@@ -10,6 +10,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="{{ asset('logo.png') }}">
+
 
     @stack('styles')
 
@@ -132,7 +134,7 @@
                     <p class="mb-0">&copy; {{ date('Y') }} Sistem Manajemen Halte. All rights reserved.</p>
                 </div>
                 <div class="col-md-6 text-end">
-                    <p class="mb-0">Dibuat dengan <i class="fas fa-heart text-danger"></i> menggunakan Laravel</p>
+                    <p class="mb-0">Dibuat dengan Mojo dan Alfi <i class="fas fa-heart text-danger"></i> menggunakan Hati</p>
                 </div>
             </div>
         </div>

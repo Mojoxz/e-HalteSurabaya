@@ -1,5 +1,5 @@
 <?php
-// app/Http/Controllers/HomeController.php
+// app/Http/Controllers/HomeController.php - IMPROVED VERSION
 
 namespace App\Http\Controllers;
 
@@ -14,20 +14,17 @@ class HomeController extends Controller
      */
     public function index()
     {
-        // Get all haltes for initial map display
+        // Get all haltes with photos - SIMPLIFIED AND FIXED
         $haltes = Halte::with(['photos' => function($query) {
-            $query->where('is_primary', true)->orWhere(function($q) {
-                $q->whereDoesntHave('halte', function($subQ) {
-                    $subQ->whereHas('photos', function($photoQ) {
-                        $photoQ->where('is_primary', true);
-                    });
-                });
-            })->limit(1);
+            $query->orderBy('is_primary', 'desc')->orderBy('id', 'asc');
         }])->get();
 
         // Transform data for JavaScript
         $haltesData = $haltes->map(function ($halte) {
             $isCurrentlyRented = $halte->isCurrentlyRented();
+
+            // Get primary photo or first available photo
+            $primaryPhotoUrl = $this->getPrimaryPhotoUrl($halte);
 
             return [
                 'id' => $halte->id,
@@ -43,16 +40,26 @@ class HomeController extends Controller
                 'rented_by' => $halte->rented_by,
                 'simbada_registered' => $halte->simbada_registered,
                 'simbada_number' => $halte->simbada_number,
-                'primary_photo' => $halte->primary_photo_url,
-                'photos' => $halte->photo_urls
+                'primary_photo' => $primaryPhotoUrl,
+                'photos' => $halte->photos->map(function($photo) {
+                    return asset('storage/' . $photo->photo_path);
+                })->toArray()
             ];
         });
 
-        // Statistics for display
+        // Calculate statistics correctly
+        $totalHaltes = $haltes->count();
+        $availableCount = $haltes->filter(function($halte) {
+            return !$halte->isCurrentlyRented();
+        })->count();
+        $rentedCount = $haltes->filter(function($halte) {
+            return $halte->isCurrentlyRented();
+        })->count();
+
         $statistics = [
-            'total' => $haltes->count(),
-            'available' => $haltes->where('rental_status', 'available')->count(),
-            'rented' => $haltes->where('rental_status', 'rented')->count(),
+            'total' => $totalHaltes,
+            'available' => $availableCount,
+            'rented' => $rentedCount,
         ];
 
         return view('home', compact('haltesData', 'statistics'));
@@ -63,7 +70,9 @@ class HomeController extends Controller
      */
     public function showHalte($id)
     {
-        $halte = Halte::with(['photos', 'rentalHistories'])->find($id);
+        $halte = Halte::with(['photos' => function($query) {
+            $query->orderBy('is_primary', 'desc')->orderBy('id', 'asc');
+        }, 'rentalHistories'])->find($id);
 
         if (!$halte) {
             return response()->json([
@@ -90,14 +99,46 @@ class HomeController extends Controller
                 'rented_by' => $halte->rented_by,
                 'simbada_registered' => $halte->simbada_registered,
                 'simbada_number' => $halte->simbada_number,
+                'primary_photo' => $this->getPrimaryPhotoUrl($halte),
                 'photos' => $halte->photos->map(function($photo) {
                     return [
-                        'url' => $photo->photo_url,
+                        'id' => $photo->id,
+                        'url' => asset('storage/' . $photo->photo_path),
                         'description' => $photo->description,
                         'is_primary' => $photo->is_primary
                     ];
                 })
             ]
         ]);
+    }
+
+    /**
+     * Helper method to get primary photo URL
+     */
+    private function getPrimaryPhotoUrl($halte)
+    {
+        // First try to get primary photo
+        $primaryPhoto = $halte->photos->where('is_primary', true)->first();
+
+        if ($primaryPhoto && $this->fileExists($primaryPhoto->photo_path)) {
+            return asset('storage/' . $primaryPhoto->photo_path);
+        }
+
+        // If no primary photo, get first available photo
+        $firstPhoto = $halte->photos->first();
+        if ($firstPhoto && $this->fileExists($firstPhoto->photo_path)) {
+            return asset('storage/' . $firstPhoto->photo_path);
+        }
+
+        // Return default image if no photos or files don't exist
+        return asset('images/halte-default.png');
+    }
+
+    /**
+     * Helper method to check if file exists
+     */
+    private function fileExists($photoPath)
+    {
+        return file_exists(storage_path('app/public/' . $photoPath));
     }
 }

@@ -1,5 +1,5 @@
 <?php
-// routes/web.php
+// routes/web.php - HANYA TAMBAHKAN BAGIAN INI
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
@@ -39,11 +39,15 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         Route::get('/{id}/edit', [AdminController::class, 'halteEdit'])->name('edit');
         Route::put('/{id}', [AdminController::class, 'halteUpdate'])->name('update');
         Route::delete('/{id}', [AdminController::class, 'halteDestroy'])->name('destroy');
+
+        // TAMBAHKAN ROUTE INI UNTUK PHOTO MANAGEMENT DALAM GRUP HALTES
+        Route::delete('/photos/{id}', [AdminController::class, 'deletePhoto'])->name('photos.delete');
+        Route::patch('/photos/{id}/primary', [AdminController::class, 'setPrimaryPhoto'])->name('photos.primary');
     });
 
-    // Photo Management
-    Route::delete('/photos/{id}', [AdminController::class, 'deletePhoto'])->name('photos.destroy');
-    Route::post('/photos/{id}/primary', [AdminController::class, 'setPrimaryPhoto'])->name('photos.primary');
+    // Photo Management - HAPUS BAGIAN INI KARENA SUDAH DIPINDAH KE DALAM GRUP HALTES
+    // Route::delete('/photos/{id}', [AdminController::class, 'deletePhoto'])->name('photos.destroy');
+    // Route::post('/photos/{id}/primary', [AdminController::class, 'setPrimaryPhoto'])->name('photos.primary');
 
     // Rental History
     Route::get('/rentals', [AdminController::class, 'rentalHistory'])->name('rentals.index');

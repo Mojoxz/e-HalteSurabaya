@@ -21,6 +21,8 @@ return new class extends Migration
             $table->string('description')->nullable();
             $table->boolean('is_primary')->default(false);
             $table->timestamps();
+
+            $table->index(['halte_id', 'is_primary'], );
         });
     }
 

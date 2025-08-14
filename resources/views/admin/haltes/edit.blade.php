@@ -6,14 +6,9 @@
 <div class="container-fluid">
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
         <h1 class="h3 mb-0 text-gray-800">Edit Halte: {{ $halte->name }}</h1>
-        <div>
-            <a href="{{ route('admin.haltes.show', $halte->id) }}" class="btn btn-info">
-                <i class="fas fa-eye"></i> Lihat Detail
-            </a>
-            <a href="{{ route('admin.haltes.index') }}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Kembali
-            </a>
-        </div>
+        <a href="{{ route('admin.haltes.index') }}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Kembali
+        </a>
     </div>
 
     @if($errors->any())
@@ -237,67 +232,61 @@
                                 @enderror
                             </div>
                         </div>
-
-                        @if($halte->is_rented)
-                            <div class="alert alert-info mt-3">
-                                <i class="fas fa-info-circle"></i>
-                                <strong>Status Sewa Saat Ini:</strong>
-                                @if($halte->isCurrentlyRented())
-                                    <span class="badge badge-danger ml-2">Sedang Disewa</span>
-                                    <br><small class="mt-1">Berakhir pada: {{ $halte->rent_end_date->format('d/m/Y') }}</small>
-                                @else
-                                    <span class="badge badge-warning ml-2">Sewa Berakhir</span>
-                                    <br><small class="mt-1">Berakhir pada: {{ $halte->rent_end_date->format('d/m/Y') }}</small>
-                                @endif
-                            </div>
-                        @endif
                     </div>
                 </div>
             </div>
 
             <div class="col-lg-4">
-                <!-- Current Photos -->
+                <!-- Existing Photos -->
                 @if($halte->photos->count() > 0)
-                    <div class="card shadow mb-4">
-                        <div class="card-header py-3">
-                            <h6 class="m-0 font-weight-bold text-primary">Foto Saat Ini</h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="row">
-                                @foreach($halte->photos as $photo)
-                                    <div class="col-12 mb-3">
-                                        <div class="position-relative">
-                                            <img src="{{ asset('storage/' . $photo->photo_path) }}"
-                                                 class="img-thumbnail w-100"
-                                                 style="height: 100px; object-fit: cover;">
-                                            @if($photo->is_primary)
-                                                <span class="badge badge-primary position-absolute" style="top: 5px; left: 5px;">
-                                                    Foto Utama
-                                                </span>
-                                            @endif
-                                            @if($photo->description)
-                                                <small class="text-muted d-block mt-1">{{ $photo->description }}</small>
-                                            @endif
-                                            <div class="mt-2">
-                                                @if(!$photo->is_primary)
-                                                    <button type="button"
-                                                            class="btn btn-sm btn-outline-primary"
-                                                            onclick="setPrimaryPhoto({{ $photo->id }})">
-                                                        <i class="fas fa-star"></i> Jadikan Utama
-                                                    </button>
-                                                @endif
-                                                <button type="button"
-                                                        class="btn btn-sm btn-outline-danger"
-                                                        onclick="deletePhoto({{ $photo->id }})">
-                                                    <i class="fas fa-trash"></i> Hapus
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Foto Saat Ini</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            @foreach($halte->photos as $photo)
+                            <div class="col-6 mb-3">
+                                <div class="position-relative">
+                                    <img src="{{ asset('storage/' . $photo->photo_path) }}"
+                                         alt="{{ $photo->description }}"
+                                         class="img-thumbnail w-100"
+                                         style="height: 120px; object-fit: cover;">
+
+                                    @if($photo->is_primary)
+                                        <span class="badge badge-primary position-absolute" style="top: 5px; left: 5px;">
+                                            <i class="fas fa-star"></i> Utama
+                                        </span>
+                                    @endif
+
+                                    <div class="btn-group position-absolute" style="top: 5px; right: 5px;">
+                                        @if(!$photo->is_primary)
+                                            <form action="{{ route('admin.haltes.photos.primary', $photo->id) }}" method="POST" style="display: inline;">
+                                                @csrf
+                                                @method('PATCH')
+                                                <button type="submit" class="btn btn-sm btn-warning" title="Jadikan Utama">
+                                                    <i class="fas fa-star"></i>
                                                 </button>
-                                            </div>
-                                        </div>
+                                            </form>
+                                        @endif
+                                        <form action="{{ route('admin.haltes.photos.delete', $photo->id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Hapus foto ini?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-danger" title="Hapus">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
                                     </div>
-                                @endforeach
+
+                                    @if($photo->description)
+                                        <small class="text-muted d-block mt-1">{{ $photo->description }}</small>
+                                    @endif
+                                </div>
                             </div>
+                            @endforeach
                         </div>
                     </div>
+                </div>
                 @endif
 
                 <!-- Upload New Photos -->
@@ -328,26 +317,17 @@
                     </div>
                 </div>
 
-                <!-- Map Preview -->
                 <div class="card shadow">
                     <div class="card-header py-3">
                         <h6 class="m-0 font-weight-bold text-primary">Preview Lokasi</h6>
                     </div>
                     <div class="card-body">
                         <div id="map" style="height: 200px; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center; border: 1px dashed #dee2e6;">
-                            @if($halte->latitude && $halte->longitude)
-                                <div class="text-center">
-                                    <i class="fas fa-map-marker-alt text-primary fa-2x mb-2"></i><br>
-                                    <strong>Koordinat Saat Ini:</strong><br>
-                                    {{ $halte->latitude }}, {{ $halte->longitude }}<br>
-                                    <small class="text-muted">Preview peta akan diupdate saat halte disimpan</small>
-                                </div>
-                            @else
-                                <span class="text-muted">
-                                    <i class="fas fa-map-marker-alt"></i><br>
-                                    Masukkan koordinat untuk preview
-                                </span>
-                            @endif
+                            <div class="text-center">
+                                <i class="fas fa-map-marker-alt text-primary fa-2x mb-2"></i><br>
+                                <strong>Koordinat:</strong><br>
+                                {{ $halte->latitude }}, {{ $halte->longitude }}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -406,7 +386,6 @@ document.getElementById('rent_start_date').addEventListener('change', function()
 
     if (startDate) {
         endDateInput.min = startDate;
-        // If end date is before start date, clear it
         if (endDateInput.value && endDateInput.value < startDate) {
             endDateInput.value = '';
         }
@@ -423,7 +402,7 @@ function previewImages() {
     descriptionsContainer.innerHTML = '';
 
     if (files.length > 0) {
-        descriptionsContainer.innerHTML = '<label>Deskripsi Foto Baru:</label>';
+        descriptionsContainer.innerHTML = '<label>Deskripsi Foto:</label>';
     }
 
     Array.from(files).forEach((file, index) => {
@@ -458,84 +437,9 @@ function previewImages() {
         descInput.type = 'text';
         descInput.name = 'photo_descriptions[]';
         descInput.className = 'form-control mb-2';
-        descInput.placeholder = 'Deskripsi foto baru ' + (index + 1) + ' (opsional)';
+        descInput.placeholder = 'Deskripsi foto ' + (index + 1) + ' (opsional)';
         descriptionsContainer.appendChild(descInput);
     });
-}
-
-// Update map preview when coordinates change
-document.getElementById('latitude').addEventListener('input', updateMapPreview);
-document.getElementById('longitude').addEventListener('input', updateMapPreview);
-
-function updateMapPreview() {
-    const lat = document.getElementById('latitude').value;
-    const lng = document.getElementById('longitude').value;
-    const mapDiv = document.getElementById('map');
-
-    if (lat && lng) {
-        mapDiv.innerHTML = `
-            <div class="text-center">
-                <i class="fas fa-map-marker-alt text-primary fa-2x mb-2"></i><br>
-                <strong>Koordinat Baru:</strong><br>
-                ${lat}, ${lng}<br>
-                <small class="text-muted">Preview peta akan diupdate saat halte disimpan</small>
-            </div>
-        `;
-    } else {
-        mapDiv.innerHTML = `
-            <span class="text-muted">
-                <i class="fas fa-map-marker-alt"></i><br>
-                Masukkan koordinat untuk preview
-            </span>
-        `;
-    }
-}
-
-// Delete photo function
-function deletePhoto(photoId) {
-    if (confirm('Apakah Anda yakin ingin menghapus foto ini?')) {
-        // Create form for DELETE request
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = `/admin/photos/${photoId}`;
-        form.style.display = 'none';
-
-        // Add CSRF token
-        const csrfToken = document.createElement('input');
-        csrfToken.type = 'hidden';
-        csrfToken.name = '_token';
-        csrfToken.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-        // Add method override
-        const methodField = document.createElement('input');
-        methodField.type = 'hidden';
-        methodField.name = '_method';
-        methodField.value = 'DELETE';
-
-        form.appendChild(csrfToken);
-        form.appendChild(methodField);
-        document.body.appendChild(form);
-        form.submit();
-    }
-}
-
-// Set primary photo function
-function setPrimaryPhoto(photoId) {
-    // Create form for POST request
-    const form = document.createElement('form');
-    form.method = 'POST';
-    form.action = `/admin/photos/${photoId}/set-primary`;
-    form.style.display = 'none';
-
-    // Add CSRF token
-    const csrfToken = document.createElement('input');
-    csrfToken.type = 'hidden';
-    csrfToken.name = '_token';
-    csrfToken.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-    form.appendChild(csrfToken);
-    document.body.appendChild(form);
-    form.submit();
 }
 </script>
 @endsection
