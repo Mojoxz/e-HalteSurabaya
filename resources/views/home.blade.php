@@ -64,14 +64,81 @@
 
     /* Custom popup styles */
     .leaflet-popup-content {
-        width: 300px !important;
+        width: 320px !important;
+        margin: 0 !important;
     }
-    .popup-image {
+    .leaflet-popup-content-wrapper {
+        padding: 0 !important;
+    }
+
+    /* Photo carousel styles */
+    .popup-photo-container {
+        position: relative;
+        width: 100%;
+        height: 200px;
+        margin-bottom: 15px;
+        border-radius: 8px 8px 0 0;
+        overflow: hidden;
+        background: #f8f9fa;
+    }
+    .popup-photo {
         width: 100%;
         height: 200px;
         object-fit: cover;
-        border-radius: 5px;
-        margin-bottom: 10px;
+        display: none;
+    }
+    .popup-photo.active {
+        display: block;
+    }
+    .popup-photo-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(0,0,0,0.5);
+        color: white;
+        border: none;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        cursor: pointer;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+    .popup-photo-nav:hover {
+        background: rgba(0,0,0,0.7);
+    }
+    .popup-photo-nav.prev {
+        left: 10px;
+    }
+    .popup-photo-nav.next {
+        right: 10px;
+    }
+    .popup-photo-counter {
+        position: absolute;
+        bottom: 10px;
+        right: 10px;
+        background: rgba(0,0,0,0.7);
+        color: white;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 12px;
+    }
+    .no-photos {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #666;
+        font-style: italic;
+    }
+
+    .popup-content {
+        padding: 0;
+    }
+    .popup-info {
+        padding: 15px;
     }
     .popup-title {
         font-size: 1.1em;
@@ -95,7 +162,7 @@
         background-color: #f8d7da;
         color: #721c24;
     }
-    .popup-info {
+    .popup-details {
         font-size: 0.9em;
         line-height: 1.4;
     }
@@ -223,26 +290,103 @@ $(document).ready(function() {
         iconAnchor: [10, 10]
     });
 
+    // Function to create photo carousel HTML
+    function createPhotoCarousel(photos, halteName) {
+        if (!photos || photos.length === 0) {
+            return `
+                <div class="popup-photo-container">
+                    <div class="no-photos">
+                        <i class="fas fa-image" style="font-size: 2em; color: #ccc;"></i>
+                        <span style="margin-left: 10px;">Tidak ada foto</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        let carouselHtml = '<div class="popup-photo-container">';
+
+        // Add photos
+        photos.forEach((photo, index) => {
+            carouselHtml += `
+                <img src="${photo}"
+                     alt="${halteName}"
+                     class="popup-photo ${index === 0 ? 'active' : ''}"
+                     data-index="${index}"
+                     onerror="this.style.display='none'">
+            `;
+        });
+
+        // Add navigation buttons if more than one photo
+        if (photos.length > 1) {
+            carouselHtml += `
+                <button class="popup-photo-nav prev" onclick="changePhoto(this, -1)">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="popup-photo-nav next" onclick="changePhoto(this, 1)">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+                <div class="popup-photo-counter">
+                    <span class="current-photo">1</span>/<span class="total-photos">${photos.length}</span>
+                </div>
+            `;
+        }
+
+        carouselHtml += '</div>';
+        return carouselHtml;
+    }
+
+    // Global function to change photos (accessible from onclick)
+    window.changePhoto = function(button, direction) {
+        const container = button.closest('.popup-photo-container');
+        const photos = container.querySelectorAll('.popup-photo');
+        const counter = container.querySelector('.current-photo');
+
+        let currentIndex = -1;
+        photos.forEach((photo, index) => {
+            if (photo.classList.contains('active')) {
+                currentIndex = index;
+            }
+            photo.classList.remove('active');
+        });
+
+        let newIndex = currentIndex + direction;
+        if (newIndex >= photos.length) {
+            newIndex = 0;
+        } else if (newIndex < 0) {
+            newIndex = photos.length - 1;
+        }
+
+        photos[newIndex].classList.add('active');
+        if (counter) {
+            counter.textContent = newIndex + 1;
+        }
+    };
+
     // Add markers for each halte
     haltesData.forEach(function(halte) {
         const icon = halte.rental_status === 'rented' ? rentedIcon : availableIcon;
 
-        // Create popup content
+        // Create photo carousel
+        const photoCarousel = createPhotoCarousel(halte.photos, halte.name);
+
+        // Create popup content with carousel
         let popupContent = `
             <div class="popup-content">
-                ${halte.primary_photo ? `<img src="${halte.primary_photo}" alt="${halte.name}" class="popup-image" onerror="this.style.display='none'">` : ''}
-                <div class="popup-title">${halte.name}</div>
-                <div class="popup-status ${halte.rental_status === 'rented' ? 'status-rented' : 'status-available'}">
-                    ${halte.rental_status === 'rented' ? 'DISEWA' : 'TERSEDIA'}
-                </div>
+                ${photoCarousel}
                 <div class="popup-info">
-                    ${halte.description ? `<div class="info-row"><span class="info-label">Deskripsi:</span> ${halte.description}</div>` : ''}
-                    ${halte.address ? `<div class="info-row"><span class="info-label">Alamat:</span> ${halte.address}</div>` : ''}
-                    ${halte.is_rented && halte.rented_by ? `<div class="info-row"><span class="info-label">Disewa oleh:</span> ${halte.rented_by}</div>` : ''}
-                    ${halte.is_rented && halte.rent_end_date ? `<div class="info-row"><span class="info-label">Sewa sampai:</span> ${halte.rent_end_date}</div>` : ''}
-                    ${halte.simbada_registered ? `<div class="info-row"><span class="info-label">SIMBADA:</span> <span class="badge bg-success">Terdaftar</span></div>` : ''}
-                    ${halte.simbada_number ? `<div class="info-row"><span class="info-label">No. SIMBADA:</span> ${halte.simbada_number}</div>` : ''}
-                    <div class="info-row"><span class="info-label">Koordinat:</span> ${halte.latitude}, ${halte.longitude}</div>
+                    <div class="popup-title">${halte.name}</div>
+                    <div class="popup-status ${halte.rental_status === 'rented' ? 'status-rented' : 'status-available'}">
+                        ${halte.rental_status === 'rented' ? 'DISEWA' : 'TERSEDIA'}
+                    </div>
+                    <div class="popup-details">
+                        ${halte.description ? `<div class="info-row"><span class="info-label">Deskripsi:</span> ${halte.description}</div>` : ''}
+                        ${halte.address ? `<div class="info-row"><span class="info-label">Alamat:</span> ${halte.address}</div>` : ''}
+                        ${halte.is_rented && halte.rented_by ? `<div class="info-row"><span class="info-label">Disewa oleh:</span> ${halte.rented_by}</div>` : ''}
+                        ${halte.is_rented && halte.rent_end_date ? `<div class="info-row"><span class="info-label">Sewa sampai:</span> ${halte.rent_end_date}</div>` : ''}
+                        ${halte.simbada_registered ? `<div class="info-row"><span class="info-label">SIMBADA:</span> <span class="badge bg-success" style="background-color: #28a745!important; color: white; padding: 2px 6px; border-radius: 3px; font-size: 0.75em;">Terdaftar</span></div>` : ''}
+                        ${halte.simbada_number ? `<div class="info-row"><span class="info-label">No. SIMBADA:</span> ${halte.simbada_number}</div>` : ''}
+                        <div class="info-row"><span class="info-label">Koordinat:</span> ${halte.latitude}, ${halte.longitude}</div>
+                    </div>
                 </div>
             </div>
         `;
@@ -250,8 +394,9 @@ $(document).ready(function() {
         // Add marker to map
         L.marker([halte.latitude, halte.longitude], { icon: icon })
             .bindPopup(popupContent, {
-                maxWidth: 320,
-                className: 'custom-popup'
+                maxWidth: 340,
+                className: 'custom-popup',
+                closeButton: true
             })
             .addTo(map);
     });
