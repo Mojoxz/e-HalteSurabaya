@@ -57,46 +57,82 @@ class AdminController extends Controller
     /**
      * Store new halte
      */
-    public function halteStore(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'latitude' => 'required|numeric|between:-90,90',
-            'longitude' => 'required|numeric|between:-180,180',
-            'address' => 'nullable|string',
-            'simbada_number' => 'nullable|string',
-            'photos.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
-        ]);
+/**
+ * Store new halte
+ */
+public function halteStore(Request $request)
+{
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'description' => 'nullable|string',
+        'latitude' => 'required|numeric|between:-90,90',
+        'longitude' => 'required|numeric|between:-180,180',
+        'address' => 'nullable|string',
+        'simbada_number' => 'nullable|string',
+        'photos.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        'rent_start_date' => 'nullable|date',
+        'rent_end_date' => 'nullable|date|after:rent_start_date',
+        'rented_by' => 'nullable|string|max:255',
+        'rental_cost' => 'nullable|numeric|min:0',
+        'rental_notes' => 'nullable|string'
+    ]);
 
-        $halte = Halte::create([
-            'name' => $request->name,
-            'description' => $request->description,
-            'latitude' => $request->latitude,
-            'longitude' => $request->longitude,
-            'address' => $request->address,
-            'simbada_registered' => $request->has('simbada_registered'),
-            'simbada_number' => $request->simbada_number,
-            'status' => 'available'
-        ]);
+    $halteData = [
+        'name' => $request->name,
+        'description' => $request->description,
+        'latitude' => $request->latitude,
+        'longitude' => $request->longitude,
+        'address' => $request->address,
+        'simbada_registered' => $request->has('simbada_registered'),
+        'simbada_number' => $request->simbada_number,
+    ];
 
-        // Handle photo uploads
-        if ($request->hasFile('photos')) {
-            foreach ($request->file('photos') as $index => $photo) {
-                $path = $photo->store('halte-photos', 'public');
-
-                HaltePhoto::create([
-                    'halte_id' => $halte->id,
-                    'photo_path' => $path,
-                    'description' => $request->photo_descriptions[$index] ?? null,
-                    'is_primary' => $index === 0 // First photo as primary
-                ]);
-            }
-        }
-
-        return redirect()->route('admin.haltes.index')->with('success', 'Halte berhasil ditambahkan');
+    // Handle rental information
+    if ($request->has('is_rented') && $request->filled('rent_start_date') && $request->filled('rent_end_date')) {
+        $halteData['is_rented'] = true;
+        $halteData['rent_start_date'] = $request->rent_start_date;
+        $halteData['rent_end_date'] = $request->rent_end_date;
+        $halteData['rented_by'] = $request->rented_by;
+        $halteData['status'] = 'rented';
+    } else {
+        $halteData['is_rented'] = false;
+        $halteData['rent_start_date'] = null;
+        $halteData['rent_end_date'] = null;
+        $halteData['rented_by'] = null;
+        $halteData['status'] = 'available';
     }
 
+    $halte = Halte::create($halteData);
+
+    // Create rental history if halte is rented
+    if ($halte->is_rented) {
+        RentalHistory::create([
+            'halte_id' => $halte->id,
+            'rented_by' => $request->rented_by,
+            'rent_start_date' => $request->rent_start_date,
+            'rent_end_date' => $request->rent_end_date,
+            'rental_cost' => $request->rental_cost ?? 0,
+            'notes' => $request->rental_notes,
+            'created_by' => Auth::id()
+        ]);
+    }
+
+    // Handle photo uploads
+    if ($request->hasFile('photos')) {
+        foreach ($request->file('photos') as $index => $photo) {
+            $path = $photo->store('halte-photos', 'public');
+
+            HaltePhoto::create([
+                'halte_id' => $halte->id,
+                'photo_path' => $path,
+                'description' => $request->photo_descriptions[$index] ?? null,
+                'is_primary' => $index === 0 // First photo as primary
+            ]);
+        }
+    }
+
+    return redirect()->route('admin.haltes.index')->with('success', 'Halte berhasil ditambahkan');
+}
     /**
      * Show halte details
      */
@@ -115,45 +151,54 @@ class AdminController extends Controller
         return view('admin.haltes.edit', compact('halte'));
     }
 
-    /**
-     * Update halte
-     */
-    public function halteUpdate(Request $request, $id)
-    {
-        $halte = Halte::findOrFail($id);
+/**
+ * Update halte
+ */
+public function halteUpdate(Request $request, $id)
+{
+    $halte = Halte::findOrFail($id);
 
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'latitude' => 'required|numeric|between:-90,90',
-            'longitude' => 'required|numeric|between:-180,180',
-            'address' => 'nullable|string',
-            'simbada_number' => 'nullable|string',
-            'photos.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'rent_start_date' => 'nullable|date',
-            'rent_end_date' => 'nullable|date|after:rent_start_date',
-            'rented_by' => 'nullable|string|max:255'
-        ]);
+    $request->validate([
+        'name' => 'required|string|max:255',
+        'description' => 'nullable|string',
+        'latitude' => 'required|numeric|between:-90,90',
+        'longitude' => 'required|numeric|between:-180,180',
+        'address' => 'nullable|string',
+        'simbada_number' => 'nullable|string',
+        'photos.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        'rent_start_date' => 'nullable|date',
+        'rent_end_date' => 'nullable|date|after:rent_start_date',
+        'rented_by' => 'nullable|string|max:255',
+        'rental_cost' => 'nullable|numeric|min:0',
+        'rental_notes' => 'nullable|string'
+    ]);
 
-        $updateData = [
-            'name' => $request->name,
-            'description' => $request->description,
-            'latitude' => $request->latitude,
-            'longitude' => $request->longitude,
-            'address' => $request->address,
-            'simbada_registered' => $request->has('simbada_registered'),
-            'simbada_number' => $request->simbada_number,
-        ];
+    $updateData = [
+        'name' => $request->name,
+        'description' => $request->description,
+        'latitude' => $request->latitude,
+        'longitude' => $request->longitude,
+        'address' => $request->address,
+        'simbada_registered' => $request->has('simbada_registered'),
+        'simbada_number' => $request->simbada_number,
+    ];
 
-        // Handle rental information
-        if ($request->filled('rent_start_date') && $request->filled('rent_end_date')) {
-            $updateData['is_rented'] = true;
-            $updateData['rent_start_date'] = $request->rent_start_date;
-            $updateData['rent_end_date'] = $request->rent_end_date;
-            $updateData['rented_by'] = $request->rented_by;
-            $updateData['status'] = 'rented';
+    // Handle rental information
+    if ($request->has('is_rented') && $request->filled('rent_start_date') && $request->filled('rent_end_date')) {
+        $updateData['is_rented'] = true;
+        $updateData['rent_start_date'] = $request->rent_start_date;
+        $updateData['rent_end_date'] = $request->rent_end_date;
+        $updateData['rented_by'] = $request->rented_by;
+        $updateData['status'] = 'rented';
 
-            // Create rental history
+        // Create rental history only if this is a new rental or rental info changed
+        $currentRental = $halte->rentalHistories()->latest()->first();
+        $shouldCreateNewHistory = !$currentRental ||
+                                  $currentRental->rent_start_date != $request->rent_start_date ||
+                                  $currentRental->rent_end_date != $request->rent_end_date ||
+                                  $currentRental->rented_by != $request->rented_by;
+
+        if ($shouldCreateNewHistory) {
             RentalHistory::create([
                 'halte_id' => $halte->id,
                 'rented_by' => $request->rented_by,
@@ -163,33 +208,33 @@ class AdminController extends Controller
                 'notes' => $request->rental_notes,
                 'created_by' => Auth::id()
             ]);
-        } else {
-            $updateData['is_rented'] = false;
-            $updateData['rent_start_date'] = null;
-            $updateData['rent_end_date'] = null;
-            $updateData['rented_by'] = null;
-            $updateData['status'] = 'available';
         }
-
-        $halte->update($updateData);
-
-        // Handle new photo uploads
-        if ($request->hasFile('photos')) {
-            foreach ($request->file('photos') as $index => $photo) {
-                $path = $photo->store('halte-photos', 'public');
-
-                HaltePhoto::create([
-                    'halte_id' => $halte->id,
-                    'photo_path' => $path,
-                    'description' => $request->photo_descriptions[$index] ?? null,
-                    'is_primary' => false
-                ]);
-            }
-        }
-
-        return redirect()->route('admin.haltes.show', $halte->id)->with('success', 'Halte berhasil diupdate');
+    } else {
+        $updateData['is_rented'] = false;
+        $updateData['rent_start_date'] = null;
+        $updateData['rent_end_date'] = null;
+        $updateData['rented_by'] = null;
+        $updateData['status'] = 'available';
     }
 
+    $halte->update($updateData);
+
+    // Handle new photo uploads
+    if ($request->hasFile('photos')) {
+        foreach ($request->file('photos') as $index => $photo) {
+            $path = $photo->store('halte-photos', 'public');
+
+            HaltePhoto::create([
+                'halte_id' => $halte->id,
+                'photo_path' => $path,
+                'description' => $request->photo_descriptions[$index] ?? null,
+                'is_primary' => false // New photos are not primary by default
+            ]);
+        }
+    }
+
+    return redirect()->route('admin.haltes.index')->with('success', 'Halte berhasil diupdate');
+}
     /**
      * Delete halte
      */

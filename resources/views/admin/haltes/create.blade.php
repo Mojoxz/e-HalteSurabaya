@@ -131,6 +131,108 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- Rental Information Card -->
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Informasi Penyewaan (Opsional)</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input type="checkbox"
+                                       class="form-check-input"
+                                       id="is_rented"
+                                       name="is_rented"
+                                       value="1"
+                                       {{ old('is_rented') ? 'checked' : '' }}>
+                                <label class="form-check-label" for="is_rented">
+                                    Halte sedang disewa
+                                </label>
+                            </div>
+                        </div>
+
+                        <div id="rental_details" style="display: none;">
+                            <div class="form-group">
+                                <label for="rented_by">Disewa Oleh</label>
+                                <input type="text"
+                                       class="form-control @error('rented_by') is-invalid @enderror"
+                                       id="rented_by"
+                                       name="rented_by"
+                                       value="{{ old('rented_by') }}"
+                                       placeholder="Nama penyewa atau perusahaan">
+                                @error('rented_by')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="rent_start_date">Tanggal Mulai Sewa</label>
+                                        <input type="date"
+                                               class="form-control @error('rent_start_date') is-invalid @enderror"
+                                               id="rent_start_date"
+                                               name="rent_start_date"
+                                               value="{{ old('rent_start_date') }}">
+                                        @error('rent_start_date')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="rent_end_date">Tanggal Berakhir Sewa</label>
+                                        <input type="date"
+                                               class="form-control @error('rent_end_date') is-invalid @enderror"
+                                               id="rent_end_date"
+                                               name="rent_end_date"
+                                               value="{{ old('rent_end_date') }}">
+                                        @error('rent_end_date')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="rental_cost">Biaya Sewa</label>
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text">Rp</span>
+                                            </div>
+                                            <input type="number"
+                                                   class="form-control @error('rental_cost') is-invalid @enderror"
+                                                   id="rental_cost"
+                                                   name="rental_cost"
+                                                   value="{{ old('rental_cost') }}"
+                                                   placeholder="0"
+                                                   min="0"
+                                                   step="1000">
+                                        </div>
+                                        @error('rental_cost')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="rental_notes">Catatan Penyewaan</label>
+                                <textarea class="form-control @error('rental_notes') is-invalid @enderror"
+                                          id="rental_notes"
+                                          name="rental_notes"
+                                          rows="3"
+                                          placeholder="Catatan atau keterangan tambahan tentang penyewaan">{{ old('rental_notes') }}</textarea>
+                                @error('rental_notes')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="col-lg-4">
@@ -210,11 +312,48 @@ document.getElementById('simbada_registered').addEventListener('change', functio
     }
 });
 
-// Initialize SIMBADA field visibility
+// Toggle rental details
+document.getElementById('is_rented').addEventListener('change', function() {
+    const rentalDetails = document.getElementById('rental_details');
+    if (this.checked) {
+        rentalDetails.style.display = 'block';
+    } else {
+        rentalDetails.style.display = 'none';
+        // Clear rental fields when hiding
+        document.getElementById('rented_by').value = '';
+        document.getElementById('rent_start_date').value = '';
+        document.getElementById('rent_end_date').value = '';
+        document.getElementById('rental_cost').value = '';
+        document.getElementById('rental_notes').value = '';
+    }
+});
+
+// Initialize field visibility
 document.addEventListener('DOMContentLoaded', function() {
-    const checkbox = document.getElementById('simbada_registered');
-    if (checkbox.checked) {
+    // SIMBADA field
+    const simbadaCheckbox = document.getElementById('simbada_registered');
+    if (simbadaCheckbox.checked) {
         document.getElementById('simbada_number_group').style.display = 'block';
+    }
+
+    // Rental field
+    const rentalCheckbox = document.getElementById('is_rented');
+    if (rentalCheckbox.checked) {
+        document.getElementById('rental_details').style.display = 'block';
+    }
+});
+
+// Validate rental dates
+document.getElementById('rent_start_date').addEventListener('change', function() {
+    const startDate = this.value;
+    const endDateInput = document.getElementById('rent_end_date');
+
+    if (startDate) {
+        endDateInput.min = startDate;
+        // If end date is before start date, clear it
+        if (endDateInput.value && endDateInput.value < startDate) {
+            endDateInput.value = '';
+        }
     }
 });
 
