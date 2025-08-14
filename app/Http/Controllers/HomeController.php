@@ -1,5 +1,5 @@
 <?php
-// app/Http/Controllers/HomeController.php - IMPROVED VERSION
+// app/Http/Controllers/HomeController.php - IMPROVED VERSION WITH DETAIL PAGE
 
 namespace App\Http\Controllers;
 
@@ -63,6 +63,24 @@ class HomeController extends Controller
         ];
 
         return view('home', compact('haltesData', 'statistics'));
+    }
+
+    /**
+     * Show halte details page (NEW METHOD)
+     */
+    public function detail($id)
+    {
+        $halte = Halte::with(['photos' => function($query) {
+            $query->orderBy('is_primary', 'desc')->orderBy('id', 'asc');
+        }, 'rentalHistories' => function($query) {
+            $query->orderBy('created_at', 'desc');
+        }])->find($id);
+
+        if (!$halte) {
+            return redirect()->route('home')->with('error', 'Halte tidak ditemukan');
+        }
+
+        return view('halte-detail', compact('halte'));
     }
 
     /**

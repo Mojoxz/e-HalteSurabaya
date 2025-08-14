@@ -64,7 +64,7 @@
 
     /* Custom popup styles */
     .leaflet-popup-content {
-        width: 320px !important;
+        width: 350px !important;
         margin: 0 !important;
     }
     .leaflet-popup-content-wrapper {
@@ -172,6 +172,30 @@
     .info-label {
         font-weight: bold;
         color: #666;
+    }
+    /* NEW: Detail button styles */
+    .popup-actions {
+        padding: 10px 15px;
+        background-color: #f8f9fa;
+        border-top: 1px solid #dee2e6;
+        text-align: center;
+    }
+    .btn-detail {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        color: white;
+        border: none;
+        padding: 8px 20px;
+        border-radius: 20px;
+        font-size: 0.85em;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        display: inline-block;
+    }
+    .btn-detail:hover {
+        transform: translateY(-1px);
+        color: white;
+        box-shadow: 0 5px 15px rgba(79, 172, 254, 0.4);
     }
 </style>
 @endpush
@@ -369,7 +393,7 @@ $(document).ready(function() {
         // Create photo carousel
         const photoCarousel = createPhotoCarousel(halte.photos, halte.name);
 
-        // Create popup content with carousel
+        // Create popup content with carousel and detail button
         let popupContent = `
             <div class="popup-content">
                 ${photoCarousel}
@@ -388,13 +412,18 @@ $(document).ready(function() {
                         <div class="info-row"><span class="info-label">Koordinat:</span> ${halte.latitude}, ${halte.longitude}</div>
                     </div>
                 </div>
+                <div class="popup-actions">
+                    <a href="/halte/${halte.id}/detail" class="btn-detail">
+                        <i class="fas fa-info-circle"></i> Lihat Detail Lengkap
+                    </a>
+                </div>
             </div>
         `;
 
         // Add marker to map
         L.marker([halte.latitude, halte.longitude], { icon: icon })
             .bindPopup(popupContent, {
-                maxWidth: 340,
+                maxWidth: 370,
                 className: 'custom-popup',
                 closeButton: true
             })
