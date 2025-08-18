@@ -12,6 +12,7 @@ use App\Http\Controllers\AdminController;
 |--------------------------------------------------------------------------
 */
 
+
 // Public Routes (User Interface)
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/halte/{id}', [HomeController::class, 'showHalte'])->name('halte.show');
