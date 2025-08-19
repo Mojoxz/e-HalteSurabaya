@@ -1,10 +1,11 @@
 <?php
-// app/Models/HaltePhoto.php
+// app/Models/HaltePhoto.php - FIXED VERSION
 
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class HaltePhoto extends Model
 {
@@ -15,10 +16,9 @@ class HaltePhoto extends Model
         'photo_path',
         'description',
         'is_primary',
-        // BARU: tambahan field untuk better file management
-        'file_size',        // ukuran file dalam bytes
-        'file_type',        // mime type (image/jpeg, image/png, etc.)
-        'original_name'     // nama asli file
+        'file_size',
+        'file_type',
+        'original_name'
     ];
 
     protected $casts = [
@@ -43,7 +43,7 @@ class HaltePhoto extends Model
     }
 
     /**
-     * BARU: Get formatted file size
+     * Get formatted file size
      */
     public function getFormattedFileSizeAttribute()
     {
@@ -62,7 +62,7 @@ class HaltePhoto extends Model
     }
 
     /**
-     * BARU: Get file extension
+     * Get file extension
      */
     public function getFileExtensionAttribute()
     {
@@ -70,7 +70,7 @@ class HaltePhoto extends Model
     }
 
     /**
-     * BARU: Check if image is primary
+     * Check if image is primary
      */
     public function isPrimary()
     {
@@ -78,7 +78,7 @@ class HaltePhoto extends Model
     }
 
     /**
-     * BARU: Scopes
+     * Scopes
      */
     public function scopePrimary($query)
     {
@@ -96,7 +96,7 @@ class HaltePhoto extends Model
     }
 
     /**
-     * BARU: Boot method untuk handle model events
+     * FIXED: Boot method - ONLY DELETE FILE, DON'T CASCADE DELETE HALTE
      */
     protected static function boot()
     {
@@ -112,10 +112,13 @@ class HaltePhoto extends Model
             }
         });
 
-        // When deleting photo, delete file from storage and handle primary photo
+        // FIXED: When deleting photo, ONLY delete file and handle primary photo
+        // DO NOT DELETE HALTE
         static::deleting(function ($photo) {
             // Delete file from storage
-            \Storage::disk('public')->delete($photo->photo_path);
+            if (Storage::disk('public')->exists($photo->photo_path)) {
+                Storage::disk('public')->delete($photo->photo_path);
+            }
 
             // If this was the primary photo, set another photo as primary
             if ($photo->is_primary) {

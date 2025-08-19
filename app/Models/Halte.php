@@ -1,5 +1,5 @@
 <?php
-// app/Models/Halte.php
+// app/Models/Halte.php - FIXED VERSION
 
 namespace App\Models;
 
@@ -36,13 +36,13 @@ class Halte extends Model
     ];
 
     /**
-     * Relationship with photos (DIPERBAIKI: ditambahkan ordering)
+     * Relationship with photos
      */
     public function photos()
     {
         return $this->hasMany(HaltePhoto::class)
-                   ->orderBy('is_primary', 'desc') // Primary photo first
-                   ->orderBy('created_at', 'asc'); // Then by creation time
+                   ->orderBy('is_primary', 'desc')
+                   ->orderBy('created_at', 'asc');
     }
 
     /**
@@ -54,7 +54,7 @@ class Halte extends Model
     }
 
     /**
-     * BARU: Get secondary photos (non-primary)
+     * Get secondary photos (non-primary)
      */
     public function secondaryPhotos()
     {
@@ -72,7 +72,7 @@ class Halte extends Model
     }
 
     /**
-     * BARU: Get current/latest rental history
+     * Get current/latest rental history
      */
     public function currentRental()
     {
@@ -80,7 +80,7 @@ class Halte extends Model
     }
 
     /**
-     * Check if halte is currently rented (DIPERBAIKI: logic lebih akurat)
+     * Check if halte is currently rented - FIXED LOGIC
      */
     public function isCurrentlyRented()
     {
@@ -93,7 +93,7 @@ class Halte extends Model
     }
 
     /**
-     * BARU: Check if rental is expired
+     * Check if rental is expired
      */
     public function isRentalExpired()
     {
@@ -105,19 +105,19 @@ class Halte extends Model
     }
 
     /**
-     * Get rental status for map display (DIPERBAIKI)
+     * Get rental status for map display
      */
     public function getRentalStatusAttribute()
     {
         if ($this->isCurrentlyRented()) {
-            return 'rented'; // Red marker
+            return 'rented';
         }
 
-        return 'available'; // Green marker
+        return 'available';
     }
 
     /**
-     * BARU: Get detailed rental status text
+     * Get detailed rental status text
      */
     public function getDetailedRentalStatusAttribute()
     {
@@ -137,7 +137,7 @@ class Halte extends Model
     }
 
     /**
-     * Get all photos URLs (DIPERBAIKI: tambahkan info photo)
+     * Get all photos URLs
      */
     public function getPhotoUrlsAttribute()
     {
@@ -152,7 +152,7 @@ class Halte extends Model
     }
 
     /**
-     * Get primary photo URL (SUDAH BAGUS, hanya sedikit perbaikan)
+     * Get primary photo URL
      */
     public function getPrimaryPhotoUrlAttribute()
     {
@@ -170,7 +170,7 @@ class Halte extends Model
     }
 
     /**
-     * BARU: Get coordinates as array for easier JSON handling
+     * Get coordinates as array for easier JSON handling
      */
     public function getCoordinatesAttribute()
     {
@@ -181,7 +181,7 @@ class Halte extends Model
     }
 
     /**
-     * BARU: Get formatted address
+     * Get formatted address
      */
     public function getFormattedAddressAttribute()
     {
@@ -194,7 +194,7 @@ class Halte extends Model
     }
 
     /**
-     * BARU: Check if halte has photos
+     * Check if halte has photos
      */
     public function hasPhotos()
     {
@@ -202,7 +202,7 @@ class Halte extends Model
     }
 
     /**
-     * BARU: Get photos count
+     * Get photos count
      */
     public function getPhotosCountAttribute()
     {
@@ -210,7 +210,7 @@ class Halte extends Model
     }
 
     /**
-     * Scope for available haltes (DIPERBAIKI: logic lebih akurat)
+     * Scope for available haltes
      */
     public function scopeAvailable($query)
     {
@@ -224,7 +224,7 @@ class Halte extends Model
     }
 
     /**
-     * Scope for rented haltes (DIPERBAIKI: logic lebih akurat)
+     * Scope for rented haltes
      */
     public function scopeRented($query)
     {
@@ -234,7 +234,7 @@ class Halte extends Model
     }
 
     /**
-     * BARU: Scope for haltes with SIMBADA
+     * Scope for haltes with SIMBADA
      */
     public function scopeWithSimbada($query)
     {
@@ -242,7 +242,7 @@ class Halte extends Model
     }
 
     /**
-     * BARU: Scope for haltes without SIMBADA
+     * Scope for haltes without SIMBADA
      */
     public function scopeWithoutSimbada($query)
     {
@@ -250,7 +250,7 @@ class Halte extends Model
     }
 
     /**
-     * BARU: Boot method untuk handle model events
+     * FIXED: Boot method - REMOVED AUTO-UPDATE TO PREVENT CONFLICTS
      */
     protected static function boot()
     {
@@ -259,24 +259,13 @@ class Halte extends Model
         // When deleting halte, also delete associated photos from storage
         static::deleting(function ($halte) {
             foreach ($halte->photos as $photo) {
-                \Storage::disk('public')->delete($photo->photo_path);
+                if (\Storage::disk('public')->exists($photo->photo_path)) {
+                    \Storage::disk('public')->delete($photo->photo_path);
+                }
             }
         });
 
-        // Auto-update status based on rental dates
-        static::saving(function ($halte) {
-            if ($halte->is_rented && $halte->rent_start_date && $halte->rent_end_date) {
-                $now = Carbon::now();
-                if ($now->between($halte->rent_start_date, $halte->rent_end_date)) {
-                    $halte->status = 'rented';
-                } elseif ($now->isAfter($halte->rent_end_date)) {
-                    $halte->status = 'available';
-                    $halte->is_rented = false; // Auto-expire rental
-                }
-            } else {
-                $halte->status = 'available';
-                $halte->is_rented = false;
-            }
-        });
+        // REMOVED: Auto-update status to prevent conflicts during manual updates
+        // Status will be handled manually in controller
     }
 }

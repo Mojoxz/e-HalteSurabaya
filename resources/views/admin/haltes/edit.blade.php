@@ -11,6 +11,24 @@
         </a>
     </div>
 
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            {{ session('success') }}
+            <button type="button" class="close" data-dismiss="alert">
+                <span>&times;</span>
+            </button>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            {{ session('error') }}
+            <button type="button" class="close" data-dismiss="alert">
+                <span>&times;</span>
+            </button>
+        </div>
+    @endif
+
     @if($errors->any())
         <div class="alert alert-danger">
             <ul class="mb-0">
@@ -21,7 +39,7 @@
         </div>
     @endif
 
-    <form action="{{ route('admin.haltes.update', $halte->id) }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ route('admin.haltes.update', $halte->id) }}" method="POST" enctype="multipart/form-data" id="halte-form">
         @csrf
         @method('PUT')
         <div class="row">
@@ -208,7 +226,7 @@
                                                    class="form-control @error('rental_cost') is-invalid @enderror"
                                                    id="rental_cost"
                                                    name="rental_cost"
-                                                   value="{{ old('rental_cost', $halte->rentalHistories->last()->rental_cost ?? '') }}"
+                                                   value="{{ old('rental_cost', $halte->rentalHistories->first()->rental_cost ?? '') }}"
                                                    placeholder="0"
                                                    min="0"
                                                    step="1000">
@@ -226,7 +244,7 @@
                                           id="rental_notes"
                                           name="rental_notes"
                                           rows="3"
-                                          placeholder="Catatan atau keterangan tambahan tentang penyewaan">{{ old('rental_notes', $halte->rentalHistories->last()->notes ?? '') }}</textarea>
+                                          placeholder="Catatan atau keterangan tambahan tentang penyewaan">{{ old('rental_notes', $halte->rentalHistories->first()->notes ?? '') }}</textarea>
                                 @error('rental_notes')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -241,12 +259,12 @@
                 @if($halte->photos->count() > 0)
                 <div class="card shadow mb-4">
                     <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary">Foto Saat Ini</h6>
+                        <h6 class="m-0 font-weight-bold text-primary">Foto Saat Ini ({{ $halte->photos->count() }})</h6>
                     </div>
                     <div class="card-body">
-                        <div class="row">
+                        <div class="row" id="existing-photos">
                             @foreach($halte->photos as $photo)
-                            <div class="col-6 mb-3">
+                            <div class="col-6 mb-3" id="photo-{{ $photo->id }}">
                                 <div class="position-relative">
                                     <img src="{{ asset('storage/' . $photo->photo_path) }}"
                                          alt="{{ $photo->description }}"
@@ -261,21 +279,19 @@
 
                                     <div class="btn-group position-absolute" style="top: 5px; right: 5px;">
                                         @if(!$photo->is_primary)
-                                            <form action="{{ route('admin.haltes.photos.primary', $photo->id) }}" method="POST" style="display: inline;">
-                                                @csrf
-                                                @method('PATCH')
-                                                <button type="submit" class="btn btn-sm btn-warning" title="Jadikan Utama">
-                                                    <i class="fas fa-star"></i>
-                                                </button>
-                                            </form>
-                                        @endif
-                                        <form action="{{ route('admin.haltes.photos.delete', $photo->id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Hapus foto ini?')">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger" title="Hapus">
-                                                <i class="fas fa-trash"></i>
+                                            <button type="button"
+                                                    class="btn btn-sm btn-warning"
+                                                    title="Jadikan Utama"
+                                                    onclick="setPrimaryPhoto({{ $photo->id }})">
+                                                <i class="fas fa-star"></i>
                                             </button>
-                                        </form>
+                                        @endif
+                                        <button type="button"
+                                                class="btn btn-sm btn-danger"
+                                                title="Hapus"
+                                                onclick="deletePhoto({{ $photo->id }})">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
                                     </div>
 
                                     @if($photo->description)
@@ -326,7 +342,7 @@
                             <div class="text-center">
                                 <i class="fas fa-map-marker-alt text-primary fa-2x mb-2"></i><br>
                                 <strong>Koordinat:</strong><br>
-                                {{ $halte->latitude }}, {{ $halte->longitude }}
+                                <span id="coords-display">{{ $halte->latitude }}, {{ $halte->longitude }}</span>
                             </div>
                         </div>
                     </div>
@@ -338,7 +354,7 @@
             <div class="col-12">
                 <div class="card shadow">
                     <div class="card-body">
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary" id="submit-btn">
                             <i class="fas fa-save"></i> Update Halte
                         </button>
                         <a href="{{ route('admin.haltes.index') }}" class="btn btn-secondary ml-2">
@@ -351,46 +367,156 @@
     </form>
 </div>
 
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+                <p class="mt-2">Memproses update...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-// Toggle SIMBADA number field
-document.getElementById('simbada_registered').addEventListener('change', function() {
-    const simbadaGroup = document.getElementById('simbada_number_group');
-    if (this.checked) {
-        simbadaGroup.style.display = 'block';
-    } else {
-        simbadaGroup.style.display = 'none';
-        document.getElementById('simbada_number').value = '';
-    }
-});
-
-// Toggle rental details
-document.getElementById('is_rented').addEventListener('change', function() {
-    const rentalDetails = document.getElementById('rental_details');
-    if (this.checked) {
-        rentalDetails.style.display = 'block';
-    } else {
-        rentalDetails.style.display = 'none';
-        // Clear rental fields when hiding
-        document.getElementById('rented_by').value = '';
-        document.getElementById('rent_start_date').value = '';
-        document.getElementById('rent_end_date').value = '';
-        document.getElementById('rental_cost').value = '';
-        document.getElementById('rental_notes').value = '';
-    }
-});
-
-// Validate rental dates
-document.getElementById('rent_start_date').addEventListener('change', function() {
-    const startDate = this.value;
-    const endDateInput = document.getElementById('rent_end_date');
-
-    if (startDate) {
-        endDateInput.min = startDate;
-        if (endDateInput.value && endDateInput.value < startDate) {
-            endDateInput.value = '';
+document.addEventListener('DOMContentLoaded', function() {
+    // CSRF token for AJAX requests
+    $.ajaxSetup({
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
         }
-    }
+    });
+
+    // Toggle SIMBADA number field
+    document.getElementById('simbada_registered').addEventListener('change', function() {
+        const simbadaGroup = document.getElementById('simbada_number_group');
+        if (this.checked) {
+            simbadaGroup.style.display = 'block';
+        } else {
+            simbadaGroup.style.display = 'none';
+            document.getElementById('simbada_number').value = '';
+        }
+    });
+
+    // Toggle rental details
+    document.getElementById('is_rented').addEventListener('change', function() {
+        const rentalDetails = document.getElementById('rental_details');
+        if (this.checked) {
+            rentalDetails.style.display = 'block';
+        } else {
+            rentalDetails.style.display = 'none';
+            // Clear rental fields when hiding
+            document.getElementById('rented_by').value = '';
+            document.getElementById('rent_start_date').value = '';
+            document.getElementById('rent_end_date').value = '';
+            document.getElementById('rental_cost').value = '';
+            document.getElementById('rental_notes').value = '';
+        }
+    });
+
+    // Validate rental dates
+    document.getElementById('rent_start_date').addEventListener('change', function() {
+        const startDate = this.value;
+        const endDateInput = document.getElementById('rent_end_date');
+
+        if (startDate) {
+            endDateInput.min = startDate;
+            if (endDateInput.value && endDateInput.value < startDate) {
+                endDateInput.value = '';
+            }
+        }
+    });
+
+    // Update coordinates display
+    document.getElementById('latitude').addEventListener('input', updateCoordinatesDisplay);
+    document.getElementById('longitude').addEventListener('input', updateCoordinatesDisplay);
+
+    // Form submission with loading
+    document.getElementById('halte-form').addEventListener('submit', function() {
+        document.getElementById('submit-btn').disabled = true;
+        $('#loadingModal').modal('show');
+    });
 });
+
+function updateCoordinatesDisplay() {
+    const lat = document.getElementById('latitude').value;
+    const lng = document.getElementById('longitude').value;
+    document.getElementById('coords-display').textContent = `${lat || '0'}, ${lng || '0'}`;
+}
+
+// FIXED: Delete photo function with AJAX
+function deletePhoto(photoId) {
+    if (!confirm('Apakah Anda yakin ingin menghapus foto ini?')) {
+        return;
+    }
+
+    $.ajax({
+        url: `/admin/haltes/photos/${photoId}`,
+        type: 'DELETE',
+        data: {
+            _token: $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function(response) {
+            if (response.success) {
+                // Remove photo element from DOM
+                $(`#photo-${photoId}`).fadeOut(300, function() {
+                    $(this).remove();
+
+                    // Update photos count
+                    const remainingPhotos = $('#existing-photos .col-6').length - 1;
+                    $('.card-header h6').first().text(`Foto Saat Ini (${remainingPhotos})`);
+
+                    if (remainingPhotos === 0) {
+                        $('#existing-photos').parent().parent().hide();
+                    }
+                });
+
+                // Show success message
+                showAlert('success', response.message);
+            }
+        },
+        error: function(xhr) {
+            const response = xhr.responseJSON;
+            showAlert('error', response ? response.message : 'Gagal menghapus foto');
+        }
+    });
+}
+
+// FIXED: Set primary photo function with AJAX
+function setPrimaryPhoto(photoId) {
+    $.ajax({
+        url: `/admin/haltes/photos/${photoId}/primary`,
+        type: 'PATCH',
+        data: {
+            _token: $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function(response) {
+            if (response.success) {
+                // Remove all primary badges
+                $('.badge-primary').remove();
+                $('.btn-warning').show();
+
+                // Add primary badge to selected photo
+                $(`#photo-${photoId}`).find('.position-relative').append(
+                    '<span class="badge badge-primary position-absolute" style="top: 5px; left: 5px;"><i class="fas fa-star"></i> Utama</span>'
+                );
+
+                // Hide primary button for this photo
+                $(`#photo-${photoId}`).find('.btn-warning').hide();
+
+                // Show success message
+                showAlert('success', response.message);
+            }
+        },
+        error: function(xhr) {
+            const response = xhr.responseJSON;
+            showAlert('error', response ? response.message : 'Gagal mengatur foto utama');
+        }
+    });
+}
 
 // Preview uploaded images
 function previewImages() {
@@ -440,6 +566,30 @@ function previewImages() {
         descInput.placeholder = 'Deskripsi foto ' + (index + 1) + ' (opsional)';
         descriptionsContainer.appendChild(descInput);
     });
+}
+
+// Show alert messages
+function showAlert(type, message) {
+    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+    const alertHtml = `
+        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="close" data-dismiss="alert">
+                <span>&times;</span>
+            </button>
+        </div>
+    `;
+
+    // Remove existing alerts
+    $('.alert').remove();
+
+    // Add new alert at the top
+    $('.container-fluid').prepend(alertHtml);
+
+    // Auto-dismiss after 5 seconds
+    setTimeout(function() {
+        $('.alert').fadeOut();
+    }, 5000);
 }
 </script>
 @endsection
