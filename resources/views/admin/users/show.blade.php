@@ -38,13 +38,15 @@
                     <p class="text-muted">{{ $user->email }}</p>
 
                     <div class="mb-3">
-                        <span class="badge {{ $user->role_badge }} me-2">
+                        <span class="badge {{ $user->role_badge ?? 'bg-secondary' }} me-2">
                             <i class="fas {{ $user->role === 'admin' ? 'fa-user-shield' : 'fa-user' }}"></i>
                             {{ ucfirst($user->role) }}
                         </span>
+                        @if(isset($user->status_badge))
                         <span class="badge {{ $user->status_badge }}">
                             {{ $user->status_text }}
                         </span>
+                        @endif
                     </div>
 
                     @if($user->id === Auth::id())
@@ -71,7 +73,7 @@
                         <tr>
                             <td><i class="fas fa-phone text-success"></i></td>
                             <td><strong>Telepon:</strong></td>
-                            <td>{{ $user->formatted_phone }}</td>
+                            <td>{{ $user->formatted_phone ?? ($user->phone ?? '-') }}</td>
                         </tr>
                         <tr>
                             <td><i class="fas fa-map-marker-alt text-danger"></i></td>
@@ -101,11 +103,12 @@
                                 <tr>
                                     <td><strong>Role:</strong></td>
                                     <td>
-                                        <span class="badge {{ $user->role_badge }}">
+                                        <span class="badge {{ $user->role_badge ?? 'bg-secondary' }}">
                                             {{ ucfirst($user->role) }}
                                         </span>
                                     </td>
                                 </tr>
+                                @if(isset($user->is_active))
                                 <tr>
                                     <td><strong>Status:</strong></td>
                                     <td>
@@ -114,14 +117,17 @@
                                         </span>
                                     </td>
                                 </tr>
+                                @endif
                                 <tr>
                                     <td><strong>Terdaftar:</strong></td>
                                     <td>{{ $user->created_at->format('d/m/Y H:i') }}</td>
                                 </tr>
+                                @if(isset($user->last_login_at))
                                 <tr>
                                     <td><strong>Login Terakhir:</strong></td>
                                     <td>{{ $user->last_login_formatted }}</td>
                                 </tr>
+                                @endif
                                 @if($user->creator)
                                 <tr>
                                     <td><strong>Dibuat oleh:</strong></td>
@@ -143,7 +149,7 @@
                                     <div class="card bg-light">
                                         <div class="card-body text-center">
                                             <i class="fas fa-history fa-2x text-info mb-2"></i>
-                                            <h5 class="mb-1">{{ $user->rentalHistories->count() }}</h5>
+                                            <h5 class="mb-1">{{ $user->rentalHistories ? $user->rentalHistories->count() : 0 }}</h5>
                                             <small class="text-muted">Riwayat Sewa Dibuat</small>
                                         </div>
                                     </div>
@@ -153,7 +159,7 @@
                                     <div class="card bg-light">
                                         <div class="card-body text-center">
                                             <i class="fas fa-user-plus fa-2x text-success mb-2"></i>
-                                            <h5 class="mb-1">{{ $user->createdUsers->count() }}</h5>
+                                            <h5 class="mb-1">{{ $user->created_users_count ?? 0 }}</h5>
                                             <small class="text-muted">User Dibuat</small>
                                         </div>
                                     </div>
@@ -166,7 +172,7 @@
             </div>
 
             <!-- Recent Activity -->
-            @if($user->rentalHistories->count() > 0)
+            @if($user->rentalHistories && $user->rentalHistories->count() > 0)
             <div class="card shadow mb-4">
                 <div class="card-header py-3">
                     <h6 class="m-0 font-weight-bold text-primary">Riwayat Aktivitas Terbaru</h6>
@@ -188,13 +194,66 @@
                                     <td>{{ $history->created_at->format('d/m/Y') }}</td>
                                     <td>
                                         @if($history->halte)
-                                            <a href="{{ route('admin.haltes.show', $history->halte->id) }}"
-                                               class="text-decoration-none">
-                                                {{ $history->halte->name }}
-                                            </a>
+                                            {{ $history->halte->name }}
                                         @else
                                             <span class="text-muted">Halte dihapus</span>
                                         @endif
                                     </td>
-                                    <td>{{ $history->rented_by }}</td>
+                                    <td>{{ $history->rented_by ?? '-' }}</td>
                                     <td>
+                                        @if(isset($history->rental_cost))
+                                            Rp {{ number_format($history->rental_cost, 0, ',', '.') }}
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+
+                    @if($user->rentalHistories->count() > 5)
+                    <div class="text-center mt-3">
+                        <a href="{{ route('admin.rentals.index') }}?user_id={{ $user->id }}" class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-list"></i> Lihat Semua Riwayat
+                        </a>
+                    </div>
+                    @endif
+                </div>
+            </div>
+            @else
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Riwayat Aktivitas</h6>
+                </div>
+                <div class="card-body text-center py-4">
+                    <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                    <h5 class="text-muted">Belum Ada Aktivitas</h5>
+                    <p class="text-muted">User ini belum memiliki riwayat aktivitas</p>
+                </div>
+            </div>
+            @endif
+        </div>
+    </div>
+</div>
+
+<style>
+.avatar-xl {
+    width: 80px;
+    height: 80px;
+}
+.avatar-title {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 600;
+}
+.shadow {
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important;
+}
+</style>
+@endsection

@@ -16,6 +16,18 @@
         </div>
     </div>
 
+    <!-- Debug Info (remove in production) -->
+    @if(config('app.debug'))
+    <div class="alert alert-info">
+        <strong>Debug Info:</strong>
+        <ul class="mb-0">
+            <li>CSRF Token: {{ csrf_token() }}</li>
+            <li>Form Action: {{ route('admin.users.store') }}</li>
+            <li>Current User: {{ Auth::user()->name ?? 'Not logged in' }}</li>
+        </ul>
+    </div>
+    @endif
+
     <div class="row">
         <div class="col-lg-8">
             <div class="card shadow">
@@ -23,7 +35,7 @@
                     <h6 class="m-0 font-weight-bold text-primary">Informasi User</h6>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('admin.users.store') }}" method="POST">
+                    <form action="{{ route('admin.users.store') }}" method="POST" id="createUserForm">
                         @csrf
 
                         <!-- Personal Information -->
@@ -43,6 +55,7 @@
                                            name="name"
                                            value="{{ old('name') }}"
                                            required
+                                           autocomplete="name"
                                            placeholder="Masukkan nama lengkap">
                                     @error('name')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -59,6 +72,7 @@
                                            name="email"
                                            value="{{ old('email') }}"
                                            required
+                                           autocomplete="email"
                                            placeholder="contoh@email.com">
                                     @error('email')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -69,11 +83,12 @@
                             <div class="col-md-6">
                                 <div class="mb-3">
                                     <label for="phone" class="form-label">Nomor Telepon</label>
-                                    <input type="text"
+                                    <input type="tel"
                                            class="form-control @error('phone') is-invalid @enderror"
                                            id="phone"
                                            name="phone"
                                            value="{{ old('phone') }}"
+                                           autocomplete="tel"
                                            placeholder="08xxxxxxxxxx">
                                     @error('phone')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -87,13 +102,14 @@
                                     <select class="form-select @error('role') is-invalid @enderror"
                                             id="role"
                                             name="role"
-                                            required>
+                                            required
+                                            autocomplete="off">
                                         <option value="">Pilih Role</option>
                                         <option value="admin" {{ old('role') === 'admin' ? 'selected' : '' }}>
-                                            <i class="fas fa-user-shield"></i> Admin
+                                            Admin
                                         </option>
                                         <option value="user" {{ old('role') === 'user' ? 'selected' : '' }}>
-                                            <i class="fas fa-user"></i> User
+                                            User
                                         </option>
                                     </select>
                                     @error('role')
@@ -109,6 +125,7 @@
                                               id="address"
                                               name="address"
                                               rows="3"
+                                              autocomplete="street-address"
                                               placeholder="Masukkan alamat lengkap">{{ old('address') }}</textarea>
                                     @error('address')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -133,6 +150,7 @@
                                            id="password"
                                            name="password"
                                            required
+                                           autocomplete="new-password"
                                            placeholder="Minimal 8 karakter">
                                     @error('password')
                                         <div class="invalid-feedback">{{ $message }}</div>
@@ -148,6 +166,7 @@
                                            id="password_confirmation"
                                            name="password_confirmation"
                                            required
+                                           autocomplete="new-password"
                                            placeholder="Ulangi password">
                                 </div>
                             </div>
@@ -158,6 +177,7 @@
                                            type="checkbox"
                                            id="is_active"
                                            name="is_active"
+                                           value="1"
                                            {{ old('is_active', true) ? 'checked' : '' }}>
                                     <label class="form-check-label" for="is_active">
                                         User aktif (dapat login ke sistem)
@@ -173,7 +193,7 @@
                                     <a href="{{ route('admin.users.index') }}" class="btn btn-secondary">
                                         <i class="fas fa-times"></i> Batal
                                     </a>
-                                    <button type="submit" class="btn btn-primary">
+                                    <button type="submit" class="btn btn-primary" id="submitBtn">
                                         <i class="fas fa-save"></i> Simpan User
                                     </button>
                                 </div>
@@ -220,9 +240,56 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Debug Panel (remove in production) -->
+            @if(config('app.debug'))
+            <div class="card shadow mt-3">
+                <div class="card-header">
+                    <h6 class="m-0 font-weight-bold text-danger">Debug Panel</h6>
+                </div>
+                <div class="card-body">
+                    <small>
+                        <strong>Old Data:</strong><br>
+                        Name: {{ old('name') ?? 'null' }}<br>
+                        Email: {{ old('email') ?? 'null' }}<br>
+                        Role: {{ old('role') ?? 'null' }}<br>
+                        Active: {{ old('is_active') ? 'true' : 'false' }}
+                    </small>
+                </div>
+            </div>
+            @endif
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form submission debugging
+    const form = document.getElementById('createUserForm');
+    const submitBtn = document.getElementById('submitBtn');
+
+    form.addEventListener('submit', function(e) {
+        console.log('Form is being submitted...');
+
+        // Disable submit button to prevent double submission
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+        // Log form data for debugging
+        const formData = new FormData(form);
+        console.log('Form data:');
+        for (let [key, value] of formData.entries()) {
+            console.log(key + ':', value);
+        }
+
+        // Re-enable button after 5 seconds (in case of issues)
+        setTimeout(function() {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-save"></i> Simpan User';
+        }, 5000);
+    });
+});
+</script>
 
 <style>
 .gap-2 {
@@ -230,19 +297,6 @@
 }
 .text-sm {
     font-size: 0.875rem;
-}
-.avatar-sm {
-    width: 32px;
-    height: 32px;
-}
-.avatar-title {
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.875rem;
-    font-weight: 600;
 }
 .shadow {
     box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important;

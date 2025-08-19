@@ -1,5 +1,5 @@
 <?php
-// app/Http/Middleware/AdminMiddleware.php
+// app/Http/Middleware/AdminMiddleware.php - FIXED
 
 namespace App\Http\Middleware;
 
@@ -22,7 +22,13 @@ class AdminMiddleware
             return redirect('/login')->with('error', 'Silakan login terlebih dahulu');
         }
 
-        if (!Auth::user()->isAdmin()) {
+        // Check if user exists and has isAdmin method
+        $user = Auth::user();
+        if (!$user || !method_exists($user, 'isAdmin')) {
+            return redirect('/')->with('error', 'Akses ditolak. Method isAdmin tidak ditemukan.');
+        }
+
+        if (!$user->isAdmin()) {
             return redirect('/')->with('error', 'Akses ditolak. Hanya admin yang dapat mengakses halaman ini.');
         }
 

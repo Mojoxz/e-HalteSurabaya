@@ -162,15 +162,21 @@
                                 <h6 class="text-primary mb-3">
                                     <i class="fas fa-toggle-on"></i> Status Akun
                                 </h6>
+                                <!-- Hidden input untuk memastikan selalu ada nilai yang dikirimkan -->
+                                <input type="hidden" name="is_active" value="0">
                                 <div class="form-check">
-                                    <input class="form-check-input"
+                                    <input class="form-check-input @error('is_active') is-invalid @enderror"
                                            type="checkbox"
                                            id="is_active"
                                            name="is_active"
+                                           value="1"
                                            {{ old('is_active', $user->is_active) ? 'checked' : '' }}>
                                     <label class="form-check-label" for="is_active">
                                         User aktif (dapat login ke sistem)
                                     </label>
+                                    @error('is_active')
+                                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                                    @enderror
                                 </div>
                             </div>
                         </div>
@@ -207,11 +213,11 @@
                             </div>
                         </div>
                         <h5>{{ $user->name }}</h5>
-                        <span class="badge {{ $user->role_badge }}">
+                        <span class="badge {{ $user->role_badge ?? 'bg-secondary' }}">
                             {{ ucfirst($user->role) }}
                         </span>
-                        <span class="badge {{ $user->status_badge }}">
-                            {{ $user->status_text }}
+                        <span class="badge {{ $user->status_badge ?? 'bg-secondary' }}">
+                            {{ $user->status_text ?? ($user->is_active ? 'Aktif' : 'Tidak Aktif') }}
                         </span>
                     </div>
 
@@ -225,10 +231,14 @@
                             <td>{{ $user->created_at->format('d/m/Y H:i') }}</td>
                         </tr>
                         <tr>
-                            <td><strong>Login Terakhir:</strong></td>
-                            <td>{{ $user->last_login_formatted }}</td>
+                            <td><strong>Diperbarui:</strong></td>
+                            <td>{{ $user->updated_at->format('d/m/Y H:i') }}</td>
                         </tr>
-                        @if($user->creator)
+                        <tr>
+                            <td><strong>Login Terakhir:</strong></td>
+                            <td>{{ $user->last_login_formatted ?? 'Belum pernah login' }}</td>
+                        </tr>
+                        @if($user->creator ?? false)
                         <tr>
                             <td><strong>Dibuat oleh:</strong></td>
                             <td>{{ $user->creator->name }}</td>
@@ -245,14 +255,20 @@
                 <div class="card-body">
                     <div class="mb-2">
                         <strong>Riwayat Sewa:</strong>
-                        <span class="badge bg-info">{{ $user->rentalHistories->count() }}</span>
+                        <span class="badge bg-info">{{ $user->rentalHistories->count() ?? 0 }}</span>
                     </div>
                     @if($user->role === 'admin')
                     <div class="mb-2">
                         <strong>User Dibuat:</strong>
-                        <span class="badge bg-success">{{ $user->createdUsers->count() }}</span>
+                        <span class="badge bg-success">{{ $user->createdUsers->count() ?? 0 }}</span>
                     </div>
                     @endif
+                    <div class="mb-2">
+                        <strong>Status:</strong>
+                        <span class="badge {{ $user->is_active ? 'bg-success' : 'bg-danger' }}">
+                            {{ $user->is_active ? 'Aktif' : 'Tidak Aktif' }}
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -279,5 +295,83 @@
 .shadow {
     box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important;
 }
+.form-check .invalid-feedback.d-block {
+    display: block !important;
+}
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Password visibility toggle (optional)
+    const passwordFields = document.querySelectorAll('input[type="password"]');
+
+    passwordFields.forEach(function(field) {
+        const toggleBtn = document.createElement('button');
+        toggleBtn.type = 'button';
+        toggleBtn.className = 'btn btn-outline-secondary position-absolute end-0 top-0 h-100';
+        toggleBtn.style.zIndex = '10';
+        toggleBtn.innerHTML = '<i class="fas fa-eye"></i>';
+
+        // Wrap field in relative position container
+        const wrapper = document.createElement('div');
+        wrapper.className = 'position-relative';
+        field.parentNode.insertBefore(wrapper, field);
+        wrapper.appendChild(field);
+        wrapper.appendChild(toggleBtn);
+
+        toggleBtn.addEventListener('click', function() {
+            if (field.type === 'password') {
+                field.type = 'text';
+                toggleBtn.innerHTML = '<i class="fas fa-eye-slash"></i>';
+            } else {
+                field.type = 'password';
+                toggleBtn.innerHTML = '<i class="fas fa-eye"></i>';
+            }
+        });
+    });
+
+    // Form validation feedback
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const requiredFields = form.querySelectorAll('[required]');
+            let isValid = true;
+
+            requiredFields.forEach(function(field) {
+                if (!field.value.trim()) {
+                    field.classList.add('is-invalid');
+                    isValid = false;
+                } else {
+                    field.classList.remove('is-invalid');
+                }
+            });
+
+            // Email validation
+            const emailField = form.querySelector('input[type="email"]');
+            if (emailField && emailField.value) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(emailField.value)) {
+                    emailField.classList.add('is-invalid');
+                    isValid = false;
+                }
+            }
+
+            // Password confirmation validation
+            const password = form.querySelector('input[name="password"]');
+            const passwordConfirmation = form.querySelector('input[name="password_confirmation"]');
+
+            if (password && passwordConfirmation && password.value) {
+                if (password.value !== passwordConfirmation.value) {
+                    passwordConfirmation.classList.add('is-invalid');
+                    isValid = false;
+                }
+            }
+
+            if (!isValid) {
+                e.preventDefault();
+            }
+        });
+    }
+});
+</script>
 @endsection

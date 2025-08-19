@@ -1,5 +1,5 @@
 <?php
-// app/Http/Controllers/UserController.php
+// app/Http/Controllers/UserController.php - SIMPLIFIED VERSION
 
 namespace App\Http\Controllers;
 
@@ -40,7 +40,7 @@ class UserController extends Controller
 
         // Apply status filter
         if ($request->filled('status') && $request->status !== 'all') {
-            $query->where('is_active', $request->status === 'active');
+            $query->where('is_active', $request->status === 'active' ? 1 : 0);
         }
 
         $users = $query->orderBy('created_at', 'desc')->paginate(10);
@@ -70,24 +70,32 @@ class UserController extends Controller
             'password' => 'required|string|min:8|confirmed',
             'role' => 'required|in:admin,user',
             'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string|max:500',
+            'address' => 'nullable|string|max:1000',
             'is_active' => 'boolean'
         ]);
 
-        $userData = [
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'role' => $request->role,
-            'phone' => $request->phone,
-            'address' => $request->address,
-            'is_active' => $request->has('is_active'),
-            'created_by' => Auth::id()
-        ];
+        try {
+            $userData = [
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'role' => $request->role,
+                'phone' => $request->phone,
+                'address' => $request->address,
+                'is_active' => $request->has('is_active') ? 1 : 0,
+                'created_by' => Auth::id()
+            ];
 
-        User::create($userData);
+            User::create($userData);
 
-        return redirect()->route('admin.users.index')->with('success', 'User berhasil ditambahkan');
+            return redirect()->route('admin.users.index')
+                ->with('success', 'User berhasil ditambahkan');
+        } catch (\Exception $e) {
+            \Log::error('Error creating user: ' . $e->getMessage());
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Gagal menambahkan user: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -95,8 +103,13 @@ class UserController extends Controller
      */
     public function show($id)
     {
-        $user = User::with(['rentalHistories.halte'])->findOrFail($id);
-        return view('admin.users.show', compact('user'));
+        try {
+            $user = User::with('creator')->findOrFail($id);
+            return view('admin.users.show', compact('user'));
+        } catch (\Exception $e) {
+            return redirect()->route('admin.users.index')
+                ->with('error', 'User tidak ditemukan');
+        }
     }
 
     /**
@@ -104,15 +117,20 @@ class UserController extends Controller
      */
     public function edit($id)
     {
-        $user = User::findOrFail($id);
+        try {
+            $user = User::findOrFail($id);
 
-        // Prevent non-super-admin from editing other admins
-        if ($user->role === 'admin' && $user->id !== Auth::id() && !Auth::user()->is_super_admin) {
+            // Prevent non-super-admin from editing other admins
+            if ($user->role === 'admin' && $user->id !== Auth::id() && !Auth::user()->isSuperAdmin()) {
+                return redirect()->route('admin.users.index')
+                    ->with('error', 'Anda tidak memiliki izin untuk mengedit admin lain');
+            }
+
+            return view('admin.users.edit', compact('user'));
+        } catch (\Exception $e) {
             return redirect()->route('admin.users.index')
-                ->with('error', 'Anda tidak memiliki izin untuk mengedit admin lain');
+                ->with('error', 'User tidak ditemukan');
         }
-
-        return view('admin.users.edit', compact('user'));
     }
 
     /**
@@ -120,47 +138,55 @@ class UserController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $user = User::findOrFail($id);
+        try {
+            $user = User::findOrFail($id);
 
-        // Prevent non-super-admin from editing other admins
-        if ($user->role === 'admin' && $user->id !== Auth::id() && !Auth::user()->is_super_admin) {
+            // Prevent non-super-admin from editing other admins
+            if ($user->role === 'admin' && $user->id !== Auth::id() && !Auth::user()->isSuperAdmin()) {
+                return redirect()->route('admin.users.index')
+                    ->with('error', 'Anda tidak memiliki izin untuk mengedit admin lain');
+            }
+
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => [
+                    'required',
+                    'string',
+                    'email',
+                    'max:255',
+                    Rule::unique('users')->ignore($user->id),
+                ],
+                'password' => 'nullable|string|min:8|confirmed',
+                'role' => 'required|in:admin,user',
+                'phone' => 'nullable|string|max:20',
+                'address' => 'nullable|string|max:1000',
+                'is_active' => 'boolean'
+            ]);
+
+            $updateData = [
+                'name' => $request->name,
+                'email' => $request->email,
+                'role' => $request->role,
+                'phone' => $request->phone,
+                'address' => $request->address,
+                'is_active' => $request->has('is_active') ? 1 : 0
+            ];
+
+            // Update password only if provided
+            if ($request->filled('password')) {
+                $updateData['password'] = Hash::make($request->password);
+            }
+
+            $user->update($updateData);
+
             return redirect()->route('admin.users.index')
-                ->with('error', 'Anda tidak memiliki izin untuk mengedit admin lain');
+                ->with('success', 'User berhasil diupdate');
+        } catch (\Exception $e) {
+            \Log::error('Error updating user: ' . $e->getMessage());
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Gagal mengupdate user: ' . $e->getMessage());
         }
-
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => [
-                'required',
-                'string',
-                'email',
-                'max:255',
-                Rule::unique('users')->ignore($user->id),
-            ],
-            'password' => 'nullable|string|min:8|confirmed',
-            'role' => 'required|in:admin,user',
-            'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string|max:500',
-            'is_active' => 'boolean'
-        ]);
-
-        $updateData = [
-            'name' => $request->name,
-            'email' => $request->email,
-            'role' => $request->role,
-            'phone' => $request->phone,
-            'address' => $request->address,
-            'is_active' => $request->has('is_active')
-        ];
-
-        // Update password only if provided
-        if ($request->filled('password')) {
-            $updateData['password'] = Hash::make($request->password);
-        }
-
-        $user->update($updateData);
-
-        return redirect()->route('admin.users.index')->with('success', 'User berhasil diupdate');
     }
 
     /**
@@ -168,23 +194,29 @@ class UserController extends Controller
      */
     public function destroy($id)
     {
-        $user = User::findOrFail($id);
+        try {
+            $user = User::findOrFail($id);
 
-        // Prevent deleting own account
-        if ($user->id === Auth::id()) {
+            // Prevent deleting own account
+            if ($user->id === Auth::id()) {
+                return redirect()->route('admin.users.index')
+                    ->with('error', 'Anda tidak dapat menghapus akun Anda sendiri');
+            }
+
+            // Prevent non-super-admin from deleting other admins
+            if ($user->role === 'admin' && !Auth::user()->isSuperAdmin()) {
+                return redirect()->route('admin.users.index')
+                    ->with('error', 'Anda tidak memiliki izin untuk menghapus admin lain');
+            }
+
+            $user->delete();
+
             return redirect()->route('admin.users.index')
-                ->with('error', 'Anda tidak dapat menghapus akun Anda sendiri');
-        }
-
-        // Prevent non-super-admin from deleting other admins
-        if ($user->role === 'admin' && !Auth::user()->is_super_admin) {
+                ->with('success', 'User berhasil dihapus');
+        } catch (\Exception $e) {
             return redirect()->route('admin.users.index')
-                ->with('error', 'Anda tidak memiliki izin untuk menghapus admin lain');
+                ->with('error', 'Gagal menghapus user');
         }
-
-        $user->delete();
-
-        return redirect()->route('admin.users.index')->with('success', 'User berhasil dihapus');
     }
 
     /**
@@ -192,20 +224,25 @@ class UserController extends Controller
      */
     public function toggleStatus($id)
     {
-        $user = User::findOrFail($id);
+        try {
+            $user = User::findOrFail($id);
 
-        // Prevent deactivating own account
-        if ($user->id === Auth::id()) {
+            // Prevent deactivating own account
+            if ($user->id === Auth::id()) {
+                return redirect()->route('admin.users.index')
+                    ->with('error', 'Anda tidak dapat menonaktifkan akun Anda sendiri');
+            }
+
+            $user->update(['is_active' => !$user->is_active]);
+
+            $status = $user->is_active ? 'diaktifkan' : 'dinonaktifkan';
+
             return redirect()->route('admin.users.index')
-                ->with('error', 'Anda tidak dapat menonaktifkan akun Anda sendiri');
+                ->with('success', "User berhasil {$status}");
+        } catch (\Exception $e) {
+            return redirect()->route('admin.users.index')
+                ->with('error', 'Gagal mengubah status user');
         }
-
-        $user->update(['is_active' => !$user->is_active]);
-
-        $status = $user->is_active ? 'diaktifkan' : 'dinonaktifkan';
-
-        return redirect()->route('admin.users.index')
-            ->with('success', "User berhasil {$status}");
     }
 
     /**
@@ -234,29 +271,36 @@ class UserController extends Controller
                 Rule::unique('users')->ignore($user->id),
             ],
             'phone' => 'nullable|string|max:20',
-            'address' => 'nullable|string|max:500',
+            'address' => 'nullable|string|max:1000',
             'current_password' => 'nullable|required_with:new_password',
             'new_password' => 'nullable|string|min:8|confirmed',
         ]);
 
-        $updateData = [
-            'name' => $request->name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'address' => $request->address
-        ];
+        try {
+            $updateData = [
+                'name' => $request->name,
+                'email' => $request->email,
+                'phone' => $request->phone,
+                'address' => $request->address
+            ];
 
-        // Update password if provided
-        if ($request->filled('current_password') && $request->filled('new_password')) {
-            if (!Hash::check($request->current_password, $user->password)) {
-                return back()->withErrors(['current_password' => 'Password saat ini tidak benar']);
+            // Update password if provided
+            if ($request->filled('current_password') && $request->filled('new_password')) {
+                if (!Hash::check($request->current_password, $user->password)) {
+                    return back()->withErrors(['current_password' => 'Password saat ini tidak benar']);
+                }
+                $updateData['password'] = Hash::make($request->new_password);
             }
-            $updateData['password'] = Hash::make($request->new_password);
+
+            $user->update($updateData);
+
+            return redirect()->route('admin.profile')
+                ->with('success', 'Profil berhasil diupdate');
+        } catch (\Exception $e) {
+            \Log::error('Error updating profile: ' . $e->getMessage());
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Gagal mengupdate profil: ' . $e->getMessage());
         }
-
-        $user->update($updateData);
-
-        return redirect()->route('admin.profile')
-            ->with('success', 'Profil berhasil diupdate');
     }
 }

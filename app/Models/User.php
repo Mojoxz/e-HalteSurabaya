@@ -1,5 +1,5 @@
 <?php
-// app/Models/User.php - UPDATED
+// app/Models/User.php - FIXED VERSION
 
 namespace App\Models;
 
@@ -9,6 +9,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Schema;
 
 class User extends Authenticatable
 {
@@ -138,23 +139,45 @@ class User extends Authenticatable
      */
     public function rentalHistories()
     {
-        return $this->hasMany(RentalHistory::class, 'created_by');
+        return $this->hasMany(\App\Models\RentalHistory::class, 'created_by');
     }
 
     /**
      * Relationship with creator (who created this user)
+     * Only if created_by column exists
      */
     public function creator()
     {
-        return $this->belongsTo(User::class, 'created_by');
+        if (Schema::hasColumn('users', 'created_by')) {
+            return $this->belongsTo(User::class, 'created_by');
+        }
+
+        return null;
     }
 
     /**
      * Relationship with created users (users created by this user)
+     * Only if created_by column exists
      */
     public function createdUsers()
     {
-        return $this->hasMany(User::class, 'created_by');
+        if (Schema::hasColumn('users', 'created_by')) {
+            return $this->hasMany(User::class, 'created_by');
+        }
+
+        return collect(); // Return empty collection if column doesn't exist
+    }
+
+    /**
+     * Get created users count safely
+     */
+    public function getCreatedUsersCountAttribute()
+    {
+        if (Schema::hasColumn('users', 'created_by')) {
+            return $this->createdUsers()->count();
+        }
+
+        return 0;
     }
 
     /**

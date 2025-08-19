@@ -1,5 +1,5 @@
 <?php
-// routes/web.php - UPDATED WITH USER MANAGEMENT ROUTES
+// routes/web.php - FIXED
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
@@ -26,6 +26,12 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 // Optional Registration Routes
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register']);
+
+// Profile Routes (Available to all authenticated users)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/profile', [UserController::class, 'profile'])->name('profile');
+    Route::put('/profile', [UserController::class, 'updateProfile'])->name('profile.update');
+});
 
 // Admin Routes (Protected by auth and admin middleware)
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
@@ -59,7 +65,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         Route::patch('/{id}/toggle-status', [UserController::class, 'toggleStatus'])->name('toggle-status');
     });
 
-    // Profile Management
+    // Admin Profile Management (separate from regular profile)
     Route::get('/profile', [UserController::class, 'profile'])->name('profile');
     Route::put('/profile', [UserController::class, 'updateProfile'])->name('profile.update');
 
