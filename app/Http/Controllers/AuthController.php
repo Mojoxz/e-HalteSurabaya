@@ -1,5 +1,5 @@
 <?php
-// app/Http/Controllers/AuthController.php
+// app/Http/Controllers/AuthController.php - UPDATED
 
 namespace App\Http\Controllers;
 
@@ -34,7 +34,21 @@ class AuthController extends Controller
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
 
-            if (Auth::user()->isAdmin()) {
+            $user = Auth::user();
+
+            // Check if user is active
+            if (!$user->is_active) {
+                Auth::logout();
+                return back()->withErrors([
+                    'email' => 'Akun Anda telah dinonaktifkan. Silakan hubungi administrator.',
+                ])->onlyInput('email');
+            }
+
+            // Update last login timestamp
+            $user->updateLastLogin();
+
+            // Redirect based on role
+            if ($user->isAdmin()) {
                 return redirect()->intended('/admin/dashboard');
             }
 
@@ -55,7 +69,7 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        return redirect('/')->with('success', 'Anda telah berhasil logout');
     }
 
     /**
@@ -75,17 +89,26 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
+            'phone' => 'nullable|string|max:20',
+            'address' => 'nullable|string|max:500'
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => 'user'
+            'phone' => $request->phone,
+            'address' => $request->address,
+            'role' => 'user',
+            'is_active' => true
         ]);
 
+        // Auto login after registration
         Auth::login($user);
 
-        return redirect('/');
+        // Update last login
+        $user->updateLastLogin();
+
+        return redirect('/')->with('success', 'Registrasi berhasil! Selamat datang.');
     }
 }
