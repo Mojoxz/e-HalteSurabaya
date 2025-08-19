@@ -85,17 +85,7 @@
             </div>
 
             <!-- Demo Login Info -->
-            <div class="card mt-3">
-                <div class="card-body">
-                    <h6 class="card-title">
-                        <i class="fas fa-info-circle text-info"></i> Informasi Login Demo
-                    </h6>
-                    <div class="row">
-                        <div class="col-md-12">
-                            <small class="text-muted">
-                                <strong>Email:</strong> admin@halte.com<br>
-                                <strong>Password:</strong> password
-                            </small>
+
                         </div>
                     </div>
                 </div>

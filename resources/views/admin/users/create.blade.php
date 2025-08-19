@@ -17,7 +17,7 @@
     </div>
 
     <!-- Debug Info (remove in production) -->
-    @if(config('app.debug'))
+    <!-- @if(config('app.debug'))
     <div class="alert alert-info">
         <strong>Debug Info:</strong>
         <ul class="mb-0">
@@ -26,7 +26,7 @@
             <li>Current User: {{ Auth::user()->name ?? 'Not logged in' }}</li>
         </ul>
     </div>
-    @endif
+    @endif -->
 
     <div class="row">
         <div class="col-lg-8">
@@ -242,7 +242,7 @@
             </div>
 
             <!-- Debug Panel (remove in production) -->
-            @if(config('app.debug'))
+           <!-- @if(config('app.debug'))
             <div class="card shadow mt-3">
                 <div class="card-header">
                     <h6 class="m-0 font-weight-bold text-danger">Debug Panel</h6>
@@ -256,7 +256,7 @@
                         Active: {{ old('is_active') ? 'true' : 'false' }}
                     </small>
                 </div>
-            </div>
+            </div> -->
             @endif
         </div>
     </div>
