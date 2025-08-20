@@ -52,7 +52,8 @@ class AuthController extends Controller
                 return redirect()->intended('/admin/dashboard');
             }
 
-            return redirect()->intended('/');
+            // Redirect regular users to user dashboard
+            return redirect()->intended('/user/dashboard');
         }
 
         return back()->withErrors([
@@ -109,6 +110,6 @@ class AuthController extends Controller
         // Update last login
         $user->updateLastLogin();
 
-        return redirect('/')->with('success', 'Registrasi berhasil! Selamat datang.');
+        return redirect('/user/dashboard')->with('success', 'Registrasi berhasil! Selamat datang.');
     }
 }

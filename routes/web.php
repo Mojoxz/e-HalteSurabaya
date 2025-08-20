@@ -1,11 +1,12 @@
 <?php
-// routes/web.php - FIXED
+// routes/web.php - UPDATED WITH USER ROUTES
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\UserDashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -27,10 +28,23 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register']);
 
-// Profile Routes (Available to all authenticated users)
-Route::middleware(['auth'])->group(function () {
-    Route::get('/profile', [UserController::class, 'profile'])->name('profile');
-    Route::put('/profile', [UserController::class, 'updateProfile'])->name('profile.update');
+// User Routes (Protected by auth and user middleware)
+Route::prefix('user')->name('user.')->middleware(['auth', 'user'])->group(function () {
+    // User Dashboard
+    Route::get('/dashboard', [UserDashboardController::class, 'dashboard'])->name('dashboard');
+
+    // Halte Management for Users
+    Route::prefix('haltes')->name('haltes.')->group(function () {
+        Route::get('/', [UserDashboardController::class, 'haltesList'])->name('index');
+        Route::get('/{id}', [UserDashboardController::class, 'halteDetail'])->name('detail');
+    });
+
+    // Map View
+    Route::get('/map', [UserDashboardController::class, 'mapView'])->name('map');
+
+    // User Profile Management
+    Route::get('/profile', [UserDashboardController::class, 'profile'])->name('profile');
+    Route::put('/profile', [UserDashboardController::class, 'updateProfile'])->name('profile.update');
 });
 
 // Admin Routes (Protected by auth and admin middleware)
@@ -73,7 +87,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('/rentals', [AdminController::class, 'rentalHistory'])->name('rentals.index');
 });
 
-// Redirect admin to dashboard after login
+// Redirect shortcuts
 Route::get('/admin', function () {
     return redirect()->route('admin.dashboard');
 })->middleware(['auth', 'admin']);
+
+Route::get('/user', function () {
+    return redirect()->route('user.dashboard');
+})->middleware(['auth', 'user']);
