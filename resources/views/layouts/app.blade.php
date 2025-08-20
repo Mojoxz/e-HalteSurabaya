@@ -19,23 +19,42 @@
             --dishub-blue: #1a4b8c;
             --dishub-light-blue: #e6f0fa;
             --dishub-accent: #2a75d6;
+            --animation-timing: 0.3s;
         }
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f8fafc;
             color: #333;
+            opacity: 0;
+            animation: fadeIn 0.5s ease-in-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
         .navbar {
             background-color: var(--dishub-blue) !important;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            animation: slideDown 0.5s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
         .navbar-brand {
             font-weight: 600;
             letter-spacing: 0.5px;
             color: white !important;
+            transition: transform 0.3s ease;
+        }
+
+        .navbar-brand:hover {
+            transform: scale(1.05);
         }
 
         .nav-link {
@@ -45,11 +64,29 @@
             border-radius: 4px;
             margin: 0 2px;
             transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background-color: white;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+
+        .nav-link:hover::after, .nav-link:focus::after {
+            width: 70%;
         }
 
         .nav-link:hover, .nav-link:focus {
             color: white !important;
             background-color: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
         }
 
         .dropdown-menu {
@@ -57,11 +94,29 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
             padding: 0.5rem 0;
+            animation: fadeInUp 0.2s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .dropdown-item {
             padding: 0.5rem 1.5rem;
             font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .dropdown-item:hover {
+            background-color: var(--dishub-light-blue);
+            padding-left: 2rem;
         }
 
         .btn-primary {
@@ -69,23 +124,40 @@
             border-color: var(--dishub-accent);
             font-weight: 500;
             padding: 0.5rem 1.25rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: all 0.5s ease;
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
         }
 
         .btn-primary:hover {
             background-color: #1c65c7;
             border-color: #1c65c7;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
         }
 
-        .btn-success {
-            background-color: #28a745;
-            border-color: #28a745;
-            font-weight: 500;
+        .btn-success, .btn-danger {
+            transition: all 0.3s ease;
         }
 
-        .btn-danger {
-            background-color: #dc3545;
-            border-color: #dc3545;
-            font-weight: 500;
+        .btn-success:hover, .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
         }
 
         .card {
@@ -93,12 +165,24 @@
             border: none;
             border-radius: 8px;
             overflow: hidden;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.3s ease;
+            animation: fadeInScale 0.5s ease-out;
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
         }
 
         .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-5px) scale(1.01);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
         }
 
         .card-header {
@@ -106,6 +190,11 @@
             border-bottom: 1px solid rgba(0, 0, 0, 0.05);
             font-weight: 600;
             padding: 1rem 1.25rem;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover .card-header {
+            background-color: #d8e6f5;
         }
 
         .table {
@@ -119,6 +208,16 @@
             color: var(--dishub-blue);
             font-weight: 600;
             border-top: 1px solid #dee2e6;
+            transition: all 0.3s ease;
+        }
+
+        .table tr {
+            transition: all 0.2s ease;
+        }
+
+        .table tr:hover {
+            background-color: rgba(230, 240, 250, 0.5);
+            transform: scale(1.01);
         }
 
         .table td, .table th {
@@ -131,12 +230,29 @@
             font-size: 0.75em;
             font-weight: 500;
             padding: 0.35em 0.65em;
+            transition: all 0.3s ease;
+        }
+
+        .badge:hover {
+            transform: scale(1.1);
         }
 
         .alert {
             border-radius: 8px;
             border: none;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            animation: slideInRight 0.5s ease-out;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
         }
 
         footer {
@@ -145,6 +261,7 @@
             color: #666;
             font-size: 0.9rem;
             padding: 1.5rem 0 !important;
+            animation: fadeIn 0.8s ease-out;
         }
 
         .container {
@@ -154,43 +271,71 @@
         main {
             min-height: calc(100vh - 180px);
             padding: 2rem 0;
+            animation: fadeInUpContent 0.7s ease-out;
         }
 
-
-                .navbar {
-            background-color: var(--dishub-blue) !important;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .navbar-brand {
-            font-weight: 600;
-            letter-spacing: 0.5px;
-            color: white !important;
-            display: flex;
-            align-items: center;
+        @keyframes fadeInUpContent {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .navbar-brand-logo {
             height: 32px;
             width: auto;
             margin-right: 10px;
+            transition: all 0.5s ease;
+        }
+
+        .navbar-brand:hover .navbar-brand-logo {
+            transform: rotate(10deg);
         }
 
         .form-control, .form-select {
             border: 1px solid #e0e0e0;
             border-radius: 6px;
             padding: 0.5rem 0.75rem;
+            transition: all 0.3s ease;
         }
 
         .form-control:focus, .form-select:focus {
             border-color: var(--dishub-accent);
             box-shadow: 0 0 0 0.25rem rgba(42, 117, 214, 0.25);
+            transform: translateY(-2px);
+        }
+
+        /* Animasi untuk elemen yang muncul saat di-scroll */
+        .fade-in-scroll {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .fade-in-scroll.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Animasi untuk loading */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
         }
     </style>
 </head>
 <body>
     <!-- Navigation -->
-        <nav class="navbar navbar-expand-lg navbar-dark">
+    <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
             <a class="navbar-brand" href="{{ route('home') }}">
                 <img src="{{ asset('logo.svg') }}" alt="Logo E-HalteDishub" class="navbar-brand-logo">
@@ -283,6 +428,46 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        // Animasi untuk elemen yang muncul saat di-scroll
+        document.addEventListener('DOMContentLoaded', function() {
+            // Fade in body
+            document.body.style.opacity = 1;
+
+            // Animasi untuk elemen dengan class fade-in-scroll
+            const fadeElements = document.querySelectorAll('.fade-in-scroll');
+
+            const fadeOptions = {
+                threshold: 0.1,
+                rootMargin: '0px 0px -50px 0px'
+            };
+
+            const fadeObserver = new IntersectionObserver(function(entries, observer) {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, fadeOptions);
+
+            fadeElements.forEach(element => {
+                fadeObserver.observe(element);
+            });
+
+            // Animasi hover untuk dropdown items
+            const dropdownItems = document.querySelectorAll('.dropdown-item');
+            dropdownItems.forEach(item => {
+                item.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateX(5px)';
+                });
+                item.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateX(0)';
+                });
+            });
+        });
+    </script>
 
     @stack('scripts')
 </body>
