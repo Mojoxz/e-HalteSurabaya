@@ -12,8 +12,8 @@
                         <div class="login-icon">
                             <img src="{{ asset('logo.svg') }}" alt="Logo E-HalteDishub" class="login-logo">
                         </div>
-                        <h2 class="login-title">Admin Login</h2>
-                        <p class="login-subtitle">Masuk ke panel administrasi</p>
+                        <h2 class="login-title">Login</h2>
+                        <p class="login-subtitle">Masuk Untuk Pengalaman Lebih Baik</p>
                     </div>
 
                     <div class="login-body">
@@ -86,7 +86,7 @@
 
                             <button type="submit" class="login-button">
                                 <i class="fas fa-sign-in-alt"></i>
-                                <span>Masuk ke Dashboard</span>
+                                <span>Login </span>
                             </button>
                         </form>
                     </div>

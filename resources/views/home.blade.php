@@ -884,14 +884,14 @@
                     Maaf, Akses Dibatasi!
                 </div>
                 <div class="modal-text">
-                    Detail lengkap halte hanya dapat diakses oleh <strong>Administrator</strong>.
-                    Silakan login sebagai admin untuk melihat informasi detail halte.
+                    Detail lengkap halte hanya dapat diakses oleh <strong>User</strong>.
+                    Silakan login sebagai user untuk melihat informasi detail halte.
                 </div>
             </div>
             <div class="modal-footer justify-content-center">
                 @guest
                 <a href="{{ route('login') }}" class="btn btn-login-modal me-2">
-                    <i class="fas fa-sign-in-alt me-1"></i> Login sebagai Admin
+                    <i class="fas fa-sign-in-alt me-1"></i> Login sebagai User
                 </a>
                 @endguest
                 <button type="button" class="btn btn-understand" data-bs-dismiss="modal">
