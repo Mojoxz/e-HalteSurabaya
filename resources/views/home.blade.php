@@ -884,8 +884,8 @@
                     Maaf, Akses Dibatasi!
                 </div>
                 <div class="modal-text">
-                    Detail lengkap halte hanya dapat diakses oleh <strong>User</strong>.
-                    Silakan login sebagai user untuk melihat informasi detail halte.
+                    Detail lengkap halte hanya dapat diakses oleh <strong>Admin</strong>.
+                    Silakan login untuk melihat informasi detail halte.
                 </div>
             </div>
             <div class="modal-footer justify-content-center">
