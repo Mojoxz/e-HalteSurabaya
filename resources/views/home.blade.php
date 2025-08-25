@@ -786,38 +786,38 @@
         <div class="row">
             <div class="col-lg-4 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="100">
                 <div class="photo-item">
-                    <img src="{{ asset('assets/suroboyo-bus-') }}" alt="Halte Bus Kota" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'">
-                    <div class="photo-caption">Halte Bus Kota dengan Atap Modern</div>
+                    <img src="{{ asset('halte.jpg') }}" alt="Halte Bus Kota" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'">
+                    <div class="photo-caption">Halte Bus Bungurasih</div>
                 </div>
             </div>
             <div class="col-lg-4 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="200">
                 <div class="photo-item">
-                    <img src="{{ asset('assets/stasiun-bus.jpg') }}" alt="Stasiun Bus" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1580274455191-1c62238fa333?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'">
-                    <div class="photo-caption">Stasiun Bus Trans dengan Fasilitas WiFi</div>
+                    <img src="{{ asset('halte2.jpg') }}" alt="Stasiun Bus" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1580274455191-1c62238fa333?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'">
+                    <div class="photo-caption">Halte Bus Pasar Turi</div>
                 </div>
             </div>
             <div class="col-lg-4 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="300">
                 <div class="photo-item">
-                    <img src="{{ asset('assets/halte-ramah-disabilitas.jpg') }}" alt="Halte Ramah Disabilitas" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'">
-                    <div class="photo-caption">Halte Ramah Disabilitas</div>
+                    <img src="{{ asset('halte1.jpg') }}" alt="Halte Ramah Disabilitas" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'">
+                    <div class="photo-caption">Halte Adityawarman</div>
                 </div>
             </div>
             <div class="col-lg-4 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="400">
                 <div class="photo-item">
-                    <img src="{{ asset('assets/halte-eco-friendly.jpg') }}" alt="Halte Eco Friendly" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'">
-                    <div class="photo-caption">Halte Eco-Friendly dengan Panel Surya</div>
+                    <img src="{{ asset('halte3.jpg') }}" alt="Halte Eco Friendly" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'">
+                    <div class="photo-caption">Halte Unair</div>
                 </div>
             </div>
             <div class="col-lg-4 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="500">
                 <div class="photo-item">
-                    <img src="{{ asset('assets/smart-bus-stop.jpg') }}" alt="Smart Bus Stop" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1570125909232-eb263c188f7e?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'">
-                    <div class="photo-caption">Smart Bus Stop dengan Digital Display</div>
+                    <img src="{{ asset('halte6.jpg') }}" alt="Smart Bus Stop" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1570125909232-eb263c188f7e?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'">
+                    <div class="photo-caption">Halte Dukuh Menanggal</div>
                 </div>
             </div>
             <div class="col-lg-4 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="600">
                 <div class="photo-item">
-                    <img src="{{ asset('assets/halte-terintegrasi.jpg') }}" alt="Halte Terintegrasi" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'">
-                    <div class="photo-caption">Halte Terintegrasi Multi-Moda</div>
+                    <img src="{{ asset('halte5.jpg') }}" alt="Halte Terintegrasi" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'">
+                    <div class="photo-caption">Halte ITS</div>
                 </div>
             </div>
                 </div>

@@ -3,308 +3,238 @@
 @section('title', 'Dashboard Admin')
 
 @section('content')
-<div class="container-fluid">
-    <!-- Page Header -->
-    <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-        <h1 class="h2 text-dishub-blue"><i class="fas fa-tachometer-alt"></i> Dashboard Admin</h1>
-        <div class="btn-toolbar mb-2 mb-md-0">
-            <div class="btn-group me-2">
-                <a href="{{ route('admin.haltes.create') }}" class="btn btn-sm btn-dishub-primary">
-                    <i class="fas fa-plus"></i> Tambah Halte
-                </a>
-                <a href="{{ route('admin.users.create') }}" class="btn btn-sm btn-dishub-success">
-                    <i class="fas fa-user-plus"></i> Tambah User
-                </a>
-                <a href="{{ route('home') }}" class="btn btn-sm btn-outline-dishub">
-                    <i class="fas fa-eye"></i> Lihat Peta
-                </a>
+<div class="dashboard-wrapper">
+    <!-- Include Admin Sidebar -->
+    @include('admin.partials.sidebar')
+
+    <!-- Main Content -->
+    <main class="main-content" id="mainContent">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="page-header-content">
+                <h1 class="page-title">
+                    <i class="fas fa-tachometer-alt"></i>
+                    Dashboard Admin
+                </h1>
+                <div class="page-actions">
+                    <button class="btn btn-dishub-primary btn-sm" id="refreshData">
+                        <i class="fas fa-sync-alt"></i> Refresh Data
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Statistics Cards -->
-    <div class="row">
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card dishub-card-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-dishub-primary text-uppercase mb-1">Total Halte</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $totalHaltes }}</div>
+        <!-- Statistics Cards -->
+        <div class="stats-grid">
+            <div class="stat-card dishub-card-primary">
+                <div class="stat-card-body">
+                    <div class="stat-info">
+                        <div class="stat-label">Total Halte</div>
+                        <div class="stat-value">{{ $totalHaltes }}</div>
+                        <div class="stat-trend">
+                            <i class="fas fa-arrow-up text-success"></i>
+                            <span class="text-success">+2 bulan ini</span>
                         </div>
-                        <div class="col-auto">
-                            <i class="fas fa-bus fa-2x text-dishub-light"></i>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-bus"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card dishub-card-success">
+                <div class="stat-card-body">
+                    <div class="stat-info">
+                        <div class="stat-label">Tersedia</div>
+                        <div class="stat-value">{{ $availableHaltes }}</div>
+                        <div class="stat-trend">
+                            <span class="text-muted">{{ round(($availableHaltes/$totalHaltes)*100, 1) }}% dari total</span>
                         </div>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card dishub-card-warning">
+                <div class="stat-card-body">
+                    <div class="stat-info">
+                        <div class="stat-label">Disewa</div>
+                        <div class="stat-value">{{ $rentedHaltes }}</div>
+                        <div class="stat-trend">
+                            <span class="text-muted">{{ round(($rentedHaltes/$totalHaltes)*100, 1) }}% dari total</span>
+                        </div>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card dishub-card-accent">
+                <div class="stat-card-body">
+                    <div class="stat-info">
+                        <div class="stat-label">Total Pendapatan</div>
+                        <div class="stat-value">Rp {{ number_format($totalRevenue, 0, ',', '.') }}</div>
+                        <div class="stat-trend">
+                            <i class="fas fa-arrow-up text-success"></i>
+                            <span class="text-success">+15% bulan ini</span>
+                        </div>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-dollar-sign"></i>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card dishub-card-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Tersedia</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $availableHaltes }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-check-circle fa-2x text-success-light"></i>
-                        </div>
+        <!-- Analytics Section -->
+        <div class="analytics-grid">
+            <!-- Rental Chart -->
+            <div class="analytics-card">
+                <div class="analytics-header">
+                    <h5 class="analytics-title">
+                        <i class="fas fa-chart-line"></i>
+                        Statistik Penyewaan (30 Hari Terakhir)
+                    </h5>
+                    <div class="analytics-actions">
+                        <select class="form-select form-select-sm">
+                            <option value="30">30 Hari</option>
+                            <option value="60">60 Hari</option>
+                            <option value="90">90 Hari</option>
+                        </select>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card dishub-card-warning shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Disewa</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ $rentedHaltes }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-clock fa-2x text-warning-light"></i>
-                        </div>
-                    </div>
+                <div class="analytics-body">
+                    <canvas id="rentalChart" height="300"></canvas>
                 </div>
             </div>
-        </div>
 
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card dishub-card-accent shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-dishub-accent text-uppercase mb-1">Total Pendapatan</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">Rp {{ number_format($totalRevenue, 0, ',', '.') }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-dollar-sign fa-2x text-dishub-light"></i>
-                        </div>
-                    </div>
+            <!-- Status Distribution -->
+            <div class="analytics-card">
+                <div class="analytics-header">
+                    <h5 class="analytics-title">
+                        <i class="fas fa-chart-pie"></i>
+                        Distribusi Status Halte
+                    </h5>
+                </div>
+                <div class="analytics-body">
+                    <canvas id="statusChart" height="300"></canvas>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- User Statistics -->
-    <div class="row">
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card dishub-card-secondary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-secondary text-uppercase mb-1">Total User</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ \App\Models\User::count() }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-users fa-2x text-secondary-light"></i>
-                        </div>
-                    </div>
+            <!-- Recent Activities -->
+            <div class="analytics-card">
+                <div class="analytics-header">
+                    <h5 class="analytics-title">
+                        <i class="fas fa-clock"></i>
+                        Aktivitas Terbaru
+                    </h5>
                 </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card dishub-card-success shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">User Aktif</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ \App\Models\User::active()->count() }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-user-check fa-2x text-success-light"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card dishub-card-primary shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-dishub-primary text-uppercase mb-1">Admin</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ \App\Models\User::admins()->count() }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-user-shield fa-2x text-dishub-light"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-xl-3 col-md-6 mb-4">
-            <div class="card dishub-card-dark shadow h-100 py-2">
-                <div class="card-body">
-                    <div class="row no-gutters align-items-center">
-                        <div class="col mr-2">
-                            <div class="text-xs font-weight-bold text-dark text-uppercase mb-1">Regular User</div>
-                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ \App\Models\User::users()->count() }}</div>
-                        </div>
-                        <div class="col-auto">
-                            <i class="fas fa-user fa-2x text-dark-light"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="row">
-        <div class="col-lg-8">
-            <div class="card shadow mb-4 dishub-main-card">
-                <div class="card-header py-3 dishub-header">
-                    <h6 class="m-0 font-weight-bold text-white">Menu Utama</h6>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-3 mb-3">
-                            <div class="card text-center h-100 dishub-menu-card">
-                                <div class="card-body">
-                                    <i class="fas fa-list fa-3x text-dishub-primary mb-3"></i>
-                                    <h5 class="card-title text-dishub-blue">Kelola Halte</h5>
-                                    <p class="card-text">Lihat, tambah, edit, dan hapus data halte.</p>
-                                    <a href="{{ route('admin.haltes.index') }}" class="btn btn-dishub-primary">
-                                        <i class="fas fa-arrow-right"></i> Buka
-                                    </a>
-                                </div>
+                <div class="analytics-body">
+                    <div class="activity-list">
+                        <div class="activity-item">
+                            <div class="activity-icon bg-success">
+                                <i class="fas fa-plus"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-title">Halte Baru Ditambahkan</div>
+                                <div class="activity-desc">Halte Suramadu berhasil ditambahkan</div>
+                                <div class="activity-time">2 jam yang lalu</div>
                             </div>
                         </div>
-                        <div class="col-md-3 mb-3">
-                            <div class="card text-center h-100 dishub-menu-card">
-                                <div class="card-body">
-                                    <i class="fas fa-plus-circle fa-3x text-success mb-3"></i>
-                                    <h5 class="card-title text-dishub-blue">Tambah Halte</h5>
-                                    <p class="card-text">Tambahkan halte baru ke sistem.</p>
-                                    <a href="{{ route('admin.haltes.create') }}" class="btn btn-dishub-success">
-                                        <i class="fas fa-plus"></i> Tambah
-                                    </a>
-                                </div>
+
+                        <div class="activity-item">
+                            <div class="activity-icon bg-warning">
+                                <i class="fas fa-handshake"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-title">Penyewaan Baru</div>
+                                <div class="activity-desc">Halte Taman Bungkul disewa oleh PT ABC</div>
+                                <div class="activity-time">4 jam yang lalu</div>
                             </div>
                         </div>
-                        <div class="col-md-3 mb-3">
-                            <div class="card text-center h-100 dishub-menu-card">
-                                <div class="card-body">
-                                    <i class="fas fa-users fa-3x text-warning mb-3"></i>
-                                    <h5 class="card-title text-dishub-blue">Kelola User</h5>
-                                    <p class="card-text">Manajemen user dan admin sistem.</p>
-                                    <a href="{{ route('admin.users.index') }}" class="btn btn-warning">
-                                        <i class="fas fa-users"></i> Kelola
-                                    </a>
-                                </div>
+
+                        <div class="activity-item">
+                            <div class="activity-icon bg-info">
+                                <i class="fas fa-user-plus"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-title">User Baru</div>
+                                <div class="activity-desc">John Doe mendaftar sebagai user</div>
+                                <div class="activity-time">6 jam yang lalu</div>
                             </div>
                         </div>
-                        <div class="col-md-3 mb-3">
-                            <div class="card text-center h-100 dishub-menu-card">
-                                <div class="card-body">
-                                    <i class="fas fa-history fa-3x text-dishub-accent mb-3"></i>
-                                    <h5 class="card-title text-dishub-blue">Riwayat Sewa</h5>
-                                    <p class="card-text">Lihat riwayat penyewaan halte.</p>
-                                    <a href="{{ route('admin.rentals.index') }}" class="btn btn-dishub-accent">
-                                        <i class="fas fa-eye"></i> Lihat
-                                    </a>
-                                </div>
+
+                        <div class="activity-item">
+                            <div class="activity-icon bg-primary">
+                                <i class="fas fa-edit"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-title">Data Halte Diperbarui</div>
+                                <div class="activity-desc">Informasi Halte Wonokromo diperbarui</div>
+                                <div class="activity-time">8 jam yang lalu</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="col-lg-4">
-            <div class="card shadow mb-4 dishub-profile-card">
-                <div class="card-header py-3 dishub-header">
-                    <h6 class="m-0 font-weight-bold text-white">Informasi Login</h6>
+            <!-- User Statistics -->
+            <div class="analytics-card">
+                <div class="analytics-header">
+                    <h5 class="analytics-title">
+                        <i class="fas fa-users"></i>
+                        Statistik User
+                    </h5>
                 </div>
-                <div class="card-body">
-                    <div class="text-center mb-3">
-                        <div class="avatar-lg mx-auto mb-3">
-                            <div class="avatar-title rounded-circle bg-dishub-primary text-white">
-                                {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
+                <div class="analytics-body">
+                    <div class="user-stats">
+                        <div class="user-stat-item">
+                            <div class="user-stat-icon bg-primary">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="user-stat-info">
+                                <div class="user-stat-value">{{ \App\Models\User::count() }}</div>
+                                <div class="user-stat-label">Total User</div>
                             </div>
                         </div>
-                        <h5 class="text-dishub-blue">{{ Auth::user()->name }}</h5>
-                        <span class="badge dishub-role-badge">
-                            {{ ucfirst(Auth::user()->role) }}
-                        </span>
-                    </div>
 
-                    <table class="table table-sm table-borderless">
-                        <tr>
-                            <td><strong class="text-dishub-blue">Email:</strong></td>
-                            <td>{{ Auth::user()->email }}</td>
-                        </tr>
-                        <tr>
-                            <td><strong class="text-dishub-blue">Login terakhir:</strong></td>
-                            <td>{{ Auth::user()->last_login_formatted }}</td>
-                        </tr>
-                        <tr>
-                            <td><strong class="text-dishub-blue">Role:</strong></td>
-                            <td>{{ ucfirst(Auth::user()->role) }}</td>
-                        </tr>
-                    </table>
+                        <div class="user-stat-item">
+                            <div class="user-stat-icon bg-success">
+                                <i class="fas fa-user-check"></i>
+                            </div>
+                            <div class="user-stat-info">
+                                <div class="user-stat-value">{{ \App\Models\User::active()->count() }}</div>
+                                <div class="user-stat-label">User Aktif</div>
+                            </div>
+                        </div>
 
-                    <div class="d-grid gap-2">
-                        <a href="{{ route('admin.profile') }}" class="btn btn-outline-dishub btn-sm">
-                            <i class="fas fa-user-edit"></i> Edit Profile
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+                        <div class="user-stat-item">
+                            <div class="user-stat-icon bg-warning">
+                                <i class="fas fa-user-shield"></i>
+                            </div>
+                            <div class="user-stat-info">
+                                <div class="user-stat-value">{{ \App\Models\User::admins()->count() }}</div>
+                                <div class="user-stat-label">Admin</div>
+                            </div>
+                        </div>
 
-    <!-- Shortcut Menu -->
-    <div class="row">
-        <div class="col-12">
-            <div class="card shadow mb-4 dishub-shortcut-card">
-                <div class="card-header py-3 dishub-header">
-                    <h6 class="m-0 font-weight-bold text-white">Shortcut Menu</h6>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-2">
-                            <a href="{{ route('admin.haltes.index') }}" class="btn btn-outline-dishub btn-block mb-2">
-                                <i class="fas fa-list"></i> Daftar Halte
-                            </a>
-                        </div>
-                        <div class="col-md-2">
-                            <a href="{{ route('admin.haltes.create') }}" class="btn btn-outline-dishub-accent btn-block mb-2">
-                                <i class="fas fa-plus"></i> Tambah Halte
-                            </a>
-                        </div>
-                        <div class="col-md-2">
-                            <a href="{{ route('admin.users.index') }}" class="btn btn-outline-warning btn-block mb-2">
-                                <i class="fas fa-users"></i> Kelola User
-                            </a>
-                        </div>
-                        <div class="col-md-2">
-                            <a href="{{ route('admin.users.create') }}" class="btn btn-outline-info btn-block mb-2">
-                                <i class="fas fa-user-plus"></i> Tambah User
-                            </a>
-                        </div>
-                        <div class="col-md-2">
-                            <a href="{{ route('admin.rentals.index') }}" class="btn btn-outline-secondary btn-block mb-2">
-                                <i class="fas fa-history"></i> Riwayat Sewa
-                            </a>
-                        </div>
-                        <div class="col-md-2">
-                            <a href="{{ route('home') }}" class="btn btn-outline-dark btn-block mb-2">
-                                <i class="fas fa-map"></i> Lihat Peta
-                            </a>
+                        <div class="user-stat-item">
+                            <div class="user-stat-icon bg-secondary">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="user-stat-info">
+                                <div class="user-stat-value">{{ \App\Models\User::users()->count() }}</div>
+                                <div class="user-stat-label">Regular User</div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </main>
 </div>
 
 <style>
@@ -312,267 +242,468 @@
     --dishub-blue: #1a4b8c;
     --dishub-light-blue: #e6f0fa;
     --dishub-accent: #2a75d6;
+    --sidebar-width: 280px;
+    --sidebar-collapsed-width: 70px;
+    --header-height: 70px;
     --animation-timing: 0.3s;
-    --container-padding: 1rem;
 }
 
-/* Dishub Color Classes */
-.text-dishub-blue {
-    color: var(--dishub-blue) !important;
+/* Dashboard Layout */
+.dashboard-wrapper {
+    display: flex;
+    min-height: 100vh;
+    background-color: #f8fafc;
 }
 
-.text-dishub-primary {
-    color: var(--dishub-blue) !important;
-}
-
-.text-dishub-accent {
-    color: var(--dishub-accent) !important;
-}
-
-.text-dishub-light {
-    color: #a8c1e8 !important;
-}
-
-.text-success-light {
-    color: #85e5b3 !important;
-}
-
-.text-warning-light {
-    color: #f9d771 !important;
-}
-
-.text-secondary-light {
-    color: #b1b5c2 !important;
-}
-
-.text-dark-light {
-    color: #8a8d96 !important;
-}
-
-/* Button Styles */
-.btn-dishub-primary {
-    background-color: var(--dishub-blue);
-    border-color: var(--dishub-blue);
+/* Sidebar Styles */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: var(--sidebar-width);
+    height: 100vh;
+    background: linear-gradient(180deg, var(--dishub-blue) 0%, #153e75 100%);
     color: white;
     transition: all var(--animation-timing) ease;
+    z-index: 1000;
+    overflow-x: hidden;
 }
 
-.btn-dishub-primary:hover {
-    background-color: #153e75;
-    border-color: #153e75;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(26, 75, 140, 0.3);
+.sidebar.collapsed {
+    width: var(--sidebar-collapsed-width);
 }
 
-.btn-dishub-accent {
-    background-color: var(--dishub-accent);
-    border-color: var(--dishub-accent);
-    color: white;
-    transition: all var(--animation-timing) ease;
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    height: var(--header-height);
 }
 
-.btn-dishub-accent:hover {
-    background-color: #2463b8;
-    border-color: #2463b8;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(42, 117, 214, 0.3);
+.sidebar-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0;
+    white-space: nowrap;
+    transition: opacity var(--animation-timing) ease;
 }
 
-.btn-dishub-success {
-    background-color: #28a745;
-    border-color: #28a745;
-    color: white;
-    transition: all var(--animation-timing) ease;
+.sidebar.collapsed .sidebar-text {
+    opacity: 0;
 }
 
-.btn-dishub-success:hover {
-    background-color: #218838;
-    border-color: #1e7e34;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
-}
-
-.btn-outline-dishub {
-    color: var(--dishub-blue);
-    border-color: var(--dishub-blue);
-    transition: all var(--animation-timing) ease;
-}
-
-.btn-outline-dishub:hover {
-    background-color: var(--dishub-blue);
-    border-color: var(--dishub-blue);
-    color: white;
-    transform: translateY(-2px);
-}
-
-.btn-outline-dishub-accent {
-    color: var(--dishub-accent);
-    border-color: var(--dishub-accent);
-    transition: all var(--animation-timing) ease;
-}
-
-.btn-outline-dishub-accent:hover {
-    background-color: var(--dishub-accent);
-    border-color: var(--dishub-accent);
-    color: white;
-    transform: translateY(-2px);
-}
-
-/* Card Styles */
-.dishub-card-primary {
-    border-left: 0.25rem solid var(--dishub-blue) !important;
-    transition: all var(--animation-timing) ease;
-}
-
-.dishub-card-primary:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 0.5rem 2rem 0 rgba(26, 75, 140, 0.2) !important;
-}
-
-.dishub-card-accent {
-    border-left: 0.25rem solid var(--dishub-accent) !important;
-    transition: all var(--animation-timing) ease;
-}
-
-.dishub-card-accent:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 0.5rem 2rem 0 rgba(42, 117, 214, 0.2) !important;
-}
-
-.dishub-card-success {
-    border-left: 0.25rem solid #1cc88a !important;
-    transition: all var(--animation-timing) ease;
-}
-
-.dishub-card-success:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 0.5rem 2rem 0 rgba(28, 200, 138, 0.2) !important;
-}
-
-.dishub-card-warning {
-    border-left: 0.25rem solid #f6c23e !important;
-    transition: all var(--animation-timing) ease;
-}
-
-.dishub-card-warning:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 0.5rem 2rem 0 rgba(246, 194, 62, 0.2) !important;
-}
-
-.dishub-card-secondary {
-    border-left: 0.25rem solid #858796 !important;
-    transition: all var(--animation-timing) ease;
-}
-
-.dishub-card-secondary:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 0.5rem 2rem 0 rgba(133, 135, 150, 0.2) !important;
-}
-
-.dishub-card-dark {
-    border-left: 0.25rem solid #5a5c69 !important;
-    transition: all var(--animation-timing) ease;
-}
-
-.dishub-card-dark:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 0.5rem 2rem 0 rgba(90, 92, 105, 0.2) !important;
-}
-
-/* Special Card Styles */
-.dishub-main-card,
-.dishub-profile-card,
-.dishub-shortcut-card {
-    transition: all var(--animation-timing) ease;
+.sidebar-toggle {
+    background: none;
     border: none;
-    border-radius: 0.75rem;
-}
-
-.dishub-main-card:hover,
-.dishub-profile-card:hover,
-.dishub-shortcut-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 0.75rem 2.5rem 0 rgba(26, 75, 140, 0.15) !important;
-}
-
-.dishub-header {
-    background: linear-gradient(135deg, var(--dishub-blue) 0%, var(--dishub-accent) 100%);
-    border-radius: 0.75rem 0.75rem 0 0 !important;
-}
-
-.dishub-menu-card {
-    transition: all var(--animation-timing) ease;
-    border: 1px solid var(--dishub-light-blue);
-    border-radius: 0.5rem;
-}
-
-.dishub-menu-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 0.5rem 1.5rem 0 rgba(26, 75, 140, 0.15);
-    border-color: var(--dishub-accent);
-}
-
-/* Role Badge */
-.dishub-role-badge {
-    background: linear-gradient(135deg, var(--dishub-blue) 0%, var(--dishub-accent) 100%);
     color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 1rem;
-    font-size: 0.875rem;
-    font-weight: 500;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 4px;
+    transition: all var(--animation-timing) ease;
 }
 
-/* General Styles */
-.text-xs {
-    font-size: .7rem;
+.sidebar-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
-.shadow {
-    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important;
+.sidebar-content {
+    padding: 1rem 0;
+    height: calc(100vh - var(--header-height));
+    overflow-y: auto;
 }
 
-.text-gray-800 {
-    color: #5a5c69 !important;
+/* Navigation Styles */
+.nav-section {
+    margin-bottom: 2rem;
 }
 
-.text-gray-300 {
-    color: #dddfeb !important;
+.nav-section-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.6);
+    padding: 0 1rem;
+    margin-bottom: 0.5rem;
+    transition: opacity var(--animation-timing) ease;
 }
 
-.btn-block {
-    width: 100%;
+.sidebar.collapsed .nav-section-title {
+    opacity: 0;
 }
 
-.avatar-lg {
-    width: 64px;
-    height: 64px;
+.nav-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
 }
 
-.avatar-title {
-    width: 100%;
+.nav-item {
+    margin-bottom: 0.25rem;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    transition: all var(--animation-timing) ease;
+    position: relative;
+}
+
+.nav-link:hover {
+    color: white;
+    background-color: rgba(255, 255, 255, 0.1);
+    text-decoration: none;
+}
+
+.nav-link.active {
+    background-color: rgba(255, 255, 255, 0.15);
+    color: white;
+}
+
+.nav-link.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
     height: 100%;
+    width: 3px;
+    background-color: white;
+}
+
+.nav-link i {
+    width: 20px;
+    text-align: center;
+    margin-right: 0.75rem;
+    font-size: 1rem;
+}
+
+.nav-text {
+    white-space: nowrap;
+    transition: opacity var(--animation-timing) ease;
+}
+
+.sidebar.collapsed .nav-text {
+    opacity: 0;
+}
+
+/* Main Content */
+.main-content {
+    margin-left: var(--sidebar-width);
+    width: calc(100% - var(--sidebar-width));
+    padding: 2rem;
+    transition: all var(--animation-timing) ease;
+}
+
+.sidebar.collapsed + .main-content {
+    margin-left: var(--sidebar-collapsed-width);
+    width: calc(100% - var(--sidebar-collapsed-width));
+}
+
+/* Sidebar Show Button */
+.sidebar-show-btn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1001;
+    background: var(--dishub-blue);
+    color: white;
+    border: none;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5rem;
+    box-shadow: 0 4px 12px rgba(26, 75, 140, 0.3);
+    cursor: pointer;
+    transition: all var(--animation-timing) ease;
+    font-size: 1.1rem;
+}
+
+.sidebar-show-btn:hover {
+    background: #153e75;
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(26, 75, 140, 0.4);
+}
+
+.sidebar-show-btn:active {
+    transform: scale(0.95);
+}
+
+/* Animation for show button */
+.sidebar-show-btn.show {
+    animation: bounceIn 0.5s ease;
+}
+
+@keyframes bounceIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.3);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    70% {
+        transform: scale(0.9);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Page Header */
+.page-header {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    animation: fadeInUp 0.5s ease;
+}
+
+.page-header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.page-title {
+    color: var(--dishub-blue);
+    font-size: 1.8rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.page-actions .btn {
+    transition: all var(--animation-timing) ease;
+}
+
+.page-actions .btn:hover {
+    transform: translateY(-2px);
+}
+
+/* Statistics Grid */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+    transition: all var(--animation-timing) ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: var(--dishub-blue);
+}
+
+.stat-card.dishub-card-success::before {
+    background: #28a745;
+}
+
+.stat-card.dishub-card-warning::before {
+    background: #ffc107;
+}
+
+.stat-card.dishub-card-accent::before {
+    background: var(--dishub-accent);
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.stat-card-body {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 0.5rem;
+}
+
+.stat-trend {
+    font-size: 0.8rem;
+}
+
+.stat-icon {
+    font-size: 2.5rem;
+    color: var(--dishub-blue);
+    opacity: 0.3;
+}
+
+/* Analytics Grid */
+.analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 2rem;
+}
+
+.analytics-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: all var(--animation-timing) ease;
+}
+
+.analytics-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.analytics-header {
+    background: linear-gradient(135deg, var(--dishub-blue) 0%, var(--dishub-accent) 100%);
+    color: white;
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.analytics-title {
+    margin: 0;
+    font-size: 1.1rem;
     font-weight: 600;
 }
 
-.gap-2 {
-    gap: 0.5rem;
+.analytics-actions .form-select {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
 }
 
-/* Background and page styling */
-body {
-    background-color: var(--dishub-light-blue);
+.analytics-body {
+    padding: 1.5rem;
 }
 
-.container-fluid {
-    padding: var(--container-padding);
+/* Activity List */
+.activity-list {
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.activity-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    margin-right: 1rem;
+    flex-shrink: 0;
+}
+
+.activity-content {
+    flex: 1;
+}
+
+.activity-title {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 0.25rem;
+}
+
+.activity-desc {
+    color: #6c757d;
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+}
+
+.activity-time {
+    color: #adb5bd;
+    font-size: 0.75rem;
+}
+
+/* User Stats */
+.user-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.user-stat-item {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    transition: all var(--animation-timing) ease;
+}
+
+.user-stat-item:hover {
+    background: #e9ecef;
+    transform: scale(1.02);
+}
+
+.user-stat-icon {
+    width: 35px;
+    height: 35px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    margin-right: 0.75rem;
+    flex-shrink: 0;
+}
+
+.user-stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #333;
+}
+
+.user-stat-label {
+    font-size: 0.8rem;
+    color: #6c757d;
 }
 
 /* Animations */
-@keyframes fadeIn {
+@keyframes fadeInUp {
     from {
         opacity: 0;
         transform: translateY(20px);
@@ -583,24 +714,172 @@ body {
     }
 }
 
-.card {
-    animation: fadeIn 0.6s ease-out;
+.stat-card, .analytics-card {
+    animation: fadeInUp 0.6s ease forwards;
 }
 
-/* Responsive adjustments */
+.stat-card:nth-child(1) { animation-delay: 0.1s; }
+.stat-card:nth-child(2) { animation-delay: 0.2s; }
+.stat-card:nth-child(3) { animation-delay: 0.3s; }
+.stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+/* Sidebar Show Button */
+.sidebar-show-btn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1001;
+    background: var(--dishub-blue);
+    color: white;
+    border: none;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(26, 75, 140, 0.3);
+    cursor: pointer;
+    transition: all var(--animation-timing) ease;
+    font-size: 1.1rem;
+}
+
+.sidebar-show-btn:hover {
+    background: #153e75;
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(26, 75, 140, 0.4);
+}
+
+.sidebar-show-btn:active {
+    transform: scale(0.95);
+}
+
+/* Button Styles */
+.btn-dishub-primary {
+    background-color: var(--dishub-blue);
+    border-color: var(--dishub-blue);
+    color: white;
+}
+
+.btn-dishub-primary:hover {
+    background-color: #153e75;
+    border-color: #153e75;
+    color: white;
+}
+
+/* Responsive Design */
 @media (max-width: 768px) {
-    .btn-toolbar .btn-group {
-        width: 100%;
+    .main-content {
+        padding: 1rem;
     }
 
-    .btn-group .btn {
-        flex: 1;
-        font-size: 0.8rem;
+    .stats-grid {
+        grid-template-columns: 1fr;
     }
 
-    .dishub-menu-card {
-        margin-bottom: 1rem;
+    .analytics-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .page-header-content {
+        flex-direction: column;
+        gap: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-content {
+        padding: 1rem;
+    }
+
+    .user-stats {
+        grid-template-columns: 1fr;
     }
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize charts
+    initializeCharts();
+
+    // Refresh data functionality
+    const refreshBtn = document.getElementById('refreshData');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', function() {
+            const icon = this.querySelector('i');
+            icon.classList.add('fa-spin');
+
+            // Simulate data refresh
+            setTimeout(() => {
+                icon.classList.remove('fa-spin');
+                // You can add actual refresh logic here
+                console.log('Data refreshed');
+            }, 2000);
+        });
+    }
+});
+
+function initializeCharts() {
+    // Rental Chart
+    const rentalCtx = document.getElementById('rentalChart');
+    if (rentalCtx) {
+        new Chart(rentalCtx, {
+            type: 'line',
+            data: {
+                labels: ['1 Jan', '5 Jan', '10 Jan', '15 Jan', '20 Jan', '25 Jan', '30 Jan'],
+                datasets: [{
+                    label: 'Penyewaan',
+                    data: [12, 19, 3, 5, 2, 3, 9],
+                    borderColor: 'rgb(26, 75, 140)',
+                    backgroundColor: 'rgba(26, 75, 140, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    // Status Chart
+    const statusCtx = document.getElementById('statusChart');
+    if (statusCtx) {
+        new Chart(statusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Tersedia', 'Disewa', 'Maintenance'],
+                datasets: [{
+                    data: [{{ $availableHaltes }}, {{ $rentedHaltes }}, 2],
+                    backgroundColor: [
+                        '#28a745',
+                        '#ffc107',
+                        '#dc3545'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+}
+</script>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 @endsection
