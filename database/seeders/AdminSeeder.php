@@ -18,13 +18,13 @@ class AdminSeeder extends Seeder
     public function run()
     {
         // Cek apakah admin sudah ada
-        $adminExists = User::where('email', 'admin@halte.com')->first();
+        $adminExists = User::where('email', 'admin@dishub.com')->first();
 
         if (!$adminExists) {
             // Buat admin default
             User::create([
                 'name' => 'Administrator',
-                'email' => 'admin@halte.com',
+                'email' => 'admin@dishub.com',
                 'password' => Hash::make('password'),
                 'role' => 'admin',
                 'email_verified_at' => now(), // Optional: langsung verify email

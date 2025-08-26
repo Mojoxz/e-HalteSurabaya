@@ -10,7 +10,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="icon" type="image/svg" href="{{ asset('logo.svg') }}">
+    <link rel="icon" type="image/svg" href="{{ asset('logo1.svg') }}">
 
     @stack('styles')
 
@@ -424,7 +424,7 @@
     <nav class="navbar navbar-expand-lg navbar-dark">
         <div class="container">
             <a class="navbar-brand" href="{{ route('home') }}">
-                <img src="{{ asset('logo.svg') }}" alt="Logo E-HalteDishub" class="navbar-brand-logo">
+                <img src="{{ asset('pageatas.gif') }}" alt="Logo Animasi" width="50" height="50">
                 <span>E-HalteDishub</span>
             </a>
 
