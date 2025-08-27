@@ -1,5 +1,5 @@
 <?php
-// routes/web.php - UPDATED WITH REPORTS AND USER ROUTES
+// routes/web.php - UPDATED WITH GALLERY ROUTE
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
@@ -16,6 +16,7 @@ use App\Http\Controllers\UserDashboardController;
 
 // Public Routes (User Interface)
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/gallery', [HomeController::class, 'gallery'])->name('gallery'); // NEW GALLERY ROUTE
 Route::get('/halte/{id}', [HomeController::class, 'showHalte'])->name('halte.show');
 Route::get('/halte/{id}/detail', [HomeController::class, 'detail'])->name('halte.detail');
 
@@ -88,7 +89,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         Route::get('/', [AdminController::class, 'rentalHistory'])->name('index');
     });
 
-    // Reports Management - NEW SECTION
+    // Reports Management
     Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('/', [AdminController::class, 'reports'])->name('index');
         Route::post('/generate', [AdminController::class, 'generateReport'])->name('generate');

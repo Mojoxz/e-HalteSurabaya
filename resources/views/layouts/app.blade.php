@@ -439,7 +439,12 @@
                             <i class="fas fa-home me-1"></i> Beranda
                         </a>
                     </li>
+                        <a class="nav-link" href="{{ route('gallery') }}">
+                            <i class="fas fa-images me-1"></i> Galerry
+                        </a>
                 </ul>
+
+
 
                 <ul class="navbar-nav">
                     @auth

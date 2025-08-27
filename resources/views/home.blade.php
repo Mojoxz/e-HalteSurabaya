@@ -21,47 +21,80 @@
         --dishub-accent: #3b82f6;
     }
 
-    /* Hero Section */
+    /* Hero Section with Slider */
     .hero-section {
-        background: var(--primary-gradient);
-        color: white;
-        padding: 120px 0;
         position: relative;
+        height: 105vh;
+        min-height: 600px;
+        color: white;
         overflow: hidden;
+        display: flex;
+        align-items: center;
     }
 
-    .hero-section::before {
+    .hero-slider {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+    }
+
+    .hero-slide {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        opacity: 0;
+        transition: opacity 1.5s ease-in-out;
+    }
+
+    .hero-slide.active {
+        opacity: 1;
+    }
+
+    .hero-slide::before {
         content: '';
         position: absolute;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
-        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" fill="white" opacity="0.08"><polygon points="0,0 0,100 1000,80 1000,0"/></svg>');
-        background-size: cover;
+        background: linear-gradient(135deg, rgba(30, 60, 114, 0.8) 0%, rgba(42, 82, 152, 0.6) 100%);
+        z-index: 2;
     }
 
     .hero-content {
         position: relative;
-        z-index: 2;
+        z-index: 3;
+        text-align: center;
+        width: 100%;
     }
 
     .hero-title {
-        font-size: 3.8rem;
+        font-size: 4.2rem;
         font-weight: 700;
         margin-bottom: 1.5rem;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        text-shadow: 3px 3px 6px rgba(0,0,0,0.4);
         background: linear-gradient(45deg, #ffffff, #e2e8f0);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
+        animation: fadeInUp 1s ease-out;
     }
 
     .hero-subtitle {
-        font-size: 1.4rem;
+        font-size: 1.6rem;
         margin-bottom: 2.5rem;
         opacity: 0.95;
         font-weight: 300;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        animation: fadeInUp 1s ease-out 0.3s both;
     }
 
     .hero-stats {
@@ -70,35 +103,77 @@
         justify-content: center;
         margin-top: 3rem;
         flex-wrap: wrap;
+        animation: fadeInUp 1s ease-out 0.6s both;
     }
 
     .hero-stat {
         text-align: center;
         background: var(--glass-bg);
-        backdrop-filter: blur(15px);
+        backdrop-filter: blur(20px);
         border: 1px solid var(--glass-border);
         border-radius: 20px;
-        padding: 2rem 1.5rem;
-        min-width: 180px;
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        padding: 2.5rem 2rem;
+        min-width: 200px;
+        transition: transform 0.4s ease, box-shadow 0.4s ease;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.1);
     }
 
     .hero-stat:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        transform: translateY(-10px) scale(1.05);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.2);
     }
 
     .hero-stat-number {
-        font-size: 3rem;
+        font-size: 3.2rem;
         font-weight: 700;
         display: block;
         color: white;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
     }
 
     .hero-stat-label {
-        font-size: 0.95rem;
+        font-size: 1rem;
         opacity: 0.9;
-        font-weight: 400;
+        font-weight: 500;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+    }
+
+    /* Hero Navigation Dots */
+    .hero-nav {
+        position: absolute;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 4;
+        display: flex;
+        gap: 12px;
+    }
+
+    .hero-nav-dot {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.4);
+        border: 2px solid rgba(255, 255, 255, 0.8);
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .hero-nav-dot.active {
+        background: white;
+        transform: scale(1.2);
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     /* Zigzag Sections */
@@ -256,7 +331,7 @@
         opacity: 0.95;
     }
 
-    /* Photo Gallery */
+    /* Photo Gallery Preview */
     .photo-gallery {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
@@ -296,6 +371,28 @@
         color: var(--dishub-blue);
         font-size: 1.05rem;
         text-align: center;
+    }
+
+    /* Gallery Button */
+    .gallery-button {
+        background: var(--accent-gradient);
+        color: white;
+        padding: 15px 40px;
+        border-radius: 50px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 1.1rem;
+        transition: all 0.4s ease;
+        display: inline-block;
+        margin-top: 2rem;
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+    }
+
+    .gallery-button:hover {
+        transform: translateY(-5px) scale(1.05);
+        box-shadow: 0 15px 35px rgba(59, 130, 246, 0.4);
+        color: white;
+        text-decoration: none;
     }
 
     /* Map Section */
@@ -390,12 +487,21 @@
     /* Responsive */
     @media (max-width: 768px) {
         .hero-title {
-            font-size: 2.5rem;
+            font-size: 2.8rem;
+        }
+
+        .hero-subtitle {
+            font-size: 1.2rem;
         }
 
         .hero-stats {
             flex-direction: column;
             gap: 1rem;
+        }
+
+        .hero-stat {
+            min-width: 160px;
+            padding: 2rem 1.5rem;
         }
 
         .zigzag-section {
@@ -625,12 +731,30 @@
 @endpush
 
 @section('content')
-<!-- Hero Section -->
+<!-- Hero Section with Slider -->
 <section class="hero-section" data-aos="fade-up">
+    <div class="hero-slider">
+        <!-- Slide 1 -->
+        <div class="hero-slide active" style="background-image: url('{{ asset('DISHUB SURABAYA1.png') }}');">
+        </div>
+        <!-- Slide 2 -->
+        <div class="hero-slide" style="background-image: url('{{ asset('DISHUB SURABAYA5.jpg') }}');">
+        </div>
+        <!-- Slide 3 -->
+        <div class="hero-slide" style="background-image: url('{{ asset('DISHUB SURABAYA3.jpg') }}');">
+        </div>
+        <!-- Slide 4 -->
+        <div class="hero-slide" style="background-image: url('{{ asset('DISHUB SURABAYA4.jpg') }}');">
+        </div>
+        <!-- Slide 5 -->
+        <div class="hero-slide" style="background-image: url('{{ asset('DISHUB SURABAYA6.jpg') }}');">
+        </div>
+    </div>
+
     <div class="container">
-        <div class="hero-content text-center">
+        <div class="hero-content">
             <h1 class="hero-title">Sistem Manajemen Halte Bus</h1>
-            <p class="hero-subtitle">Kelola dan pantau halte bus dengan E-HalteDishub</p>
+            <p class="hero-subtitle">Kelola dan pantau halte bus dengan E-HalteDishub yang modern dan efisien</p>
 
             <div class="hero-stats">
                 <div class="hero-stat" data-aos="fade-up" data-aos-delay="100">
@@ -647,6 +771,15 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Hero Navigation Dots -->
+    <div class="hero-nav">
+        <div class="hero-nav-dot active" data-slide="0"></div>
+        <div class="hero-nav-dot" data-slide="1"></div>
+        <div class="hero-nav-dot" data-slide="2"></div>
+        <div class="hero-nav-dot" data-slide="3"></div>
+        <div class="hero-nav-dot" data-slide="4"></div>
     </div>
 </section>
 
@@ -775,12 +908,12 @@
     </div>
 </section>
 
-<!-- Gallery Section -->
+<!-- Gallery Section Preview -->
 <section class="zigzag-section">
     <div class="container">
         <div class="text-center mb-5" data-aos="fade-up">
             <h2 class="display-5 fw-bold mb-4">Galeri Halte Bus</h2>
-            <p class="lead">Koleksi foto halte bus terbaru dengan fasilitas modern</p>
+            <p class="lead">Lihat foto-foto halte bus terbaru dengan fasilitas modern di seluruh kota</p>
         </div>
 
         <div class="row">
@@ -802,50 +935,32 @@
                     <div class="photo-caption">Halte Adityawarman</div>
                 </div>
             </div>
-            <div class="col-lg-4 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="400">
+        </div>
+        <div class="row">
+            <div class="col-lg-4 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="100">
                 <div class="photo-item">
-                    <img src="{{ asset('halte3.jpg') }}" alt="Halte Eco Friendly" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'">
+                    <img src="{{ asset('halte3.jpg') }}" alt="Halte Bus Kota" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'">
                     <div class="photo-caption">Halte Unair</div>
                 </div>
             </div>
-            <div class="col-lg-4 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="500">
+            <div class="col-lg-4 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="200">
                 <div class="photo-item">
-                    <img src="{{ asset('halte6.jpg') }}" alt="Smart Bus Stop" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1570125909232-eb263c188f7e?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'">
+                    <img src="{{ asset('busid9.jpg') }}" alt="Stasiun Bus" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1580274455191-1c62238fa333?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'">
+                    <div class="photo-caption">Joyoboyo</div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="300">
+                <div class="photo-item">
+                    <img src="{{ asset('halte6.jpg') }}" alt="Halte Ramah Disabilitas" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'">
                     <div class="photo-caption">Halte Dukuh Menanggal</div>
                 </div>
             </div>
-            <div class="col-lg-4 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="600">
-                <div class="photo-item">
-                    <img src="{{ asset('halte5.jpg') }}" alt="Halte Terintegrasi" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80'">
-                    <div class="photo-caption">Halte ITS</div>
-                </div>
-            </div>
-                </div>
-            </div>
-            <!--<div class="col-lg-4 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="300">
-                <div class="photo-item">
-                    <img src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Halte Ramah Disabilitas" loading="lazy">
-                    <div class="photo-caption">Halte Ramah Disabilitas</div>
-                </div>
-            </div>
-            <div class="col-lg-4 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="400">
-                <div class="photo-item">
-                    <img src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Halte Eco Friendly" loading="lazy">
-                    <div class="photo-caption">Halte Eco-Friendly dengan Panel Surya</div>
-                </div>
-            </div>
-            <div class="col-lg-4 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="500">
-                <div class="photo-item">
-                    <img src="https://images.unsplash.com/photo-1570125909232-eb263c188f7e?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Smart Bus Stop" loading="lazy">
-                    <div class="photo-caption">Smart Bus Stop dengan Digital Display</div>
-                </div>
-            </div>
-            <div class="col-lg-4 col-md-6 mb-4" data-aos="fade-up" data-aos-delay="600">
-                <div class="photo-item">
-                    <img src="https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80" alt="Halte Terintegrasi" loading="lazy">
-                    <div class="photo-caption">Halte Terintegrasi Multi-Moda</div>
-                </div> -->
-            </div>
+        </div>
+
+        <div class="text-center" data-aos="fade-up" data-aos-delay="400">
+            <a href="{{ route('gallery') }}" class="gallery-button">
+                <i class="fas fa-images me-2"></i>Lihat Galeri Lengkap
+            </a>
         </div>
     </div>
 </section>
@@ -853,16 +968,16 @@
 <!-- CTA Section -->
 <section class="cta-section" data-aos="fade-up">
     <div class="container text-center">
-        <h2 class="display-5 fw-bold mb-4">Siap Mengelola Halte Bus?</h2>
-        <p class="lead mb-4">Bergabunglah dengan sistem manajemen halte bus terdepan untuk efisiensi maksimal</p>
-        @auth
+        <h2 class="display-5 fw-bold mb-4">Siap Melihat Halte Bus?</h2>
+        <p class="lead mb-4">Bergabunglah dengan Galerry halte bus terdepan untuk efisiensi maksimal</p>
+        <!--@auth
             @if(Auth::user()->isAdmin())
                 <a href="{{ route('admin.dashboard') }}" class="cta-button">
                     <i class="fas fa-tachometer-alt me-2"></i>Akses Dashboard Admin
                 </a>
             @endif
         @else
-        @endauth
+        @endauth -->
     </div>
 </section>
 
@@ -919,6 +1034,40 @@ $(document).ready(function() {
         easing: 'ease-in-out',
         once: true,
         offset: 100
+    });
+
+    // Hero Slider Functionality
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.hero-slide');
+    const navDots = document.querySelectorAll('.hero-nav-dot');
+    const totalSlides = slides.length;
+
+    function showSlide(index) {
+        // Hide all slides
+        slides.forEach((slide, i) => {
+            slide.classList.remove('active');
+            navDots[i].classList.remove('active');
+        });
+
+        // Show current slide
+        slides[index].classList.add('active');
+        navDots[index].classList.add('active');
+    }
+
+    function nextSlide() {
+        currentSlide = (currentSlide + 1) % totalSlides;
+        showSlide(currentSlide);
+    }
+
+    // Auto-advance slider every 5 seconds
+    setInterval(nextSlide, 5000);
+
+    // Click handlers for navigation dots
+    navDots.forEach((dot, index) => {
+        dot.addEventListener('click', () => {
+            currentSlide = index;
+            showSlide(currentSlide);
+        });
     });
 
     // Check if user is admin

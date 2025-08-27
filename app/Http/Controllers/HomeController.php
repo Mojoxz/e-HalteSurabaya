@@ -1,5 +1,5 @@
 <?php
-// app/Http/Controllers/HomeController.php - IMPROVED VERSION WITH DETAIL PAGE
+// app/Http/Controllers/HomeController.php - IMPROVED VERSION WITH GALLERY PAGE
 
 namespace App\Http\Controllers;
 
@@ -66,7 +66,19 @@ class HomeController extends Controller
     }
 
     /**
-     * Show halte details page (NEW METHOD)
+     * Show gallery page with all haltes (NEW METHOD)
+     */
+    public function gallery()
+    {
+        $haltes = Halte::with(['photos' => function($query) {
+            $query->orderBy('is_primary', 'desc')->orderBy('id', 'asc');
+        }])->get();
+
+        return view('gallery', compact('haltes'));
+    }
+
+    /**
+     * Show halte details page
      */
     public function detail($id)
     {
