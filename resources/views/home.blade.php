@@ -925,12 +925,12 @@ $(document).ready(function() {
     const isAdmin = @json(auth()->check() && auth()->user()->isAdmin());
 
     // Initialize map centered on Sidoarjo, East Java
-    const map = L.map('map').setView([-7.4478, 112.7183], 11);
+    const map = L.map('map').setView([-7.2575, 112.7521], 12);
 
     // Add OpenStreetMap tiles
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles &copy; Esri'
+}).addTo(map);
 
     // Halte data from Laravel
     const haltesData = @json($haltesData);
