@@ -735,7 +735,7 @@
 <section class="hero-section" data-aos="fade-up">
     <div class="hero-slider">
         <!-- Slide 1 -->
-        <div class="hero-slide active" style="background-image: url('{{ asset('DISHUB SURABAYA1.png') }}');">
+        <div class="hero-slide active" style="background-image: url('{{ asset('DISHUB SURABAYA.png') }}');">
         </div>
         <!-- Slide 2 -->
         <div class="hero-slide" style="background-image: url('{{ asset('DISHUB SURABAYA5.jpg') }}');">

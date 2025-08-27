@@ -10,7 +10,7 @@
                 <div class="login-card">
                     <div class="login-header">
                         <div class="login-icon">
-                            <img src="{{ asset('logo.svg') }}" alt="Logo E-HalteDishub" class="login-logo">
+                            <img src="{{ asset('DISHUB SURABAYA.svg') }}" alt="Logo E-HalteDishub" class="login-logo">
                         </div>
                         <h2 class="login-title">Login</h2>
                         <p class="login-subtitle">Masuk Untuk Pengalaman Lebih Baik</p>
@@ -268,20 +268,29 @@ document.addEventListener('DOMContentLoaded', function() {
 .login-icon {
     width: 80px;
     height: 80px;
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.95);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 0 auto 1.75rem;
     backdrop-filter: blur(10px);
-    border: 2px solid rgba(255, 255, 255, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
+/* PERUBAHAN UTAMA: Menghapus filter putih dan menggunakan warna asli logo */
 .login-logo {
     width: 48px;
     height: 48px;
-    filter: brightness(0) invert(1);
+    /* Menghapus filter: brightness(0) invert(1); yang membuat icon putih */
+    /* Sekarang logo akan menampilkan warna aslinya */
+    transition: var(--transition);
+}
+
+/* Tambahan: Hover effect untuk logo */
+.login-icon:hover .login-logo {
+    transform: scale(1.05);
 }
 
 .login-title {
@@ -754,95 +763,17 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 }
 
-<script>
-function togglePassword() {
-    const passwordInput = document.getElementById('password');
-    const toggleIcon = document.getElementById('toggleIcon');
-    const toggleButton = document.querySelector('.password-toggle');
-
-    // Add animation class to button
-    toggleButton.classList.add('animating');
-
-    // Add reveal animation to input
-    passwordInput.classList.add('password-reveal-animation', 'animating');
-
-    setTimeout(() => {
-        if (passwordInput.type === 'password') {
-            passwordInput.type = 'text';
-            toggleIcon.classList.remove('fa-eye');
-            toggleIcon.classList.add('fa-eye-slash');
-
-            // Add a subtle shake animation when showing password
-            passwordInput.style.animation = 'none';
-            passwordInput.offsetHeight; // Trigger reflow
-            passwordInput.style.animation = 'subtle-shake 0.5s ease-in-out';
-        } else {
-            passwordInput.type = 'password';
-            toggleIcon.classList.remove('fa-eye-slash');
-            toggleIcon.classList.add('fa-eye');
-        }
-    }, 300);
-
-    // Remove animation classes after animation completes
-    setTimeout(() => {
-        toggleButton.classList.remove('animating');
-        passwordInput.classList.remove('animating');
-        passwordInput.style.animation = '';
-    }, 600);
-
-    // Add focus back to input after toggle
-    setTimeout(() => {
-        passwordInput.focus();
-    }, 100);
+/* Additional styles for subtle animation effects */
+@keyframes subtle-shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-2px); }
+    75% { transform: translateX(2px); }
 }
 
-// Add subtle shake keyframe animation
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes subtle-shake {
-        0%, 100% { transform: translateX(0); }
-        25% { transform: translateX(-2px); }
-        75% { transform: translateX(2px); }
-    }
-
-    @keyframes password-glow {
-        0% { box-shadow: 0 0 0 4px rgba(42, 117, 214, 0); }
-        50% { box-shadow: 0 0 0 4px rgba(42, 117, 214, 0.2); }
-        100% { box-shadow: 0 0 0 4px rgba(42, 117, 214, 0); }
-    }
-`;
-document.head.appendChild(style);
-
-// Add keyboard shortcut (Ctrl/Cmd + Shift + H) to toggle password
-document.addEventListener('keydown', function(e) {
-    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'H') {
-        e.preventDefault();
-        const passwordField = document.getElementById('password');
-        if (document.activeElement === passwordField) {
-            togglePassword();
-        }
-    }
-});
-
-// Add hover effect to password field when it contains text
-document.addEventListener('DOMContentLoaded', function() {
-    const passwordInput = document.getElementById('password');
-    const toggleButton = document.querySelector('.password-toggle');
-
-    passwordInput.addEventListener('input', function() {
-        if (this.value.length > 0) {
-            toggleButton.style.opacity = '1';
-            toggleButton.style.visibility = 'visible';
-        } else {
-            toggleButton.style.opacity = '0.6';
-        }
-    });
-
-    // Initial state
-    if (passwordInput.value.length === 0) {
-        toggleButton.style.opacity = '0.6';
-    }
-});
-</script>
+@keyframes password-glow {
+    0% { box-shadow: 0 0 0 4px rgba(42, 117, 214, 0); }
+    50% { box-shadow: 0 0 0 4px rgba(42, 117, 214, 0.2); }
+    100% { box-shadow: 0 0 0 4px rgba(42, 117, 214, 0); }
+}
 </style>
 @endsection
