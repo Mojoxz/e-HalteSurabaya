@@ -1,4 +1,4 @@
-<!-- Admin Sidebar Component -->
+<!-- resources/views/admin/partials/sidebar.blade.php - UPDATED VERSION -->
 <aside class="admin-sidebar" id="adminSidebar">
     <div class="sidebar-header">
         <h4 class="sidebar-title">
@@ -12,29 +12,50 @@
 
     <div class="sidebar-content">
         <nav class="sidebar-nav">
+            {{-- Dashboard --}}
             <div class="nav-section">
-                <h6 class="nav-section-title">MANAJEMEN</h6>
+                <h6 class="nav-section-title">DASHBOARD</h6>
                 <ul class="nav-list">
                     <li class="nav-item">
-                        <a href="{{ route('admin.haltes.index') }}" class="nav-link">
+                        <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span class="nav-text">Dashboard</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            {{-- Halte Management --}}
+            <div class="nav-section">
+                <h6 class="nav-section-title">MANAJEMEN HALTE</h6>
+                <ul class="nav-list">
+                    <li class="nav-item">
+                        <a href="{{ route('admin.haltes.index') }}" class="nav-link {{ request()->routeIs('admin.haltes.index') ? 'active' : '' }}">
                             <i class="fas fa-list"></i>
                             <span class="nav-text">Kelola Halte</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="{{ route('admin.haltes.create') }}" class="nav-link">
+                        <a href="{{ route('admin.haltes.create') }}" class="nav-link {{ request()->routeIs('admin.haltes.create') ? 'active' : '' }}">
                             <i class="fas fa-plus-circle"></i>
                             <span class="nav-text">Tambah Halte</span>
                         </a>
                     </li>
+                </ul>
+            </div>
+
+            {{-- User Management --}}
+            <div class="nav-section">
+                <h6 class="nav-section-title">MANAJEMEN USER</h6>
+                <ul class="nav-list">
                     <li class="nav-item">
-                        <a href="{{ route('admin.users.index') }}" class="nav-link">
+                        <a href="{{ route('admin.users.index') }}" class="nav-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}">
                             <i class="fas fa-users"></i>
                             <span class="nav-text">Kelola User</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="{{ route('admin.users.create') }}" class="nav-link">
+                        <a href="{{ route('admin.users.create') }}" class="nav-link {{ request()->routeIs('admin.users.create') ? 'active' : '' }}">
                             <i class="fas fa-user-plus"></i>
                             <span class="nav-text">Tambah User</span>
                         </a>
@@ -42,38 +63,60 @@
                 </ul>
             </div>
 
+            {{-- Reports & History --}}
             <div class="nav-section">
                 <h6 class="nav-section-title">LAPORAN</h6>
                 <ul class="nav-list">
                     <li class="nav-item">
-                        <a href="{{ route('admin.rentals.index') }}" class="nav-link">
+                        <a href="{{ route('admin.rentals.index') }}" class="nav-link {{ request()->routeIs('admin.rentals.*') ? 'active' : '' }}">
                             <i class="fas fa-history"></i>
                             <span class="nav-text">Riwayat Sewa</span>
+                            @php
+                                $pendingCount = \App\Models\RentalHistory::where('rent_end_date', '>=', now())
+                                    ->where('rent_start_date', '<=', now())
+                                    ->count();
+                            @endphp
+                            @if($pendingCount > 0)
+                                <span class="badge bg-success ms-2">{{ $pendingCount }}</span>
+                            @endif
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="#" class="nav-link">
+                        <a href="{{ route('admin.reports.index') }}" class="nav-link {{ request()->routeIs('admin.reports.*') ? 'active' : '' }}">
                             <i class="fas fa-chart-line"></i>
                             <span class="nav-text">Laporan</span>
+                            <span class="badge bg-primary ms-2">New</span>
                         </a>
                     </li>
                 </ul>
             </div>
 
+            {{-- Others --}}
             <div class="nav-section">
                 <h6 class="nav-section-title">LAINNYA</h6>
                 <ul class="nav-list">
                     <li class="nav-item">
-                        <a href="{{ route('home') }}" class="nav-link">
+                        <a href="{{ route('home') }}" class="nav-link" target="_blank">
                             <i class="fas fa-map"></i>
                             <span class="nav-text">Lihat Peta</span>
+                            <i class="fas fa-external-link-alt ms-1" style="font-size: 0.75rem;"></i>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="{{ route('admin.profile') }}" class="nav-link">
+                        <a href="{{ route('admin.profile') }}" class="nav-link {{ request()->routeIs('admin.profile') ? 'active' : '' }}">
                             <i class="fas fa-user-cog"></i>
                             <span class="nav-text">Profile</span>
                         </a>
+                    </li>
+                    <li class="nav-item">
+                        <form method="POST" action="{{ route('logout') }}" class="d-inline">
+                            @csrf
+                            <button type="submit" class="nav-link border-0 bg-transparent text-start w-100"
+                                    style="color: rgba(255, 255, 255, 0.8);">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span class="nav-text">Logout</span>
+                            </button>
+                        </form>
                     </li>
                 </ul>
             </div>
@@ -194,6 +237,10 @@
     text-decoration: none;
     transition: all var(--animation-timing) ease;
     position: relative;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
 }
 
 .nav-link:hover {
@@ -227,9 +274,32 @@
 .nav-text {
     white-space: nowrap;
     transition: opacity var(--animation-timing) ease;
+    flex-grow: 1;
 }
 
 .admin-sidebar.collapsed .nav-text {
+    opacity: 0;
+}
+
+/* Badge Styles */
+.badge {
+    font-size: 0.625rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.badge.bg-success {
+    background-color: #28a745 !important;
+}
+
+.badge.bg-primary {
+    background-color: #007bff !important;
+}
+
+.admin-sidebar.collapsed .badge {
     opacity: 0;
 }
 
@@ -351,6 +421,24 @@
         width: calc(100vw - 260px);
     }
 }
+
+/* Custom Scrollbar */
+.sidebar-content::-webkit-scrollbar {
+    width: 4px;
+}
+
+.sidebar-content::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+}
+
+.sidebar-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
 </style>
 
 <script>
@@ -439,34 +527,6 @@ document.addEventListener('DOMContentLoaded', function() {
         sidebar.classList.add('collapsed');
     }
 
-    // Set active nav link
-    function setActiveNavLink() {
-        const currentPath = window.location.pathname;
-        const navLinks = document.querySelectorAll('.admin-sidebar .nav-link');
-
-        navLinks.forEach(link => {
-            link.classList.remove('active');
-            if (link.getAttribute('href') === currentPath) {
-                link.classList.add('active');
-            }
-        });
-    }
-
-    // Smooth scroll for anchor links
-    const navLinks = document.querySelectorAll('.admin-sidebar .nav-link');
-    navLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            const href = this.getAttribute('href');
-            if (href.startsWith('#')) {
-                e.preventDefault();
-                const target = document.querySelector(href);
-                if (target) {
-                    target.scrollIntoView({ behavior: 'smooth' });
-                }
-            }
-        });
-    });
-
     // Initial setup
     if (window.innerWidth <= 768) {
         sidebar.classList.remove('show');
@@ -474,7 +534,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     updateShowButtonVisibility();
     updateMainContentClasses();
-    setActiveNavLink();
 
     // Expose functions globally for external use
     window.AdminSidebar = {
@@ -502,6 +561,7 @@ document.addEventListener('DOMContentLoaded', function() {
             updateMainContentClasses();
         },
         setActive: function(href) {
+            const navLinks = document.querySelectorAll('.admin-sidebar .nav-link');
             navLinks.forEach(link => {
                 link.classList.remove('active');
                 if (link.getAttribute('href') === href) {

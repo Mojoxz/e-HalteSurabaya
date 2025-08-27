@@ -1,5 +1,5 @@
 <?php
-// app/Http/Controllers/AdminController.php - FIXED VERSION
+// app/Http/Controllers/AdminController.php - IMPROVED VERSION WITH REPORTS
 
 namespace App\Http\Controllers;
 
@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Illuminate\Routing\Controller;
+use Illuminate\Support\Facades\DB;
 
 class AdminController extends Controller
 {
@@ -30,11 +31,18 @@ class AdminController extends Controller
         $rentedHaltes = Halte::rented()->count();
         $totalRevenue = RentalHistory::sum('rental_cost');
 
+        // Recent rental activities
+        $recentRentals = RentalHistory::with(['halte', 'creator'])
+                                    ->orderBy('created_at', 'desc')
+                                    ->take(5)
+                                    ->get();
+
         return view('admin.dashboard', compact(
             'totalHaltes',
             'availableHaltes',
             'rentedHaltes',
-            'totalRevenue'
+            'totalRevenue',
+            'recentRentals'
         ));
     }
 
@@ -191,7 +199,9 @@ class AdminController extends Controller
     {
         $halte = Halte::with(['photos' => function($query) {
             $query->orderBy('is_primary', 'desc');
-        }, 'rentalHistories'])->findOrFail($id);
+        }, 'rentalHistories' => function($query) {
+            $query->orderBy('created_at', 'desc');
+        }])->findOrFail($id);
 
         return view('admin.haltes.show', compact('halte'));
     }
@@ -416,14 +426,155 @@ class AdminController extends Controller
     }
 
     /**
-     * Rental history list
+     * Rental history list - IMPROVED WITH FILTERS
      */
-    public function rentalHistory()
+    public function rentalHistory(Request $request)
     {
-        $histories = RentalHistory::with(['halte', 'creator'])
-                                 ->orderBy('created_at', 'desc')
-                                 ->paginate(15);
+        $query = RentalHistory::with(['halte', 'creator'])
+                             ->orderBy('created_at', 'desc');
 
-        return view('admin.rentals.index', compact('histories'));
+        // Apply date filter
+        if ($request->filled('start_date')) {
+            $query->where('rent_start_date', '>=', $request->start_date);
+        }
+
+        if ($request->filled('end_date')) {
+            $query->where('rent_end_date', '<=', $request->end_date);
+        }
+
+        // Apply halte filter
+        if ($request->filled('halte_id')) {
+            $query->where('halte_id', $request->halte_id);
+        }
+
+        // Apply renter filter
+        if ($request->filled('rented_by')) {
+            $query->where('rented_by', 'LIKE', '%' . $request->rented_by . '%');
+        }
+
+        $histories = $query->paginate(15);
+
+        // Get haltes for filter dropdown
+        $haltes = Halte::orderBy('name')->get();
+
+        // Preserve query parameters in pagination links
+        $histories->appends($request->query());
+
+        return view('admin.rentals.index', compact('histories', 'haltes'));
+    }
+
+    /**
+     * Reports dashboard - NEW
+     */
+    public function reports(Request $request)
+    {
+        $year = $request->get('year', date('Y'));
+        $month = $request->get('month', date('m'));
+
+        // Monthly rental statistics
+        $monthlyStats = RentalHistory::selectRaw('
+                MONTH(rent_start_date) as month,
+                COUNT(*) as total_rentals,
+                SUM(rental_cost) as total_revenue,
+                COUNT(DISTINCT halte_id) as unique_haltes
+            ')
+            ->whereYear('rent_start_date', $year)
+            ->groupBy('month')
+            ->orderBy('month')
+            ->get();
+
+        // Top rented haltes
+        $topHaltes = DB::table('rental_histories')
+            ->join('haltes', 'rental_histories.halte_id', '=', 'haltes.id')
+            ->select('haltes.name',
+                    DB::raw('COUNT(*) as rental_count'),
+                    DB::raw('SUM(rental_histories.rental_cost) as total_revenue'))
+            ->whereYear('rental_histories.rent_start_date', $year)
+            ->groupBy('haltes.id', 'haltes.name')
+            ->orderBy('rental_count', 'desc')
+            ->take(10)
+            ->get();
+
+        // Revenue by month for chart
+        $revenueChart = [];
+        for ($i = 1; $i <= 12; $i++) {
+            $monthData = $monthlyStats->firstWhere('month', $i);
+            $revenueChart[] = [
+                'month' => Carbon::create()->month($i)->format('M'),
+                'revenue' => $monthData ? $monthData->total_revenue : 0,
+                'rentals' => $monthData ? $monthData->total_rentals : 0
+            ];
+        }
+
+        // Current month detailed stats
+        $currentMonthStats = [
+            'total_rentals' => RentalHistory::whereYear('rent_start_date', $year)
+                                          ->whereMonth('rent_start_date', $month)
+                                          ->count(),
+            'total_revenue' => RentalHistory::whereYear('rent_start_date', $year)
+                                          ->whereMonth('rent_start_date', $month)
+                                          ->sum('rental_cost'),
+            'active_rentals' => RentalHistory::where('rent_start_date', '<=', now())
+                                           ->where('rent_end_date', '>=', now())
+                                           ->count(),
+            'expired_rentals' => RentalHistory::where('rent_end_date', '<', now())
+                                            ->whereYear('rent_end_date', $year)
+                                            ->whereMonth('rent_end_date', $month)
+                                            ->count()
+        ];
+
+        return view('admin.reports.index', compact(
+            'monthlyStats',
+            'topHaltes',
+            'revenueChart',
+            'currentMonthStats',
+            'year',
+            'month'
+        ));
+    }
+
+    /**
+     * Generate PDF Report - NEW
+     */
+    public function generateReport(Request $request)
+    {
+        $request->validate([
+            'report_type' => 'required|in:monthly,yearly,custom',
+            'start_date' => 'required_if:report_type,custom|date',
+            'end_date' => 'required_if:report_type,custom|date|after:start_date',
+            'year' => 'required_if:report_type,yearly|numeric',
+            'month' => 'required_if:report_type,monthly|numeric|between:1,12'
+        ]);
+
+        $reportType = $request->report_type;
+        $query = RentalHistory::with(['halte', 'creator']);
+
+        // Set date filters based on report type
+        if ($reportType === 'monthly') {
+            $year = $request->year ?? date('Y');
+            $month = $request->month ?? date('m');
+            $query->whereYear('rent_start_date', $year)
+                  ->whereMonth('rent_start_date', $month);
+            $reportTitle = "Laporan Bulanan - " . Carbon::create($year, $month)->format('F Y');
+        } elseif ($reportType === 'yearly') {
+            $year = $request->year ?? date('Y');
+            $query->whereYear('rent_start_date', $year);
+            $reportTitle = "Laporan Tahunan - " . $year;
+        } else { // custom
+            $query->whereBetween('rent_start_date', [$request->start_date, $request->end_date]);
+            $reportTitle = "Laporan Custom - " . $request->start_date . " sampai " . $request->end_date;
+        }
+
+        $rentals = $query->orderBy('rent_start_date', 'desc')->get();
+
+        $summary = [
+            'total_rentals' => $rentals->count(),
+            'total_revenue' => $rentals->sum('rental_cost'),
+            'unique_haltes' => $rentals->pluck('halte_id')->unique()->count(),
+            'average_rental_cost' => $rentals->count() > 0 ? $rentals->avg('rental_cost') : 0
+        ];
+
+        // Return view for now (can be converted to PDF later)
+        return view('admin.reports.pdf', compact('rentals', 'summary', 'reportTitle'));
     }
 }

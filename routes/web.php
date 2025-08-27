@@ -1,5 +1,5 @@
 <?php
-// routes/web.php - UPDATED WITH USER ROUTES
+// routes/web.php - UPDATED WITH REPORTS AND USER ROUTES
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
@@ -83,8 +83,16 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::get('/profile', [UserController::class, 'profile'])->name('profile');
     Route::put('/profile', [UserController::class, 'updateProfile'])->name('profile.update');
 
-    // Rental History
-    Route::get('/rentals', [AdminController::class, 'rentalHistory'])->name('rentals.index');
+    // Rental History Management
+    Route::prefix('rentals')->name('rentals.')->group(function () {
+        Route::get('/', [AdminController::class, 'rentalHistory'])->name('index');
+    });
+
+    // Reports Management - NEW SECTION
+    Route::prefix('reports')->name('reports.')->group(function () {
+        Route::get('/', [AdminController::class, 'reports'])->name('index');
+        Route::post('/generate', [AdminController::class, 'generateReport'])->name('generate');
+    });
 });
 
 // Redirect shortcuts
