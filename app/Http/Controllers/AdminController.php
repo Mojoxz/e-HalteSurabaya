@@ -1,5 +1,5 @@
 <?php
-// app/Http/Controllers/AdminController.php - IMPROVED VERSION WITH REPORTS
+// app/Http/Controllers/AdminController.php - FIXED VERSION WITH AUTO SORTING
 
 namespace App\Http\Controllers;
 
@@ -47,10 +47,21 @@ class AdminController extends Controller
     }
 
     /**
-     * List all haltes - FIXED WITH PROPER EAGER LOADING AND FILTERING
+     * List all haltes - FIXED WITH AUTO SORTING AND PERSISTENT STATE
      */
     public function halteList(Request $request)
     {
+        // FIXED: Store current filter/sort state in session (except for reset)
+        if (!$request->has('reset')) {
+            $currentParams = $request->only(['search', 'status', 'simbada', 'sort', 'direction']);
+            if (!empty($currentParams)) {
+                $request->session()->put('halte_sort', $currentParams);
+            }
+        } else {
+            // Clear session when reset is triggered
+            $request->session()->forget('halte_sort');
+        }
+
         $query = Halte::with(['photos' => function($query) {
             $query->orderBy('is_primary', 'desc')->orderBy('id', 'asc');
         }, 'rentalHistories']);
@@ -78,12 +89,27 @@ class AdminController extends Controller
             $query->where('simbada_registered', $request->simbada);
         }
 
-        $haltes = $query->orderBy('created_at', 'desc')->paginate(10);
+        // FIXED: Auto sorting with persistent state
+        $sortField = $request->get('sort', 'name'); // Default sort by name
+        $sortDirection = $request->get('direction', 'asc'); // Default ascending
 
-        // Preserve query parameters in pagination links
+        // Validate sort fields to prevent SQL injection
+        $allowedSortFields = ['name', 'created_at', 'updated_at', 'status'];
+        if (!in_array($sortField, $allowedSortFields)) {
+            $sortField = 'name';
+        }
+
+        $sortDirection = in_array($sortDirection, ['asc', 'desc']) ? $sortDirection : 'asc';
+
+        // Apply sorting
+        $query->orderBy($sortField, $sortDirection);
+
+        $haltes = $query->paginate(10);
+
+        // Preserve ALL query parameters in pagination links
         $haltes->appends($request->query());
 
-        return view('admin.haltes.index', compact('haltes'));
+        return view('admin.haltes.index', compact('haltes', 'sortField', 'sortDirection'));
     }
 
     /**
@@ -189,7 +215,13 @@ class AdminController extends Controller
             }
         }
 
-        return redirect()->route('admin.haltes.index')->with('success', 'Halte berhasil ditambahkan');
+        // FIXED: Redirect with preserved sort parameters
+        $redirectParams = [];
+        if ($request->session()->has('halte_sort')) {
+            $redirectParams = $request->session()->get('halte_sort');
+        }
+
+        return redirect()->route('admin.haltes.index', $redirectParams)->with('success', 'Halte berhasil ditambahkan');
     }
 
     /**
@@ -219,7 +251,7 @@ class AdminController extends Controller
     }
 
     /**
-     * Update halte - COMPLETELY FIXED
+     * Update halte - FIXED WITH PERSISTENT SORT STATE
      */
     public function halteUpdate(Request $request, $id)
     {
@@ -323,7 +355,13 @@ class AdminController extends Controller
                 }
             }
 
-            return redirect()->route('admin.haltes.index')->with('success', 'Halte berhasil diupdate');
+            // FIXED: Redirect with preserved sort parameters
+            $redirectParams = [];
+            if ($request->session()->has('halte_sort')) {
+                $redirectParams = $request->session()->get('halte_sort');
+            }
+
+            return redirect()->route('admin.haltes.index', $redirectParams)->with('success', 'Halte berhasil diupdate');
 
         } catch (\Exception $e) {
             Log::error('Error updating halte: ' . $e->getMessage());
@@ -332,7 +370,7 @@ class AdminController extends Controller
     }
 
     /**
-     * Delete halte
+     * Delete halte - FIXED WITH PERSISTENT SORT STATE
      */
     public function halteDestroy($id)
     {
@@ -348,7 +386,13 @@ class AdminController extends Controller
 
             $halte->delete();
 
-            return redirect()->route('admin.haltes.index')->with('success', 'Halte berhasil dihapus');
+            // FIXED: Redirect with preserved sort parameters
+            $redirectParams = [];
+            if (request()->session()->has('halte_sort')) {
+                $redirectParams = request()->session()->get('halte_sort');
+            }
+
+            return redirect()->route('admin.haltes.index', $redirectParams)->with('success', 'Halte berhasil dihapus');
         } catch (\Exception $e) {
             Log::error('Error deleting halte: ' . $e->getMessage());
             return back()->with('error', 'Gagal menghapus halte');
