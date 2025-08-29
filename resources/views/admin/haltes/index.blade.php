@@ -47,7 +47,11 @@
             </h6>
         </div>
         <div class="card-body bg-white">
-            <form method="GET" action="{{ route('admin.haltes.index') }}">
+            <form method="GET" action="{{ route('admin.haltes.index') }}" id="filterForm">
+                <!-- FIXED: Preserve sort parameters in form -->
+                <input type="hidden" name="sort" value="{{ $sortField }}">
+                <input type="hidden" name="direction" value="{{ $sortDirection }}">
+
                 <div class="row g-3">
                     <div class="col-md-4">
                         <label for="search" class="form-label fw-semibold">
@@ -87,7 +91,7 @@
                     <div class="col-md-2">
                         <label class="form-label">&nbsp;</label>
                         <div class="d-grid">
-                            <a href="{{ route('admin.haltes.index') }}" class="btn btn-outline-secondary btn-lg">
+                            <a href="{{ route('admin.haltes.index', ['reset' => '1']) }}" class="btn btn-outline-secondary btn-lg">
                                 <i class="fas fa-times me-2"></i> Reset
                             </a>
                         </div>
@@ -118,9 +122,40 @@
                         <thead class="table-dark">
                             <tr>
                                 <th style="width: 80px;" class="text-center">Foto</th>
-                                <th>Nama Halte</th>
+                                <!-- FIXED: Sortable columns -->
+                                <th class="sortable-header" data-sort="name">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <span>Nama Halte</span>
+                                        <div class="sort-icons">
+                                            @if($sortField === 'name')
+                                                @if($sortDirection === 'asc')
+                                                    <i class="fas fa-sort-up text-warning"></i>
+                                                @else
+                                                    <i class="fas fa-sort-down text-warning"></i>
+                                                @endif
+                                            @else
+                                                <i class="fas fa-sort text-muted opacity-50"></i>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </th>
                                 <th>Alamat</th>
-                                <th style="width: 100px;" class="text-center">Status</th>
+                                <th style="width: 100px;" class="text-center sortable-header" data-sort="status">
+                                    <div class="d-flex align-items-center justify-content-center">
+                                        <span>Status</span>
+                                        <div class="sort-icons ms-2">
+                                            @if($sortField === 'status')
+                                                @if($sortDirection === 'asc')
+                                                    <i class="fas fa-sort-up text-warning"></i>
+                                                @else
+                                                    <i class="fas fa-sort-down text-warning"></i>
+                                                @endif
+                                            @else
+                                                <i class="fas fa-sort text-muted opacity-50"></i>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </th>
                                 <th style="width: 120px;" class="text-center">SIMBADA</th>
                                 <th style="width: 150px;">Info Sewa</th>
                                 <th style="width: 120px;" class="text-center">Aksi</th>
@@ -173,14 +208,6 @@
                                              style="width: 60px; height: 60px;">
                                             <i class="fas fa-image text-muted"></i>
                                         </div>
-                                    @endif
-
-                                    {{-- Debug info (only in development) --}}
-                                    @if(config('app.debug') && config('app.env') !== 'production')
-                                        <small class="text-muted d-block mt-1" style="font-size: 10px;">
-                                            {{ $halte->photos->count() }} foto
-                                            @if($primaryPhoto) | Primary: ✓ @endif
-                                        </small>
                                     @endif
                                 </td>
                                 <td class="align-middle">
@@ -287,6 +314,12 @@
                                 <i class="fas fa-info-circle me-1"></i>
                                 Menampilkan {{ $haltes->firstItem() }} sampai {{ $haltes->lastItem() }}
                                 dari {{ $haltes->total() }} halte
+                                @if($sortField !== 'name' || $sortDirection !== 'asc')
+                                    <span class="text-primary ms-2">
+                                        (Diurutkan berdasarkan {{ $sortField === 'name' ? 'Nama' : ($sortField === 'status' ? 'Status' : $sortField) }}
+                                        {{ $sortDirection === 'asc' ? 'A-Z' : 'Z-A' }})
+                                    </span>
+                                @endif
                             </div>
                             <div class="pagination-wrapper">
                                 <nav aria-label="Halte pagination">
@@ -347,7 +380,7 @@
                             <i class="fas fa-search fa-4x text-muted mb-4 opacity-50"></i>
                             <h4 class="text-muted fw-bold">Tidak ada halte yang ditemukan</h4>
                             <p class="text-muted mb-4">Coba ubah kriteria pencarian atau filter Anda.</p>
-                            <a href="{{ route('admin.haltes.index') }}" class="btn btn-outline-primary btn-lg">
+                            <a href="{{ route('admin.haltes.index', ['reset' => '1']) }}" class="btn btn-outline-primary btn-lg">
                                 <i class="fas fa-times me-2"></i> Reset Filter
                             </a>
                         </div>
@@ -423,6 +456,48 @@
 
 @push('scripts')
 <script>
+// FIXED: Auto sorting functionality
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle sortable headers
+    const sortableHeaders = document.querySelectorAll('.sortable-header');
+
+    sortableHeaders.forEach(header => {
+        header.style.cursor = 'pointer';
+        header.addEventListener('click', function() {
+            const sortField = this.dataset.sort;
+            const currentSort = '{{ $sortField }}';
+            const currentDirection = '{{ $sortDirection }}';
+
+            let newDirection = 'asc';
+            if (sortField === currentSort && currentDirection === 'asc') {
+                newDirection = 'desc';
+            }
+
+            // Build URL with current parameters
+            const url = new URL(window.location.href);
+            url.searchParams.set('sort', sortField);
+            url.searchParams.set('direction', newDirection);
+
+            // Add loading state
+            this.classList.add('loading');
+
+            // Navigate to new URL
+            window.location.href = url.toString();
+        });
+    });
+
+    // Add hover effect to sortable headers
+    sortableHeaders.forEach(header => {
+        header.addEventListener('mouseenter', function() {
+            this.style.backgroundColor = 'rgba(255,255,255,0.1)';
+        });
+
+        header.addEventListener('mouseleave', function() {
+            this.style.backgroundColor = '';
+        });
+    });
+});
+
 // Photo modal functionality
 function showPhotoModal(photoUrl, halteName) {
     document.getElementById('modalPhoto').src = photoUrl;
@@ -446,6 +521,10 @@ function confirmDelete(halteId, halteName) {
 
 document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
     if (deleteHalteId) {
+        // Add loading state
+        this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Menghapus...';
+        this.disabled = true;
+
         document.getElementById('delete-form-' + deleteHalteId).submit();
     }
 });
@@ -470,13 +549,68 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Search form enhancement
+// Search form enhancement with auto-submit on filter change
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('search');
+    const statusSelect = document.getElementById('status');
+    const simbadaSelect = document.getElementById('simbada');
+    const filterForm = document.getElementById('filterForm');
+
+    // Auto-submit on filter change
+    if (statusSelect) {
+        statusSelect.addEventListener('change', function() {
+            filterForm.submit();
+        });
+    }
+
+    if (simbadaSelect) {
+        simbadaSelect.addEventListener('change', function() {
+            filterForm.submit();
+        });
+    }
+
+    // Search on Enter key
     if (searchInput) {
         searchInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
-                this.closest('form').submit();
+                filterForm.submit();
+            }
+        });
+    }
+
+    // Clear search on Escape key
+    if (searchInput) {
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                this.value = '';
+            }
+        });
+    }
+});
+
+// Add loading state for pagination and sorting
+document.addEventListener('DOMContentLoaded', function() {
+    // Add loading state to pagination links
+    const paginationLinks = document.querySelectorAll('.pagination .page-link');
+    paginationLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            if (!this.closest('.page-item').classList.contains('disabled') &&
+                !this.closest('.page-item').classList.contains('active')) {
+                this.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            }
+        });
+    });
+});
+
+// Form submission loading states
+document.addEventListener('DOMContentLoaded', function() {
+    const filterForm = document.getElementById('filterForm');
+    if (filterForm) {
+        filterForm.addEventListener('submit', function() {
+            const submitBtn = this.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Mencari...';
+                submitBtn.disabled = true;
             }
         });
     }
@@ -538,6 +672,33 @@ document.addEventListener('DOMContentLoaded', function() {
     background-color: #f8f9fa !important;
     transform: translateY(-1px);
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* FIXED: Sortable header styling */
+.sortable-header {
+    transition: all 0.2s ease;
+    user-select: none;
+    position: relative;
+}
+
+.sortable-header:hover {
+    background-color: rgba(255,255,255,0.1) !important;
+    color: #fff !important;
+}
+
+.sort-icons {
+    margin-left: 8px;
+    display: inline-block;
+    font-size: 0.8rem;
+}
+
+.sort-icons i {
+    transition: all 0.2s ease;
+}
+
+.sortable-header:hover .sort-icons .fa-sort {
+    color: #ffc107 !important;
+    opacity: 1 !important;
 }
 
 /* Image Hover Effects */
@@ -706,6 +867,7 @@ document.addEventListener('DOMContentLoaded', function() {
         font-size: 0.75rem;
     }
 }
+
 @media (max-width: 768px) {
     .page-header {
         padding: 1.5rem;
@@ -745,6 +907,11 @@ document.addEventListener('DOMContentLoaded', function() {
     .modal-dialog {
         margin: 1rem;
     }
+
+    /* Hide sort icons on mobile for space */
+    .sort-icons {
+        display: none;
+    }
 }
 
 @media (max-width: 576px) {
@@ -759,11 +926,29 @@ document.addEventListener('DOMContentLoaded', function() {
     .card-body {
         padding: 1rem;
     }
+
+    /* Stack table columns on very small screens */
+    .table-responsive {
+        font-size: 0.75rem;
+    }
+
+    .modern-table th,
+    .modern-table td {
+        padding: 0.5rem 0.25rem;
+    }
+
+    /* Hide less important columns on mobile */
+    .modern-table th:nth-child(3),
+    .modern-table td:nth-child(3),
+    .modern-table th:nth-child(5),
+    .modern-table td:nth-child(5) {
+        display: none;
+    }
 }
 
 /* Print Styles */
 @media print {
-    .btn, .btn-group, .modal, .alert {
+    .btn, .btn-group, .modal, .alert, .page-header .btn-toolbar {
         display: none !important;
     }
 
@@ -774,6 +959,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     .table th {
         background-color: #f8f9fa !important;
+        -webkit-print-color-adjust: exact;
+    }
+
+    .sortable-header {
+        cursor: default !important;
+    }
+
+    .sort-icons {
+        display: none !important;
     }
 }
 
@@ -791,9 +985,13 @@ document.addEventListener('DOMContentLoaded', function() {
     .border {
         border-color: #495057 !important;
     }
+
+    .table-row-hover:hover {
+        background-color: #495057 !important;
+    }
 }
 
-/* Loading Animation */
+/* Loading Animation for sorting */
 .loading {
     opacity: 0.6;
     pointer-events: none;
@@ -805,13 +1003,14 @@ document.addEventListener('DOMContentLoaded', function() {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 20px;
-    height: 20px;
-    margin: -10px 0 0 -10px;
+    width: 16px;
+    height: 16px;
+    margin: -8px 0 0 -8px;
     border: 2px solid #ccc;
     border-top-color: #0d6efd;
     border-radius: 50%;
     animation: spin 1s linear infinite;
+    z-index: 10;
 }
 
 @keyframes spin {
@@ -823,6 +1022,90 @@ document.addEventListener('DOMContentLoaded', function() {
 * {
     transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out,
                 border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+/* Additional enhancements for better UX */
+.form-label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.5rem;
+}
+
+.btn-outline-secondary:hover {
+    background-color: #6c757d;
+    border-color: #6c757d;
+    color: white;
+    transform: translateY(-1px);
+}
+
+.btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(13,110,253,0.25);
+}
+
+/* Status indicators */
+.badge.bg-danger {
+    background-color: #dc3545 !important;
+    animation: pulse-red 2s infinite;
+}
+
+.badge.bg-success {
+    background-color: #198754 !important;
+}
+
+.badge.bg-info {
+    background-color: #0dcaf0 !important;
+}
+
+.badge.bg-warning {
+    background-color: #ffc107 !important;
+}
+
+@keyframes pulse-red {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+/* Sort direction indicators */
+.fa-sort-up {
+    color: #ffc107 !important;
+}
+
+.fa-sort-down {
+    color: #ffc107 !important;
+}
+
+.fa-sort {
+    opacity: 0.5;
+}
+
+/* Tooltip for sorting */
+.sortable-header[title] {
+    position: relative;
+}
+
+.sortable-header::before {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #000;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+    z-index: 1000;
+    white-space: nowrap;
+}
+
+.sortable-header:hover::before {
+    opacity: 0.9;
 }
 </style>
 @endpush
