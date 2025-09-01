@@ -19,6 +19,14 @@
             --dishub-blue: #1a4b8c;
             --dishub-light-blue: #e6f0fa;
             --dishub-accent: #2a75d6;
+            --dishub-dark-blue: #153a73;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --warning-color: #f59e0b;
+            --gradient-primary: linear-gradient(135deg, var(--dishub-blue) 0%, var(--dishub-accent) 100%);
+            --shadow-heavy: 0 8px 32px rgba(26, 75, 140, 0.16);
+            --border-radius: 12px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             --animation-timing: 0.3s;
         }
 
@@ -43,7 +51,6 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            /* Remove default body margins */
             margin: 0 !important;
             padding: 0 !important;
         }
@@ -57,7 +64,6 @@
             background-color: var(--dishub-blue) !important;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             animation: slideDown 0.5s ease-out;
-            /* Make navbar stick to top edge */
             margin: 0;
             border-radius: 0;
             flex-shrink: 0;
@@ -288,7 +294,6 @@
             margin-top: auto;
         }
 
-        /* Container yang lebih luas tapi tidak full screen */
         .container {
             max-width: 1400px !important;
             width: 95% !important;
@@ -297,13 +302,11 @@
             margin: 0 auto;
         }
 
-        /* Container khusus untuk navbar agar tetap rapi */
         .navbar .container {
             max-width: 1400px;
             margin: 0 auto;
         }
 
-        /* Main content dengan padding yang lebih baik */
         main {
             flex: 1;
             padding: 2rem 0;
@@ -348,7 +351,6 @@
             transform: translateY(-2px);
         }
 
-        /* Animasi untuk elemen yang muncul saat di-scroll */
         .fade-in-scroll {
             opacity: 0;
             transform: translateY(20px);
@@ -360,7 +362,6 @@
             transform: translateY(0);
         }
 
-        /* Animasi untuk loading */
         @keyframes pulse {
             0% { transform: scale(1); }
             50% { transform: scale(1.05); }
@@ -369,6 +370,205 @@
 
         .pulse {
             animation: pulse 2s infinite;
+        }
+
+        /* MODAL LOGOUT STYLES - Disempurnakan */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1050;
+            backdrop-filter: blur(3px);
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-popup {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            max-width: 400px;
+            width: 90%;
+            max-height: 90vh;
+            overflow: hidden;
+            transform: scale(0.9);
+            animation: modalSlideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+
+        .modal-header {
+            padding: 2rem 2rem 1rem;
+            text-align: center;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .modal-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 1.75rem;
+            border: 3px solid;
+        }
+
+        .modal-icon.question {
+            background: var(--dishub-light-blue);
+            color: var(--dishub-blue);
+            border-color: var(--dishub-accent);
+        }
+
+        .modal-icon.success {
+            background: #f0fdf4;
+            color: var(--success-color);
+            border-color: var(--success-color);
+        }
+
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #1f2937;
+        }
+
+        .modal-message {
+            color: #6b7280;
+            font-size: 0.95rem;
+            line-height: 1.5;
+            margin-bottom: 0;
+        }
+
+        .modal-footer {
+            padding: 1.5rem 2rem;
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            background: #f8fafc;
+        }
+
+        /* Modal Buttons */
+        .btn-modal {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: 100px;
+            justify-content: center;
+            text-decoration: none;
+        }
+
+        .btn-modal:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn-modal:active {
+            transform: translateY(0);
+        }
+
+        .btn-modal.btn-cancel {
+            background: white;
+            color: #374151;
+            border: 1px solid #d1d5db;
+        }
+
+        .btn-modal.btn-cancel:hover {
+            background: #f9fafb;
+            border-color: #9ca3af;
+        }
+
+        .btn-modal.btn-confirm {
+            background: var(--dishub-blue);
+            color: white;
+        }
+
+        .btn-modal.btn-confirm:hover {
+            background: var(--dishub-dark-blue);
+        }
+
+        .btn-modal.btn-success {
+            background: var(--dishub-blue);
+            color: white;
+        }
+
+        .btn-modal.btn-success:hover {
+            background: var(--dishub-dark-blue);
+        }
+
+        .btn-loading {
+            position: relative;
+            pointer-events: none;
+            opacity: 0.8;
+        }
+
+        .btn-loading::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 16px;
+            height: 16px;
+            margin-left: -8px;
+            margin-top: -8px;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        /* Animations */
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                transform: scale(0.9) translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: scale(1) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 53%, 80%, 100% {
+                transform: translate3d(0,0,0);
+            }
+            40%, 43% {
+                transform: translate3d(0, -8px, 0);
+            }
+            70% {
+                transform: translate3d(0, -4px, 0);
+            }
+            90% {
+                transform: translate3d(0, -2px, 0);
+            }
+        }
+
+        .bounce {
+            animation: bounce 1s ease;
         }
 
         /* Media queries untuk responsivitas yang lebih balanced */
@@ -401,7 +601,41 @@
             }
         }
 
-        /* Override bootstrap container untuk width yang balanced */
+        /* Modal Responsive */
+        @media (max-width: 576px) {
+            .modal-popup {
+                width: 95%;
+                margin: 0 10px;
+            }
+
+            .modal-header {
+                padding: 1.5rem 1.5rem 1rem;
+            }
+
+            .modal-footer {
+                padding: 1rem 1.5rem 1.5rem;
+                flex-direction: column;
+            }
+
+            .btn-modal {
+                width: 100%;
+            }
+
+            .modal-icon {
+                width: 56px;
+                height: 56px;
+                font-size: 1.5rem;
+            }
+
+            .modal-title {
+                font-size: 1.1rem;
+            }
+
+            .modal-message {
+                font-size: 0.9rem;
+            }
+        }
+
         .container-fluid {
             padding-left: 1.5rem;
             padding-right: 1.5rem;
@@ -409,7 +643,6 @@
             max-width: none;
         }
 
-        /* Class helper untuk content yang lebih lebar */
         .wider-content {
             width: 98%;
             max-width: 1600px;
@@ -440,11 +673,9 @@
                         </a>
                     </li>
                         <a class="nav-link" href="{{ route('gallery') }}">
-                            <i class="fas fa-images me-1"></i> Galerry
+                            <i class="fas fa-images me-1"></i> Gallery
                         </a>
                 </ul>
-
-
 
                 <ul class="navbar-nav">
                     @auth
@@ -461,12 +692,9 @@
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end">
                                 <li>
-                                    <form method="POST" action="{{ route('logout') }}" style="display: inline;">
-                                        @csrf
-                                        <button type="submit" class="dropdown-item">
-                                            <i class="fas fa-sign-out-alt me-1"></i> Logout
-                                        </button>
-                                    </form>
+                                    <button type="button" class="dropdown-item" onclick="showLogoutConfirmation()">
+                                        <i class="fas fa-sign-out-alt me-1"></i> Logout
+                                    </button>
                                 </li>
                             </ul>
                         </li>
@@ -515,6 +743,52 @@
         </div>
     </footer>
 
+    <!-- Modal Konfirmasi Logout -->
+    <div class="modal-overlay" id="logoutModal">
+        <div class="modal-popup">
+            <div class="modal-header">
+                <div class="modal-icon question">
+                    <i class="fas fa-question-circle"></i>
+                </div>
+                <h3 class="modal-title">Logout</h3>
+                <p class="modal-message">
+                    Apakah Anda yakin untuk logout?
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-modal btn-cancel" onclick="cancelLogout()">
+                    <i class="fas fa-times"></i>
+                    Batal
+                </button>
+                <button class="btn-modal btn-confirm" onclick="confirmLogout()" id="confirmBtn">
+                    <i class="fas fa-check"></i>
+                    Ya, Logout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Berhasil Logout -->
+    <div class="modal-overlay" id="successModal">
+        <div class="modal-popup">
+            <div class="modal-header">
+                <div class="modal-icon success">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <h3 class="modal-title">Logout Berhasil</h3>
+                <p class="modal-message">
+                    Anda telah berhasil logout dari sistem.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-modal btn-success" onclick="redirectToHome()">
+                    <i class="fas fa-home"></i>
+                    Kembali ke Beranda
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- jQuery -->
@@ -556,6 +830,115 @@
                 item.addEventListener('mouseleave', function() {
                     this.style.transform = 'translateX(0)';
                 });
+            });
+
+            // Cek session success untuk menampilkan modal berhasil logout
+            @if(session('success') && session('success') === 'Anda telah berhasil logout')
+                showSuccessModal();
+            @endif
+        });
+
+        // POPUP LOGOUT FUNCTIONS
+        // Fungsi untuk menampilkan modal konfirmasi logout
+        function showLogoutConfirmation() {
+            const modal = document.getElementById('logoutModal');
+            modal.classList.add('show');
+
+            // Focus pada tombol "Batal" untuk accessibility
+            setTimeout(() => {
+                document.querySelector('.btn-cancel').focus();
+            }, 100);
+        }
+
+        // Fungsi untuk membatalkan logout
+        function cancelLogout() {
+            const modal = document.getElementById('logoutModal');
+            modal.classList.remove('show');
+        }
+
+        // Fungsi untuk konfirmasi logout
+        function confirmLogout() {
+            const confirmBtn = document.getElementById('confirmBtn');
+            const modal = document.getElementById('logoutModal');
+
+            // Tampilkan loading state
+            confirmBtn.classList.add('btn-loading');
+            confirmBtn.innerHTML = '<span>Memproses...</span>';
+            confirmBtn.disabled = true;
+
+            // Buat form logout dan submit
+            const logoutForm = document.createElement('form');
+            logoutForm.method = 'POST';
+            logoutForm.action = '{{ route("logout") }}';
+
+            // Tambahkan CSRF token
+            const csrfToken = document.createElement('input');
+            csrfToken.type = 'hidden';
+            csrfToken.name = '_token';
+            csrfToken.value = '{{ csrf_token() }}';
+            logoutForm.appendChild(csrfToken);
+
+            // Tambahkan form ke body dan submit
+            document.body.appendChild(logoutForm);
+            logoutForm.submit();
+        }
+
+        // Fungsi untuk menampilkan modal berhasil logout
+        function showSuccessModal() {
+            const modal = document.getElementById('successModal');
+            modal.classList.add('show');
+
+            // Tambahkan bounce animation pada icon
+            setTimeout(() => {
+                const successIcon = document.querySelector('#successModal .modal-icon');
+                if (successIcon) {
+                    successIcon.classList.add('bounce');
+                }
+            }, 200);
+
+            // Focus pada tombol untuk accessibility
+            setTimeout(() => {
+                const successBtn = document.querySelector('#successModal .btn-success');
+                if (successBtn) {
+                    successBtn.focus();
+                }
+            }, 100);
+        }
+
+        // Fungsi untuk redirect ke beranda
+        function redirectToHome() {
+            const modal = document.getElementById('successModal');
+            modal.classList.remove('show');
+
+            setTimeout(() => {
+                window.location.href = '{{ route("home") }}';
+            }, 300);
+        }
+
+        // Event listener untuk ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const logoutModal = document.getElementById('logoutModal');
+                const successModal = document.getElementById('successModal');
+
+                if (logoutModal && logoutModal.classList.contains('show')) {
+                    cancelLogout();
+                } else if (successModal && successModal.classList.contains('show')) {
+                    redirectToHome();
+                }
+            }
+        });
+
+        // Event listener untuk klik di overlay
+        document.querySelectorAll('.modal-overlay').forEach(overlay => {
+            overlay.addEventListener('click', function(e) {
+                if (e.target === overlay) {
+                    if (overlay.id === 'logoutModal') {
+                        cancelLogout();
+                    } else if (overlay.id === 'successModal') {
+                        redirectToHome();
+                    }
+                }
             });
         });
     </script>

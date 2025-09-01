@@ -1,5 +1,5 @@
 <?php
-// app/Http/Controllers/AuthController.php - UPDATED
+// app/Http/Controllers/AuthController.php - UPDATED DENGAN POPUP LOGOUT
 
 namespace App\Http\Controllers;
 
@@ -63,6 +63,7 @@ class AuthController extends Controller
 
     /**
      * Handle logout
+     * DIMODIFIKASI: Mengubah pesan logout agar konsisten dengan popup
      */
     public function logout(Request $request)
     {
@@ -70,7 +71,8 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/')->with('success', 'Anda telah berhasil logout');
+        // Pesan yang akan memicu popup berhasil logout
+        return redirect('/');
     }
 
     /**
