@@ -5,6 +5,8 @@
 @push('styles')
 <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Swiper CSS untuk carousel -->
+<link href="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.css" rel="stylesheet">
 <style>
     :root {
         --primary-gradient: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
@@ -13,9 +15,11 @@
         --light-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
         --dishub-blue: #1e3c72;
         --dishub-accent: #3b82f6;
+        --gold-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        --purple-gradient: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
     }
 
-    /* Header Section */
+    /* Header Section - Enhanced */
     .gallery-header {
         background: var(--primary-gradient);
         color: white;
@@ -46,6 +50,10 @@
         font-weight: 700;
         margin-bottom: 1rem;
         text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        background: linear-gradient(45deg, #fff, #e0f2fe);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
     }
 
     .gallery-subtitle {
@@ -86,7 +94,7 @@
         background: var(--light-gradient);
     }
 
-    /* Filter Buttons */
+    /* Enhanced Filter Buttons */
     .filter-buttons {
         display: flex;
         justify-content: center;
@@ -99,117 +107,220 @@
         background: white;
         color: var(--dishub-blue);
         border: 2px solid var(--dishub-blue);
-        padding: 12px 30px;
+        padding: 15px 35px;
         border-radius: 50px;
-        font-weight: 600;
-        transition: all 0.3s ease;
+        font-weight: 700;
+        transition: all 0.4s ease;
         cursor: pointer;
         text-decoration: none;
+        position: relative;
+        overflow: hidden;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: 0.9rem;
+    }
+
+    .filter-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: var(--primary-gradient);
+        transition: left 0.4s ease;
+        z-index: 0;
+    }
+
+    .filter-btn span {
+        position: relative;
+        z-index: 1;
+    }
+
+    .filter-btn:hover::before,
+    .filter-btn.active::before {
+        left: 0;
     }
 
     .filter-btn:hover,
     .filter-btn.active {
-        background: var(--primary-gradient);
         color: white;
         border-color: var(--dishub-blue);
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(30, 60, 114, 0.3);
+        transform: translateY(-3px);
+        box-shadow: 0 15px 35px rgba(30, 60, 114, 0.4);
     }
 
-    /* Gallery Grid */
+    /* Modern Gallery Grid */
     .gallery-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-        gap: 30px;
+        grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+        gap: 35px;
         margin-bottom: 60px;
     }
 
+    /* Enhanced Halte Card */
     .halte-card {
         background: white;
-        border-radius: 20px;
+        border-radius: 25px;
         overflow: hidden;
-        box-shadow: 0 10px 30px rgba(30, 60, 114, 0.1);
-        transition: all 0.4s ease;
+        box-shadow: 0 15px 40px rgba(30, 60, 114, 0.08);
+        transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         border: 1px solid rgba(59, 130, 246, 0.1);
         position: relative;
+        transform-style: preserve-3d;
+    }
+
+    .halte-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: var(--accent-gradient);
+        opacity: 0;
+        transition: opacity 0.5s ease;
+        z-index: 1;
+        border-radius: 25px;
+    }
+
+    .halte-card:hover::before {
+        opacity: 0.03;
     }
 
     .halte-card:hover {
-        transform: translateY(-15px);
-        box-shadow: 0 25px 50px rgba(30, 60, 114, 0.2);
+        transform: translateY(-20px) rotateX(5deg) rotateY(5deg);
+        box-shadow: 0 35px 70px rgba(30, 60, 114, 0.25);
     }
 
+    /* Enhanced Image Container */
     .halte-image-container {
         position: relative;
-        height: 280px;
+        height: 320px;
         overflow: hidden;
+        border-radius: 25px 25px 0 0;
     }
 
     .halte-image {
         width: 100%;
         height: 100%;
         object-fit: cover;
-        transition: transform 0.4s ease;
+        transition: all 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        filter: brightness(0.9) contrast(1.1);
     }
 
     .halte-card:hover .halte-image {
-        transform: scale(1.1);
+        transform: scale(1.15) rotate(2deg);
+        filter: brightness(1) contrast(1.2);
     }
 
+    /* Gradient Overlay */
+    .halte-image-container::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+            45deg,
+            rgba(30, 60, 114, 0.1) 0%,
+            transparent 40%,
+            transparent 60%,
+            rgba(59, 130, 246, 0.1) 100%
+        );
+        opacity: 0;
+        transition: opacity 0.5s ease;
+    }
+
+    .halte-card:hover .halte-image-container::after {
+        opacity: 1;
+    }
+
+    /* Enhanced Status Badge */
     .halte-status {
         position: absolute;
-        top: 15px;
-        right: 15px;
-        padding: 8px 16px;
-        border-radius: 50px;
+        top: 20px;
+        right: 20px;
+        padding: 10px 20px;
+        border-radius: 25px;
         font-size: 0.8rem;
-        font-weight: 600;
+        font-weight: 700;
         text-transform: uppercase;
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(15px);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        z-index: 2;
+        letter-spacing: 1px;
+        animation: statusPulse 2s infinite;
+    }
+
+    @keyframes statusPulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
     }
 
     .status-available {
-        background: rgba(40, 167, 69, 0.9);
+        background: rgba(16, 185, 129, 0.9);
         color: white;
+        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
     }
 
     .status-rented {
-        background: rgba(220, 53, 69, 0.9);
+        background: rgba(239, 68, 68, 0.9);
         color: white;
+        box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
     }
 
+    /* Enhanced Photo Count */
     .photo-count {
         position: absolute;
-        bottom: 15px;
-        left: 15px;
-        background: rgba(0, 0, 0, 0.7);
+        bottom: 20px;
+        left: 20px;
+        background: rgba(0, 0, 0, 0.8);
         color: white;
-        padding: 6px 12px;
-        border-radius: 50px;
+        padding: 8px 16px;
+        border-radius: 25px;
         font-size: 0.85rem;
         display: flex;
         align-items: center;
-        gap: 5px;
+        gap: 8px;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        z-index: 2;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
     }
 
+    .photo-count:hover {
+        background: rgba(59, 130, 246, 0.9);
+        transform: scale(1.1);
+    }
+
+    /* Enhanced Card Info */
     .halte-info {
-        padding: 25px;
+        padding: 30px;
+        position: relative;
+        z-index: 2;
     }
 
     .halte-title {
-        font-size: 1.3rem;
-        font-weight: 700;
+        font-size: 1.4rem;
+        font-weight: 800;
         color: var(--dishub-blue);
-        margin-bottom: 10px;
+        margin-bottom: 12px;
         line-height: 1.3;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
     }
 
     .halte-description {
-        color: #6c757d;
+        color: #64748b;
         font-size: 0.95rem;
-        line-height: 1.6;
-        margin-bottom: 15px;
+        line-height: 1.7;
+        margin-bottom: 20px;
         display: -webkit-box;
         -webkit-line-clamp: 3;
         -webkit-box-orient: vertical;
@@ -220,36 +331,44 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 20px;
+        margin-bottom: 25px;
+        padding: 15px 0;
+        border-top: 1px solid #e2e8f0;
+        border-bottom: 1px solid #e2e8f0;
     }
 
     .halte-location {
         display: flex;
         align-items: center;
-        gap: 5px;
-        color: #6c757d;
+        gap: 8px;
+        color: #64748b;
         font-size: 0.9rem;
+        font-weight: 500;
     }
 
     .halte-simbada {
         display: flex;
         align-items: center;
-        gap: 5px;
+        gap: 8px;
         font-size: 0.85rem;
     }
 
     .simbada-badge {
-        background: #28a745;
+        background: var(--gold-gradient);
         color: white;
-        padding: 3px 8px;
-        border-radius: 10px;
+        padding: 6px 14px;
+        border-radius: 15px;
         font-size: 0.75rem;
-        font-weight: 600;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
     }
 
+    /* Enhanced Actions */
     .halte-actions {
         display: flex;
-        gap: 10px;
+        gap: 12px;
     }
 
     .btn-view-detail {
@@ -257,162 +376,317 @@
         background: var(--accent-gradient);
         color: white;
         border: none;
-        padding: 12px 20px;
-        border-radius: 50px;
-        font-weight: 600;
+        padding: 15px 25px;
+        border-radius: 25px;
+        font-weight: 700;
         text-decoration: none;
         text-align: center;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+        position: relative;
+        overflow: hidden;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        font-size: 0.85rem;
+    }
+
+    .btn-view-detail::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: left 0.6s ease;
+    }
+
+    .btn-view-detail:hover::before {
+        left: 100%;
     }
 
     .btn-view-detail:hover {
-        transform: translateY(-2px);
+        transform: translateY(-3px);
         color: white;
-        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+        box-shadow: 0 15px 35px rgba(59, 130, 246, 0.5);
     }
 
     .btn-view-photos {
         background: var(--secondary-gradient);
         color: white;
         border: none;
-        padding: 12px 16px;
-        border-radius: 50px;
-        font-weight: 600;
-        transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(29, 78, 216, 0.3);
+        padding: 15px 20px;
+        border-radius: 25px;
+        font-weight: 700;
+        transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        box-shadow: 0 8px 25px rgba(29, 78, 216, 0.3);
         cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .btn-view-photos::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        transition: all 0.5s ease;
+        transform: translate(-50%, -50%);
+    }
+
+    .btn-view-photos:hover::before {
+        width: 200px;
+        height: 200px;
     }
 
     .btn-view-photos:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(29, 78, 216, 0.4);
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 15px 35px rgba(29, 78, 216, 0.5);
     }
 
-    /* Photo Modal */
+    /* Modern Photo Modal */
     .photo-modal {
         display: none;
         position: fixed;
-        z-index: 2000;
+        z-index: 3000;
         left: 0;
         top: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(0, 0, 0, 0.9);
-        backdrop-filter: blur(5px);
+        background-color: rgba(0, 0, 0, 0.95);
+        backdrop-filter: blur(10px);
     }
 
     .photo-modal-content {
         position: relative;
-        width: 90%;
-        max-width: 800px;
-        margin: 50px auto;
+        width: 95%;
+        max-width: 1200px;
+        height: 90vh;
+        margin: 5vh auto;
         background: white;
-        border-radius: 20px;
+        border-radius: 25px;
         overflow: hidden;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        animation: modalSlideIn 0.3s ease-out;
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+        animation: modalSlideIn 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     }
 
     @keyframes modalSlideIn {
         from {
             opacity: 0;
-            transform: translateY(-50px);
+            transform: translateY(-100px) scale(0.8);
         }
         to {
             opacity: 1;
-            transform: translateY(0);
+            transform: translateY(0) scale(1);
         }
     }
 
     .photo-modal-header {
         background: var(--primary-gradient);
         color: white;
-        padding: 20px 25px;
+        padding: 25px 30px;
         display: flex;
         justify-content: space-between;
         align-items: center;
+        position: relative;
+    }
+
+    .photo-modal-header::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
     }
 
     .photo-modal-title {
-        font-size: 1.4rem;
-        font-weight: 600;
+        font-size: 1.6rem;
+        font-weight: 700;
         margin: 0;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
     }
 
     .photo-modal-close {
-        background: none;
-        border: none;
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 255, 255, 0.3);
         color: white;
         font-size: 1.5rem;
         cursor: pointer;
-        padding: 5px;
+        padding: 10px;
         border-radius: 50%;
-        transition: background-color 0.3s ease;
+        transition: all 0.3s ease;
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .photo-modal-close:hover {
         background: rgba(255, 255, 255, 0.2);
+        transform: rotate(90deg) scale(1.1);
     }
 
     .photo-modal-body {
         padding: 0;
-        max-height: 70vh;
-        overflow-y: auto;
-    }
-
-    .photo-gallery-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 15px;
-        padding: 25px;
-    }
-
-    .photo-gallery-item {
-        border-radius: 15px;
+        height: calc(90vh - 80px);
         overflow: hidden;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        transition: transform 0.3s ease;
-        cursor: pointer;
     }
 
-    .photo-gallery-item:hover {
-        transform: scale(1.05);
+    /* Modern Swiper Carousel */
+    .photo-carousel-container {
+        height: 100%;
+        position: relative;
     }
 
-    .photo-gallery-item img {
+    .photo-swiper {
         width: 100%;
-        height: 200px;
+        height: 100%;
+    }
+
+    .photo-swiper .swiper-slide {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8fafc;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .carousel-image {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        max-height: 100%;
+        border-radius: 15px;
+        transition: all 0.5s ease;
+        cursor: zoom-in;
+    }
+
+    .carousel-image.zoomed {
+        cursor: zoom-out;
         object-fit: cover;
+        transform: scale(1.5);
+    }
+
+    /* Custom Swiper Navigation */
+    .swiper-button-next,
+    .swiper-button-prev {
+        background: rgba(30, 60, 114, 0.9);
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        color: white !important;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+    }
+
+    .swiper-button-next::after,
+    .swiper-button-prev::after {
+        font-size: 20px;
+        font-weight: 700;
+    }
+
+    .swiper-button-next:hover,
+    .swiper-button-prev:hover {
+        background: rgba(59, 130, 246, 0.9);
+        transform: scale(1.1);
+        box-shadow: 0 8px 25px rgba(30, 60, 114, 0.4);
+    }
+
+    /* Custom Swiper Pagination */
+    .swiper-pagination-bullet {
+        background: rgba(30, 60, 114, 0.5);
+        width: 12px;
+        height: 12px;
+        transition: all 0.3s ease;
+    }
+
+    .swiper-pagination-bullet-active {
+        background: var(--dishub-blue);
+        transform: scale(1.3);
+        box-shadow: 0 4px 15px rgba(30, 60, 114, 0.4);
+    }
+
+    /* Image Counter */
+    .image-counter {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 10px 20px;
+        border-radius: 25px;
+        font-weight: 600;
+        z-index: 1000;
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
     .no-photos {
         text-align: center;
-        padding: 60px 20px;
-        color: #6c757d;
+        padding: 80px 20px;
+        color: #64748b;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
     }
 
     .no-photos i {
-        font-size: 4rem;
-        margin-bottom: 20px;
-        opacity: 0.5;
+        font-size: 5rem;
+        margin-bottom: 30px;
+        opacity: 0.3;
+        background: var(--accent-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
     }
 
-    /* Back to Top Button */
+    /* Zoom Hint */
+    .zoom-hint {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        z-index: 1000;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        backdrop-filter: blur(10px);
+    }
+
+    .photo-swiper:hover .zoom-hint {
+        opacity: 1;
+    }
+
+    /* Enhanced Back to Top Button */
     .back-to-top {
         position: fixed;
         bottom: 30px;
         right: 30px;
         background: var(--accent-gradient);
         color: white;
-        width: 50px;
-        height: 50px;
+        width: 60px;
+        height: 60px;
         border-radius: 50%;
         border: none;
-        font-size: 1.2rem;
+        font-size: 1.4rem;
         cursor: pointer;
-        transition: all 0.3s ease;
-        box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
+        transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
         opacity: 0;
         visibility: hidden;
         z-index: 1000;
@@ -424,8 +698,8 @@
     }
 
     .back-to-top:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
+        transform: translateY(-5px) scale(1.1);
+        box-shadow: 0 15px 40px rgba(59, 130, 246, 0.5);
     }
 
     /* Responsive Design */
@@ -436,7 +710,7 @@
 
         .gallery-grid {
             grid-template-columns: 1fr;
-            gap: 20px;
+            gap: 25px;
         }
 
         .filter-buttons {
@@ -449,8 +723,21 @@
         }
 
         .photo-modal-content {
-            width: 95%;
-            margin: 20px auto;
+            width: 98%;
+            height: 95vh;
+            margin: 2.5vh auto;
+            border-radius: 15px;
+        }
+
+        .swiper-button-next,
+        .swiper-button-prev {
+            width: 45px;
+            height: 45px;
+        }
+
+        .swiper-button-next::after,
+        .swiper-button-prev::after {
+            font-size: 16px;
         }
     }
 
@@ -499,16 +786,16 @@
         <!-- Filter Buttons -->
         <div class="filter-buttons" data-aos="fade-up">
             <button class="filter-btn active" data-filter="all">
-                <i class="fas fa-th me-2"></i>Semua Halte
+                <span><i class="fas fa-th me-2"></i>Semua Halte</span>
             </button>
             <button class="filter-btn" data-filter="available">
-                <i class="fas fa-check-circle me-2"></i>Tersedia
+                <span><i class="fas fa-check-circle me-2"></i>Tersedia</span>
             </button>
             <button class="filter-btn" data-filter="rented">
-                <i class="fas fa-clock me-2"></i>Disewa
+                <span><i class="fas fa-clock me-2"></i>Disewa</span>
             </button>
             <button class="filter-btn" data-filter="simbada">
-                <i class="fas fa-certificate me-2"></i>SIMBADA Terdaftar
+                <span><i class="fas fa-certificate me-2"></i>SIMBADA Terdaftar</span>
             </button>
         </div>
 
@@ -535,7 +822,7 @@
                     </div>
 
                     @if($halte->photos->count() > 0)
-                    <div class="photo-count">
+                    <div class="photo-count" onclick="openPhotoModal({{ $halte->id }}, '{{ $halte->name }}', {{ $halte->photos->toJson() }})">
                         <i class="fas fa-images"></i>
                         {{ $halte->photos->count() }} Foto
                     </div>
@@ -616,7 +903,7 @@
     </div>
 </section>
 
-<!-- Photo Modal -->
+<!-- Enhanced Photo Modal with Swiper Carousel -->
 <div id="photoModal" class="photo-modal">
     <div class="photo-modal-content">
         <div class="photo-modal-header">
@@ -626,7 +913,29 @@
             </button>
         </div>
         <div class="photo-modal-body" id="photoModalBody">
-            <!-- Photos will be loaded here dynamically -->
+            <div class="photo-carousel-container">
+                <!-- Image Counter -->
+                <div class="image-counter" id="imageCounter">1 / 1</div>
+
+                <!-- Swiper Container -->
+                <div class="swiper photo-swiper" id="photoSwiper">
+                    <div class="swiper-wrapper" id="swiperWrapper">
+                        <!-- Slides will be populated dynamically -->
+                    </div>
+
+                    <!-- Navigation buttons -->
+                    <div class="swiper-button-next"></div>
+                    <div class="swiper-button-prev"></div>
+
+                    <!-- Pagination -->
+                    <div class="swiper-pagination"></div>
+
+                    <!-- Zoom hint -->
+                    <div class="zoom-hint">
+                        <i class="fas fa-search-plus me-1"></i> Klik untuk zoom
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -677,17 +986,19 @@
 @push('scripts')
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Swiper JS -->
+<script src="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.js"></script>
 <script>
 $(document).ready(function() {
     // Initialize AOS
     AOS.init({
-        duration: 800,
-        easing: 'ease-in-out',
+        duration: 1000,
+        easing: 'ease-out-cubic',
         once: true,
         offset: 100
     });
 
-    // Filter functionality
+    // Enhanced Filter functionality
     const filterButtons = document.querySelectorAll('.filter-btn[data-filter]');
     const halteCards = document.querySelectorAll('.halte-card[data-filter]');
 
@@ -695,23 +1006,27 @@ $(document).ready(function() {
         button.addEventListener('click', () => {
             const filter = button.getAttribute('data-filter');
 
-            // Update active filter button
-            filterButtons.forEach(btn => btn.classList.remove('active'));
+            // Update active filter button with smooth transition
+            filterButtons.forEach(btn => {
+                btn.classList.remove('active');
+                btn.style.transform = 'scale(1)';
+            });
             button.classList.add('active');
+            button.style.transform = 'scale(1.05)';
 
-            // Filter cards
-            halteCards.forEach(card => {
+            // Filter cards with stagger animation
+            halteCards.forEach((card, index) => {
                 const cardFilters = card.getAttribute('data-filter').split(' ');
 
                 if (filter === 'all' || cardFilters.includes(filter)) {
                     card.style.display = 'block';
                     setTimeout(() => {
                         card.style.opacity = '1';
-                        card.style.transform = 'translateY(0)';
-                    }, 50);
+                        card.style.transform = 'translateY(0) scale(1)';
+                    }, index * 50);
                 } else {
                     card.style.opacity = '0';
-                    card.style.transform = 'translateY(20px)';
+                    card.style.transform = 'translateY(20px) scale(0.95)';
                     setTimeout(() => {
                         card.style.display = 'none';
                     }, 300);
@@ -720,7 +1035,7 @@ $(document).ready(function() {
         });
     });
 
-    // Back to top button
+    // Enhanced Back to top button
     const backToTop = document.getElementById('backToTop');
 
     window.addEventListener('scroll', () => {
@@ -738,7 +1053,7 @@ $(document).ready(function() {
         });
     });
 
-    // Smooth scrolling for anchor links
+    // Enhanced smooth scrolling for anchor links
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.addEventListener('click', function (e) {
             e.preventDefault();
@@ -751,56 +1066,159 @@ $(document).ready(function() {
             }
         });
     });
+
+    // Add hover effects to cards
+    const cards = document.querySelectorAll('.halte-card');
+    cards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.zIndex = '10';
+        });
+
+        card.addEventListener('mouseleave', function() {
+            this.style.zIndex = '1';
+        });
+    });
 });
 
-// Photo modal functions
+// Global Swiper instance
+let photoSwiper = null;
+
+// Enhanced Photo modal functions
 function openPhotoModal(halteId, halteName, photos) {
     const modal = document.getElementById('photoModal');
     const title = document.getElementById('photoModalTitle');
     const body = document.getElementById('photoModalBody');
+    const counter = document.getElementById('imageCounter');
+    const swiperWrapper = document.getElementById('swiperWrapper');
 
-    title.textContent = `Foto ${halteName}`;
+    title.textContent = `Galeri ${halteName}`;
 
     if (photos && photos.length > 0) {
-        let photosHtml = '<div class="photo-gallery-grid">';
-        photos.forEach(photo => {
+        // Clear existing slides
+        swiperWrapper.innerHTML = '';
+
+        // Create slides
+        photos.forEach((photo, index) => {
             const photoUrl = `/storage/${photo.photo_path}`;
-            photosHtml += `
-                <div class="photo-gallery-item">
-                    <img src="${photoUrl}" alt="${halteName}" onclick="openLightbox('${photoUrl}', '${halteName}')" loading="lazy">
-                </div>
+            const slide = document.createElement('div');
+            slide.className = 'swiper-slide';
+            slide.innerHTML = `
+                <img src="${photoUrl}"
+                     alt="${halteName} - Foto ${index + 1}"
+                     class="carousel-image"
+                     onclick="toggleZoom(this)"
+                     loading="lazy">
             `;
+            swiperWrapper.appendChild(slide);
         });
-        photosHtml += '</div>';
-        body.innerHTML = photosHtml;
+
+        // Update counter
+        counter.textContent = `1 / ${photos.length}`;
+
+        // Initialize/Update Swiper
+        if (photoSwiper) {
+            photoSwiper.destroy(true, true);
+        }
+
+        photoSwiper = new Swiper('#photoSwiper', {
+            loop: photos.length > 1,
+            navigation: {
+                nextEl: '.swiper-button-next',
+                prevEl: '.swiper-button-prev',
+            },
+            pagination: {
+                el: '.swiper-pagination',
+                clickable: true,
+                renderBullet: function (index, className) {
+                    return '<span class="' + className + '">' + (index + 1) + '</span>';
+                },
+            },
+            keyboard: {
+                enabled: true,
+                onlyInViewport: false,
+            },
+            mousewheel: {
+                invert: false,
+            },
+            speed: 600,
+            effect: 'slide',
+            allowTouchMove: true,
+            grabCursor: true,
+            on: {
+                slideChange: function () {
+                    const currentSlide = this.realIndex + 1;
+                    counter.textContent = `${currentSlide} / ${photos.length}`;
+
+                    // Reset zoom on all images
+                    const images = document.querySelectorAll('.carousel-image');
+                    images.forEach(img => {
+                        img.classList.remove('zoomed');
+                    });
+                }
+            }
+        });
     } else {
         body.innerHTML = `
             <div class="no-photos">
-                <i class="fas fa-image"></i>
+                <i class="fas fa-camera-retro"></i>
                 <h4>Tidak ada foto tersedia</h4>
                 <p>Foto halte belum tersedia untuk saat ini.</p>
             </div>
         `;
     }
 
+    // Show modal with animation
     modal.style.display = 'block';
     setTimeout(() => {
         modal.style.opacity = '1';
     }, 10);
+
+    // Prevent body scroll
+    document.body.style.overflow = 'hidden';
 }
 
 function closePhotoModal() {
     const modal = document.getElementById('photoModal');
+
+    // Destroy swiper instance
+    if (photoSwiper) {
+        photoSwiper.destroy(true, true);
+        photoSwiper = null;
+    }
+
     modal.style.opacity = '0';
     setTimeout(() => {
         modal.style.display = 'none';
     }, 300);
+
+    // Restore body scroll
+    document.body.style.overflow = 'auto';
 }
 
-// Close modal when clicking outside
+// Toggle zoom function for images
+function toggleZoom(image) {
+    const isZoomed = image.classList.contains('zoomed');
+
+    // Reset all images first
+    const allImages = document.querySelectorAll('.carousel-image');
+    allImages.forEach(img => img.classList.remove('zoomed'));
+
+    // Toggle current image
+    if (!isZoomed) {
+        image.classList.add('zoomed');
+    }
+}
+
+// Close modal when clicking outside or pressing ESC
 window.addEventListener('click', function(event) {
     const modal = document.getElementById('photoModal');
     if (event.target === modal) {
+        closePhotoModal();
+    }
+});
+
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
         closePhotoModal();
     }
 });
@@ -811,41 +1229,51 @@ function showAccessModal() {
     modal.show();
 }
 
-// Lightbox function (optional enhancement)
-function openLightbox(imageSrc, altText) {
-    // Simple lightbox implementation
-    const lightbox = document.createElement('div');
-    lightbox.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.9);
-        z-index: 3000;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-    `;
+// Enhanced loading animation for load more button
+const loadMoreBtn = document.getElementById('loadMoreBtn');
+if (loadMoreBtn) {
+    loadMoreBtn.addEventListener('click', function() {
+        const loadText = this.querySelector('.load-text');
+        const spinner = this.querySelector('.loading-spinner');
 
-    const img = document.createElement('img');
-    img.src = imageSrc;
-    img.alt = altText;
-    img.style.cssText = `
-        max-width: 90%;
-        max-height: 90%;
-        object-fit: contain;
-        border-radius: 10px;
-        box-shadow: 0 20px 60px rgba(0,0,0,0.5);
-    `;
+        loadText.style.display = 'none';
+        spinner.style.display = 'inline-block';
 
-    lightbox.appendChild(img);
-    document.body.appendChild(lightbox);
-
-    lightbox.addEventListener('click', () => {
-        document.body.removeChild(lightbox);
+        // Simulate loading
+        setTimeout(() => {
+            loadText.style.display = 'inline';
+            spinner.style.display = 'none';
+        }, 2000);
     });
 }
+
+// Add parallax effect to header
+window.addEventListener('scroll', function() {
+    const scrolled = window.pageYOffset;
+    const header = document.querySelector('.gallery-header');
+    if (header) {
+        const rate = scrolled * -0.5;
+        header.style.transform = `translateY(${rate}px)`;
+    }
+});
+
+// Add intersection observer for card animations
+const observerOptions = {
+    threshold: 0.1,
+    rootMargin: '0px 0px -50px 0px'
+};
+
+const observer = new IntersectionObserver(function(entries) {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.classList.add('animate-in');
+        }
+    });
+}, observerOptions);
+
+// Observe all cards
+document.querySelectorAll('.halte-card').forEach(card => {
+    observer.observe(card);
+});
 </script>
 @endpush

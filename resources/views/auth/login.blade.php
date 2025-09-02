@@ -71,7 +71,7 @@
                                 </div>
                             </div>
 
-                            <div class="checkbox-wrapper">
+                            <!--<div class="checkbox-wrapper">
                                 <label class="checkbox-label">
                                     <input
                                         type="checkbox"
@@ -82,7 +82,7 @@
                                     <span class="checkbox-custom"></span>
                                     <span class="checkbox-text">Ingat saya</span>
                                 </label>
-                            </div>
+                            </div> -->
 
                             <button type="submit" class="login-button">
                                 <i class="fas fa-sign-in-alt"></i>
