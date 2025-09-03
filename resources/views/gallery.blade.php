@@ -150,15 +150,268 @@
         box-shadow: 0 15px 35px rgba(30, 60, 114, 0.4);
     }
 
-    /* Modern Gallery Grid */
-    .gallery-grid {
+    /* New Carousel Layout */
+    .main-carousel-container {
+        position: relative;
+        height: 600px;
+        margin-bottom: 60px;
+    }
+
+    .carousel-layout {
         display: grid;
+        grid-template-columns: 2fr 1fr;
+        grid-template-rows: 1fr 1fr;
+        gap: 20px;
+        height: 100%;
+    }
+
+    .main-carousel {
+        grid-row: 1 / 3;
+        position: relative;
+        border-radius: 25px;
+        overflow: hidden;
+        box-shadow: 0 20px 60px rgba(30, 60, 114, 0.15);
+    }
+
+    .side-carousel {
+        position: relative;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(30, 60, 114, 0.1);
+        cursor: pointer;
+        transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+
+    .side-carousel:hover {
+        transform: scale(1.05);
+        box-shadow: 0 20px 40px rgba(30, 60, 114, 0.2);
+    }
+
+    /* Carousel Card Styles */
+    .carousel-card {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        background: white;
+        border-radius: inherit;
+        overflow: hidden;
+        transition: all 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        transform-style: preserve-3d;
+    }
+
+    .carousel-card.expanded {
+        transform: scale(1.02);
+        z-index: 10;
+        box-shadow: 0 30px 80px rgba(30, 60, 114, 0.3);
+    }
+
+    .carousel-card.shrunk {
+        transform: scale(0.95);
+        opacity: 0.7;
+    }
+
+    .carousel-image-container {
+        position: relative;
+        width: 100%;
+        height: 70%;
+        overflow: hidden;
+    }
+
+    .carousel-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: all 0.6s ease;
+        filter: brightness(0.9);
+    }
+
+    .carousel-card:hover .carousel-image {
+        transform: scale(1.1);
+        filter: brightness(1);
+    }
+
+    .carousel-info {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: linear-gradient(to top, rgba(0,0,0,0.9), rgba(0,0,0,0.3));
+        color: white;
+        padding: 25px;
+        transform: translateY(60%);
+        transition: all 0.5s ease;
+    }
+
+    .carousel-card:hover .carousel-info,
+    .carousel-card.expanded .carousel-info {
+        transform: translateY(0);
+    }
+
+    .carousel-title {
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+        line-height: 1.2;
+    }
+
+    .side-carousel .carousel-title {
+        font-size: 1.1rem;
+    }
+
+    .carousel-description {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        margin-bottom: 15px;
+        line-height: 1.4;
+    }
+
+    .carousel-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.8rem;
+    }
+
+    .carousel-status {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        backdrop-filter: blur(10px);
+        z-index: 2;
+    }
+
+    .status-available {
+        background: rgba(16, 185, 129, 0.9);
+        color: white;
+    }
+
+    .status-rented {
+        background: rgba(239, 68, 68, 0.9);
+        color: white;
+    }
+
+    .carousel-photo-count {
+        position: absolute;
+        bottom: 15px;
+        left: 15px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 15px;
+        font-size: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        z-index: 2;
+    }
+
+    .carousel-actions {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        display: flex;
+        gap: 10px;
+        opacity: 0;
+        transition: all 0.5s ease;
+        z-index: 5;
+    }
+
+    .carousel-card:hover .carousel-actions,
+    .carousel-card.expanded .carousel-actions {
+        opacity: 1;
+    }
+
+    .carousel-btn {
+        background: var(--accent-gradient);
+        color: white;
+        border: none;
+        padding: 12px 20px;
+        border-radius: 25px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+        font-size: 0.9rem;
+    }
+
+    .carousel-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 35px rgba(59, 130, 246, 0.5);
+        color: white;
+    }
+
+    /* Carousel Navigation */
+    .main-carousel-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(30, 60, 114, 0.9);
+        color: white;
+        border: none;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        font-size: 1.2rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .main-carousel-nav:hover {
+        background: var(--dishub-accent);
+        transform: translateY(-50%) scale(1.1);
+    }
+
+    .carousel-prev {
+        left: 20px;
+    }
+
+    .carousel-next {
+        right: 20px;
+    }
+
+    .carousel-indicators {
+        position: absolute;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+        z-index: 10;
+    }
+
+    .carousel-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.5);
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .carousel-indicator.active {
+        background: white;
+        transform: scale(1.2);
+    }
+
+    /* Traditional Grid (Hidden by default) */
+    .traditional-grid {
+        display: none;
         grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
         gap: 35px;
         margin-bottom: 60px;
     }
 
-    /* Enhanced Halte Card */
+    /* Enhanced Halte Card for Traditional Grid */
     .halte-card {
         background: white;
         border-radius: 25px;
@@ -193,7 +446,7 @@
         box-shadow: 0 35px 70px rgba(30, 60, 114, 0.25);
     }
 
-    /* Enhanced Image Container */
+    /* Enhanced Image Container for Traditional Grid */
     .halte-image-container {
         position: relative;
         height: 320px;
@@ -214,7 +467,7 @@
         filter: brightness(1) contrast(1.2);
     }
 
-    /* Gradient Overlay */
+    /* Gradient Overlay for Traditional Grid */
     .halte-image-container::after {
         content: '';
         position: absolute;
@@ -237,7 +490,7 @@
         opacity: 1;
     }
 
-    /* Enhanced Status Badge */
+    /* Enhanced Status Badge for Traditional Grid */
     .halte-status {
         position: absolute;
         top: 20px;
@@ -259,19 +512,7 @@
         50% { transform: scale(1.05); }
     }
 
-    .status-available {
-        background: rgba(16, 185, 129, 0.9);
-        color: white;
-        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
-    }
-
-    .status-rented {
-        background: rgba(239, 68, 68, 0.9);
-        color: white;
-        box-shadow: 0 8px 25px rgba(239, 68, 68, 0.3);
-    }
-
-    /* Enhanced Photo Count */
+    /* Enhanced Photo Count for Traditional Grid */
     .photo-count {
         position: absolute;
         bottom: 20px;
@@ -297,7 +538,7 @@
         transform: scale(1.1);
     }
 
-    /* Enhanced Card Info */
+    /* Enhanced Card Info for Traditional Grid */
     .halte-info {
         padding: 30px;
         position: relative;
@@ -365,7 +606,7 @@
         box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
     }
 
-    /* Enhanced Actions */
+    /* Enhanced Actions for Traditional Grid */
     .halte-actions {
         display: flex;
         gap: 12px;
@@ -446,6 +687,34 @@
     .btn-view-photos:hover {
         transform: translateY(-3px) scale(1.05);
         box-shadow: 0 15px 35px rgba(29, 78, 216, 0.5);
+    }
+
+    /* View Toggle Buttons */
+    .view-toggle {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-bottom: 40px;
+    }
+
+    .view-toggle-btn {
+        background: white;
+        color: var(--dishub-blue);
+        border: 2px solid var(--dishub-blue);
+        padding: 12px 25px;
+        border-radius: 50px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+
+    .view-toggle-btn.active,
+    .view-toggle-btn:hover {
+        background: var(--dishub-blue);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(30, 60, 114, 0.3);
     }
 
     /* Modern Photo Modal */
@@ -559,7 +828,7 @@
         overflow: hidden;
     }
 
-    .carousel-image {
+    .modal-carousel-image {
         width: 100%;
         height: 100%;
         object-fit: contain;
@@ -569,7 +838,7 @@
         cursor: zoom-in;
     }
 
-    .carousel-image.zoomed {
+    .modal-carousel-image.zoomed {
         cursor: zoom-out;
         object-fit: cover;
         transform: scale(1.5);
@@ -708,7 +977,17 @@
             font-size: 2.5rem;
         }
 
-        .gallery-grid {
+        .carousel-layout {
+            grid-template-columns: 1fr;
+            grid-template-rows: 300px 150px 150px;
+            height: 600px;
+        }
+
+        .main-carousel {
+            grid-row: 1;
+        }
+
+        .traditional-grid {
             grid-template-columns: 1fr;
             gap: 25px;
         }
@@ -739,6 +1018,12 @@
         .swiper-button-prev::after {
             font-size: 16px;
         }
+
+        .main-carousel-nav {
+            width: 40px;
+            height: 40px;
+            font-size: 1rem;
+        }
     }
 
     /* Loading Animation */
@@ -754,6 +1039,34 @@
 
     @keyframes spin {
         to { transform: rotate(360deg); }
+    }
+
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 100px 20px;
+        color: #64748b;
+    }
+
+    .empty-state i {
+        font-size: 5rem;
+        margin-bottom: 30px;
+        opacity: 0.3;
+        background: var(--accent-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .empty-state h3 {
+        font-size: 1.8rem;
+        margin-bottom: 15px;
+        color: #475569;
+    }
+
+    .empty-state p {
+        font-size: 1.1rem;
+        line-height: 1.6;
     }
 </style>
 @endpush
@@ -799,106 +1112,149 @@
             </button>
         </div>
 
-        <!-- Gallery Grid -->
-        <div class="gallery-grid" id="galleryGrid">
-            @forelse($haltes as $halte)
-            <div class="halte-card"
-                 data-filter="{{ $halte->isCurrentlyRented() ? 'rented' : 'available' }} {{ $halte->simbada_registered ? 'simbada' : '' }}"
-                 data-aos="fade-up"
-                 data-aos-delay="{{ $loop->index * 100 }}">
+        <!-- View Toggle -->
+        <div class="view-toggle" data-aos="fade-up" data-aos-delay="100">
+            <button class="view-toggle-btn active" id="carouselViewBtn">
+                <i class="fas fa-film me-2"></i>Tampilan Carousel
+            </button>
+            <!-- <button class="view-toggle-btn" id="gridViewBtn">
+                <i class="fas fa-th-large me-2"></i>Tampilan Grid
+            </button> -->
+        </div>
 
-                <div class="halte-image-container">
-                    @php
-                        $primaryPhoto = $halte->photos->where('is_primary', true)->first() ?? $halte->photos->first();
-                        $photoUrl = $primaryPhoto && file_exists(storage_path('app/public/' . $primaryPhoto->photo_path))
-                            ? asset('storage/' . $primaryPhoto->photo_path)
-                            : asset('images/halte-default.png');
-                    @endphp
-
-                    <img src="{{ $photoUrl }}" alt="{{ $halte->name }}" class="halte-image" loading="lazy">
-
-                    <div class="halte-status {{ $halte->isCurrentlyRented() ? 'status-rented' : 'status-available' }}">
-                        {{ $halte->isCurrentlyRented() ? 'Disewa' : 'Tersedia' }}
+        @if($haltes->count() > 0)
+            <!-- Main Carousel Container -->
+            <div class="main-carousel-container" id="carouselContainer" data-aos="fade-up" data-aos-delay="200">
+                <div class="carousel-layout">
+                    <!-- Main Carousel -->
+                    <div class="main-carousel" id="mainCarousel">
+                        <!-- Main carousel content will be populated by JavaScript -->
                     </div>
 
-                    @if($halte->photos->count() > 0)
-                    <div class="photo-count" onclick="openPhotoModal({{ $halte->id }}, '{{ $halte->name }}', {{ $halte->photos->toJson() }})">
-                        <i class="fas fa-images"></i>
-                        {{ $halte->photos->count() }} Foto
+                    <!-- Side Carousels -->
+                    <div class="side-carousel" id="sideCarousel1">
+                        <!-- Side carousel 1 content will be populated by JavaScript -->
                     </div>
-                    @endif
+
+                    <div class="side-carousel" id="sideCarousel2">
+                        <!-- Side carousel 2 content will be populated by JavaScript -->
+                    </div>
                 </div>
 
-                <div class="halte-info">
-                    <h3 class="halte-title">{{ $halte->name }}</h3>
+                <!-- Navigation -->
+                <button class="main-carousel-nav carousel-prev" onclick="prevMainSlide()">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="main-carousel-nav carousel-next" onclick="nextMainSlide()">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
 
-                    @if($halte->description)
-                    <p class="halte-description">{{ $halte->description }}</p>
-                    @endif
+                <!-- Indicators -->
+                <div class="carousel-indicators" id="carouselIndicators">
+                    <!-- Indicators will be populated by JavaScript -->
+                </div>
+            </div>
 
-                    <div class="halte-meta">
-                        @if($halte->address)
-                        <div class="halte-location">
-                            <i class="fas fa-map-marker-alt"></i>
-                            {{ Str::limit($halte->address, 30) }}
+            <!-- Traditional Grid -->
+            <div class="traditional-grid" id="traditionalGrid">
+                @foreach($haltes as $halte)
+                <div class="halte-card"
+                     data-filter="{{ $halte->isCurrentlyRented() ? 'rented' : 'available' }} {{ $halte->simbada_registered ? 'simbada' : '' }}"
+                     data-aos="fade-up"
+                     data-aos-delay="{{ $loop->index * 100 }}">
+
+                    <div class="halte-image-container">
+                        @php
+                            $primaryPhoto = $halte->photos->where('is_primary', true)->first() ?? $halte->photos->first();
+                            $photoUrl = $primaryPhoto && file_exists(storage_path('app/public/' . $primaryPhoto->photo_path))
+                                ? asset('storage/' . $primaryPhoto->photo_path)
+                                : asset('images/halte-default.png');
+                        @endphp
+
+                        <img src="{{ $photoUrl }}" alt="{{ $halte->name }}" class="halte-image" loading="lazy">
+
+                        <div class="halte-status {{ $halte->isCurrentlyRented() ? 'status-rented' : 'status-available' }}">
+                            {{ $halte->isCurrentlyRented() ? 'Disewa' : 'Tersedia' }}
                         </div>
-                        @endif
 
-                        @if($halte->simbada_registered)
-                        <div class="halte-simbada">
-                            <span class="simbada-badge">
-                                <i class="fas fa-certificate"></i> SIMBADA
-                            </span>
+                        @if($halte->photos->count() > 0)
+                        <div class="photo-count" onclick="openPhotoModal({{ $halte->id }}, '{{ $halte->name }}', {{ $halte->photos->toJson() }})">
+                            <i class="fas fa-images"></i>
+                            {{ $halte->photos->count() }} Foto
                         </div>
                         @endif
                     </div>
 
-                    <div class="halte-actions">
-                        @auth
-                            @if(Auth::user()->isAdmin())
-                                <a href="{{ route('halte.detail', $halte->id) }}" class="btn-view-detail">
-                                    <i class="fas fa-info-circle me-2"></i>Lihat Detail
-                                </a>
+                    <div class="halte-info">
+                        <h3 class="halte-title">{{ $halte->name }}</h3>
+
+                        @if($halte->description)
+                        <p class="halte-description">{{ $halte->description }}</p>
+                        @endif
+
+                        <div class="halte-meta">
+                            @if($halte->address)
+                            <div class="halte-location">
+                                <i class="fas fa-map-marker-alt"></i>
+                                {{ Str::limit($halte->address, 30) }}
+                            </div>
+                            @endif
+
+                            @if($halte->simbada_registered)
+                            <div class="halte-simbada">
+                                <span class="simbada-badge">
+                                    <i class="fas fa-certificate"></i> SIMBADA
+                                </span>
+                            </div>
+                            @endif
+                        </div>
+
+                        <div class="halte-actions">
+                            @auth
+                                @if(Auth::user()->isAdmin())
+                                    <a href="{{ route('halte.detail', $halte->id) }}" class="btn-view-detail">
+                                        <i class="fas fa-info-circle me-2"></i>Lihat Detail
+                                    </a>
+                                @else
+                                    <button onclick="showAccessModal()" class="btn-view-detail">
+                                        <i class="fas fa-info-circle me-2"></i>Lihat Detail
+                                    </button>
+                                @endif
                             @else
                                 <button onclick="showAccessModal()" class="btn-view-detail">
                                     <i class="fas fa-info-circle me-2"></i>Lihat Detail
                                 </button>
-                            @endif
-                        @else
-                            <button onclick="showAccessModal()" class="btn-view-detail">
-                                <i class="fas fa-info-circle me-2"></i>Lihat Detail
-                            </button>
-                        @endauth
+                            @endauth
 
-                        @if($halte->photos->count() > 0)
-                        <button class="btn-view-photos" onclick="openPhotoModal({{ $halte->id }}, '{{ $halte->name }}', {{ $halte->photos->toJson() }})">
-                            <i class="fas fa-images"></i>
-                        </button>
-                        @endif
+                            @if($halte->photos->count() > 0)
+                            <button class="btn-view-photos" onclick="openPhotoModal({{ $halte->id }}, '{{ $halte->name }}', {{ $halte->photos->toJson() }})">
+                                <i class="fas fa-images"></i>
+                            </button>
+                            @endif
+                        </div>
                     </div>
                 </div>
+                @endforeach
             </div>
-            @empty
-            <div class="col-12">
-                <div class="text-center py-5">
-                    <i class="fas fa-bus" style="font-size: 4rem; color: #ccc; margin-bottom: 20px;"></i>
-                    <h3 style="color: #6c757d;">Belum ada halte yang terdaftar</h3>
-                    <p style="color: #6c757d;">Data halte akan muncul setelah ditambahkan oleh administrator.</p>
-                </div>
-            </div>
-            @endforelse
-        </div>
 
-        <!-- Load More Button -->
-        @if($haltes->count() >= 12)
-        <div class="text-center" data-aos="fade-up">
-            <button class="filter-btn" id="loadMoreBtn">
-                <span class="load-text">
-                    <i class="fas fa-plus me-2"></i>Muat Lebih Banyak
-                </span>
-                <span class="loading-spinner" style="display: none;"></span>
-            </button>
-        </div>
+            <!-- Load More Button -->
+            @if($haltes->count() >= 12)
+            <div class="text-center" data-aos="fade-up">
+                <button class="filter-btn" id="loadMoreBtn">
+                    <span class="load-text">
+                        <i class="fas fa-plus me-2"></i>Muat Lebih Banyak
+                    </span>
+                    <span class="loading-spinner" style="display: none;"></span>
+                </button>
+            </div>
+            @endif
+        @else
+            <!-- Empty State -->
+            <div class="empty-state" data-aos="fade-up">
+                <i class="fas fa-bus"></i>
+                <h3>Belum ada halte yang terdaftar</h3>
+                <p>Data halte akan muncul setelah ditambahkan oleh administrator.</p>
+            </div>
         @endif
     </div>
 </section>
@@ -989,6 +1345,12 @@
 <!-- Swiper JS -->
 <script src="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.js"></script>
 <script>
+// Global variables
+let halteData = @json($haltes);
+let currentMainSlide = 0;
+let photoSwiper = null;
+let isCarouselView = true;
+
 $(document).ready(function() {
     // Initialize AOS
     AOS.init({
@@ -996,6 +1358,37 @@ $(document).ready(function() {
         easing: 'ease-out-cubic',
         once: true,
         offset: 100
+    });
+
+    // Initialize carousel if there's data
+    if (halteData.length > 0) {
+        initializeCarousel();
+    }
+
+    // View toggle functionality
+    const carouselViewBtn = document.getElementById('carouselViewBtn');
+    const gridViewBtn = document.getElementById('gridViewBtn');
+    const carouselContainer = document.getElementById('carouselContainer');
+    const traditionalGrid = document.getElementById('traditionalGrid');
+
+    carouselViewBtn.addEventListener('click', function() {
+        if (!isCarouselView) {
+            isCarouselView = true;
+            this.classList.add('active');
+            gridViewBtn.classList.remove('active');
+            carouselContainer.style.display = 'block';
+            traditionalGrid.style.display = 'none';
+        }
+    });
+
+    gridViewBtn.addEventListener('click', function() {
+        if (isCarouselView) {
+            isCarouselView = false;
+            this.classList.add('active');
+            carouselViewBtn.classList.remove('active');
+            carouselContainer.style.display = 'none';
+            traditionalGrid.style.display = 'grid';
+        }
     });
 
     // Enhanced Filter functionality
@@ -1006,15 +1399,36 @@ $(document).ready(function() {
         button.addEventListener('click', () => {
             const filter = button.getAttribute('data-filter');
 
-            // Update active filter button with smooth transition
-            filterButtons.forEach(btn => {
-                btn.classList.remove('active');
-                btn.style.transform = 'scale(1)';
-            });
+            // Update active filter button
+            filterButtons.forEach(btn => btn.classList.remove('active'));
             button.classList.add('active');
-            button.style.transform = 'scale(1.05)';
 
-            // Filter cards with stagger animation
+            // Filter halte data for carousel
+            let filteredHaltes = halteData;
+            if (filter !== 'all') {
+                filteredHaltes = halteData.filter(halte => {
+                    const isRented = halte.rentals && halte.rentals.some(rental =>
+                        new Date(rental.start_date) <= new Date() && new Date(rental.end_date) >= new Date()
+                    );
+                    const isAvailable = !isRented;
+
+                    switch(filter) {
+                        case 'available':
+                            return isAvailable;
+                        case 'rented':
+                            return isRented;
+                        case 'simbada':
+                            return halte.simbada_registered;
+                        default:
+                            return true;
+                    }
+                });
+            }
+
+            // Update carousel with filtered data
+            updateCarousel(filteredHaltes);
+
+            // Filter traditional grid cards
             halteCards.forEach((card, index) => {
                 const cardFilters = card.getAttribute('data-filter').split(' ');
 
@@ -1035,9 +1449,8 @@ $(document).ready(function() {
         });
     });
 
-    // Enhanced Back to top button
+    // Back to top functionality
     const backToTop = document.getElementById('backToTop');
-
     window.addEventListener('scroll', () => {
         if (window.pageYOffset > 300) {
             backToTop.classList.add('show');
@@ -1053,41 +1466,249 @@ $(document).ready(function() {
         });
     });
 
-    // Enhanced smooth scrolling for anchor links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-            }
-        });
-    });
+    // Load more functionality
+    const loadMoreBtn = document.getElementById('loadMoreBtn');
+    if (loadMoreBtn) {
+        loadMoreBtn.addEventListener('click', function() {
+            const loadText = this.querySelector('.load-text');
+            const spinner = this.querySelector('.loading-spinner');
 
-    // Add hover effects to cards
-    const cards = document.querySelectorAll('.halte-card');
-    cards.forEach(card => {
-        card.addEventListener('mouseenter', function() {
-            this.style.zIndex = '10';
-        });
+            loadText.style.display = 'none';
+            spinner.style.display = 'inline-block';
 
-        card.addEventListener('mouseleave', function() {
-            this.style.zIndex = '1';
+            // Simulate loading
+            setTimeout(() => {
+                loadText.style.display = 'inline';
+                spinner.style.display = 'none';
+            }, 2000);
         });
-    });
+    }
 });
 
-// Global Swiper instance
-let photoSwiper = null;
+// Carousel initialization
+function initializeCarousel() {
+    updateCarousel(halteData);
+}
 
-// Enhanced Photo modal functions
+function updateCarousel(data) {
+    if (data.length === 0) {
+        document.getElementById('carouselContainer').innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-bus"></i>
+                <h3>Tidak ada halte yang sesuai filter</h3>
+                <p>Coba ubah filter untuk melihat halte lainnya.</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Reset current slide if it exceeds new data length
+    if (currentMainSlide >= data.length) {
+        currentMainSlide = 0;
+    }
+
+    // Update carousel content
+    updateCarouselContent(data);
+    updateCarouselIndicators(data);
+}
+
+function updateCarouselContent(data) {
+    const mainCarousel = document.getElementById('mainCarousel');
+    const sideCarousel1 = document.getElementById('sideCarousel1');
+    const sideCarousel2 = document.getElementById('sideCarousel2');
+
+    // Get current, next, and previous halte data
+    const currentHalte = data[currentMainSlide];
+    const nextHalte = data[(currentMainSlide + 1) % data.length];
+    const prevHalte = data[(currentMainSlide - 1 + data.length) % data.length];
+
+    // Main carousel content
+    mainCarousel.innerHTML = createCarouselCard(currentHalte, 'main');
+
+    // Side carousels content
+    if (data.length > 1) {
+        sideCarousel1.innerHTML = createCarouselCard(nextHalte, 'side');
+        sideCarousel2.innerHTML = createCarouselCard(prevHalte, 'side');
+    } else {
+        sideCarousel1.innerHTML = '';
+        sideCarousel2.innerHTML = '';
+    }
+
+    // Add click handlers to side carousels
+    if (data.length > 1) {
+        sideCarousel1.onclick = () => expandCarouselCard(sideCarousel1, () => nextMainSlide());
+        sideCarousel2.onclick = () => expandCarouselCard(sideCarousel2, () => prevMainSlide());
+    }
+}
+
+function createCarouselCard(halte, type = 'main') {
+    const primaryPhoto = halte.photos && halte.photos.length > 0
+        ? halte.photos.find(p => p.is_primary) || halte.photos[0]
+        : null;
+
+    const photoUrl = primaryPhoto
+        ? `/storage/${primaryPhoto.photo_path}`
+        : '/images/halte-default.png';
+
+    const isRented = halte.rentals && halte.rentals.some(rental =>
+        new Date(rental.start_date) <= new Date() && new Date(rental.end_date) >= new Date()
+    );
+
+    const statusClass = isRented ? 'status-rented' : 'status-available';
+    const statusText = isRented ? 'Disewa' : 'Tersedia';
+
+    return `
+        <div class="carousel-card">
+            <div class="carousel-image-container">
+                <img src="${photoUrl}" alt="${halte.name}" class="carousel-image" loading="lazy">
+
+                <div class="carousel-status ${statusClass}">
+                    ${statusText}
+                </div>
+
+                ${halte.photos && halte.photos.length > 0 ? `
+                <div class="carousel-photo-count">
+                    <i class="fas fa-images"></i>
+                    ${halte.photos.length} Foto
+                </div>
+                ` : ''}
+
+                <div class="carousel-actions">
+                    @auth
+                        @if(Auth::user()->isAdmin())
+                            <a href="/halte/${halte.id}" class="carousel-btn">
+                                <i class="fas fa-info-circle me-1"></i>Detail
+                            </a>
+                        @else
+                            <button onclick="showAccessModal()" class="carousel-btn">
+                                <i class="fas fa-info-circle me-1"></i>Detail
+                            </button>
+                        @endif
+                    @else
+                        <button onclick="showAccessModal()" class="carousel-btn">
+                            <i class="fas fa-info-circle me-1"></i>Detail
+                        </button>
+                    @endauth
+
+                    ${halte.photos && halte.photos.length > 0 ? `
+                    <button class="carousel-btn" onclick="openPhotoModal(${halte.id}, '${halte.name}', ${JSON.stringify(halte.photos).replace(/"/g, '&quot;')})">
+                        <i class="fas fa-images me-1"></i>Foto
+                    </button>
+                    ` : ''}
+                </div>
+            </div>
+
+            <div class="carousel-info">
+                <h3 class="carousel-title">${halte.name}</h3>
+                ${halte.description ? `<p class="carousel-description">${halte.description.substring(0, 100)}${halte.description.length > 100 ? '...' : ''}</p>` : ''}
+
+                <div class="carousel-meta">
+                    ${halte.address ? `
+                    <div class="carousel-location">
+                        <i class="fas fa-map-marker-alt me-1"></i>
+                        ${halte.address.substring(0, 30)}${halte.address.length > 30 ? '...' : ''}
+                    </div>
+                    ` : ''}
+
+                    ${halte.simbada_registered ? `
+                    <div class="carousel-simbada">
+                        <span class="simbada-badge">
+                            <i class="fas fa-certificate"></i> SIMBADA
+                        </span>
+                    </div>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function updateCarouselIndicators(data) {
+    const indicatorsContainer = document.getElementById('carouselIndicators');
+    indicatorsContainer.innerHTML = '';
+
+    for (let i = 0; i < data.length; i++) {
+        const indicator = document.createElement('div');
+        indicator.className = `carousel-indicator ${i === currentMainSlide ? 'active' : ''}`;
+        indicator.onclick = () => goToSlide(i);
+        indicatorsContainer.appendChild(indicator);
+    }
+}
+
+function expandCarouselCard(cardElement, callback) {
+    // Add expanded class to clicked card
+    const card = cardElement.querySelector('.carousel-card');
+    card.classList.add('expanded');
+
+    // Add shrunk class to other cards
+    const allCards = document.querySelectorAll('.carousel-card');
+    allCards.forEach(c => {
+        if (c !== card) {
+            c.classList.add('shrunk');
+        }
+    });
+
+    // Reset after animation and execute callback
+    setTimeout(() => {
+        allCards.forEach(c => {
+            c.classList.remove('expanded', 'shrunk');
+        });
+        callback();
+    }, 800);
+}
+
+function nextMainSlide() {
+    const data = getCurrentFilteredData();
+    currentMainSlide = (currentMainSlide + 1) % data.length;
+    updateCarouselContent(data);
+    updateCarouselIndicators(data);
+}
+
+function prevMainSlide() {
+    const data = getCurrentFilteredData();
+    currentMainSlide = (currentMainSlide - 1 + data.length) % data.length;
+    updateCarouselContent(data);
+    updateCarouselIndicators(data);
+}
+
+function goToSlide(index) {
+    const data = getCurrentFilteredData();
+    currentMainSlide = index;
+    updateCarouselContent(data);
+    updateCarouselIndicators(data);
+}
+
+function getCurrentFilteredData() {
+    const activeFilter = document.querySelector('.filter-btn.active');
+    const filter = activeFilter ? activeFilter.getAttribute('data-filter') : 'all';
+
+    if (filter === 'all') {
+        return halteData;
+    }
+
+    return halteData.filter(halte => {
+        const isRented = halte.rentals && halte.rentals.some(rental =>
+            new Date(rental.start_date) <= new Date() && new Date(rental.end_date) >= new Date()
+        );
+        const isAvailable = !isRented;
+
+        switch(filter) {
+            case 'available':
+                return isAvailable;
+            case 'rented':
+                return isRented;
+            case 'simbada':
+                return halte.simbada_registered;
+            default:
+                return true;
+        }
+    });
+}
+
+// Photo modal functions
 function openPhotoModal(halteId, halteName, photos) {
     const modal = document.getElementById('photoModal');
     const title = document.getElementById('photoModalTitle');
-    const body = document.getElementById('photoModalBody');
     const counter = document.getElementById('imageCounter');
     const swiperWrapper = document.getElementById('swiperWrapper');
 
@@ -1105,7 +1726,7 @@ function openPhotoModal(halteId, halteName, photos) {
             slide.innerHTML = `
                 <img src="${photoUrl}"
                      alt="${halteName} - Foto ${index + 1}"
-                     class="carousel-image"
+                     class="modal-carousel-image"
                      onclick="toggleZoom(this)"
                      loading="lazy">
             `;
@@ -1150,7 +1771,7 @@ function openPhotoModal(halteId, halteName, photos) {
                     counter.textContent = `${currentSlide} / ${photos.length}`;
 
                     // Reset zoom on all images
-                    const images = document.querySelectorAll('.carousel-image');
+                    const images = document.querySelectorAll('.modal-carousel-image');
                     images.forEach(img => {
                         img.classList.remove('zoomed');
                     });
@@ -1158,7 +1779,7 @@ function openPhotoModal(halteId, halteName, photos) {
             }
         });
     } else {
-        body.innerHTML = `
+        document.getElementById('photoModalBody').innerHTML = `
             <div class="no-photos">
                 <i class="fas fa-camera-retro"></i>
                 <h4>Tidak ada foto tersedia</h4>
@@ -1200,7 +1821,7 @@ function toggleZoom(image) {
     const isZoomed = image.classList.contains('zoomed');
 
     // Reset all images first
-    const allImages = document.querySelectorAll('.carousel-image');
+    const allImages = document.querySelectorAll('.modal-carousel-image');
     allImages.forEach(img => img.classList.remove('zoomed'));
 
     // Toggle current image
@@ -1221,6 +1842,15 @@ document.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
         closePhotoModal();
     }
+
+    // Keyboard navigation for main carousel
+    if (isCarouselView && halteData.length > 0) {
+        if (event.key === 'ArrowLeft') {
+            prevMainSlide();
+        } else if (event.key === 'ArrowRight') {
+            nextMainSlide();
+        }
+    }
 });
 
 // Access modal function
@@ -1229,25 +1859,59 @@ function showAccessModal() {
     modal.show();
 }
 
-// Enhanced loading animation for load more button
-const loadMoreBtn = document.getElementById('loadMoreBtn');
-if (loadMoreBtn) {
-    loadMoreBtn.addEventListener('click', function() {
-        const loadText = this.querySelector('.load-text');
-        const spinner = this.querySelector('.loading-spinner');
+// Auto-play carousel (optional)
+let autoPlayInterval;
 
-        loadText.style.display = 'none';
-        spinner.style.display = 'inline-block';
-
-        // Simulate loading
-        setTimeout(() => {
-            loadText.style.display = 'inline';
-            spinner.style.display = 'none';
-        }, 2000);
-    });
+function startAutoPlay() {
+    if (halteData.length > 1) {
+        autoPlayInterval = setInterval(() => {
+            if (isCarouselView) {
+                nextMainSlide();
+            }
+        }, 5000);
+    }
 }
 
-// Add parallax effect to header
+function stopAutoPlay() {
+    if (autoPlayInterval) {
+        clearInterval(autoPlayInterval);
+    }
+}
+
+// Start auto-play when page loads
+setTimeout(startAutoPlay, 3000);
+
+// Pause auto-play on hover
+document.getElementById('carouselContainer')?.addEventListener('mouseenter', stopAutoPlay);
+document.getElementById('carouselContainer')?.addEventListener('mouseleave', startAutoPlay);
+
+// Touch/swipe support for mobile
+let touchStartX = 0;
+let touchEndX = 0;
+
+document.getElementById('carouselContainer')?.addEventListener('touchstart', function(event) {
+    touchStartX = event.changedTouches[0].screenX;
+});
+
+document.getElementById('carouselContainer')?.addEventListener('touchend', function(event) {
+    touchEndX = event.changedTouches[0].screenX;
+    handleSwipe();
+});
+
+function handleSwipe() {
+    const swipeThreshold = 50;
+    const diff = touchStartX - touchEndX;
+
+    if (Math.abs(diff) > swipeThreshold) {
+        if (diff > 0) {
+            nextMainSlide();
+        } else {
+            prevMainSlide();
+        }
+    }
+}
+
+// Parallax effect for header
 window.addEventListener('scroll', function() {
     const scrolled = window.pageYOffset;
     const header = document.querySelector('.gallery-header');
@@ -1257,7 +1921,7 @@ window.addEventListener('scroll', function() {
     }
 });
 
-// Add intersection observer for card animations
+// Intersection observer for animations
 const observerOptions = {
     threshold: 0.1,
     rootMargin: '0px 0px -50px 0px'
@@ -1271,9 +1935,93 @@ const observer = new IntersectionObserver(function(entries) {
     });
 }, observerOptions);
 
-// Observe all cards
-document.querySelectorAll('.halte-card').forEach(card => {
-    observer.observe(card);
+// Observe all cards and carousel elements
+document.querySelectorAll('.halte-card, .carousel-card').forEach(element => {
+    observer.observe(element);
 });
+
+// Preload images for better performance
+function preloadImages() {
+    halteData.forEach(halte => {
+        if (halte.photos && halte.photos.length > 0) {
+            halte.photos.forEach(photo => {
+                const img = new Image();
+                img.src = `/storage/${photo.photo_path}`;
+            });
+        }
+    });
+}
+
+// Start preloading after initial load
+setTimeout(preloadImages, 1000);
+
+// Resize handler for responsive carousel
+window.addEventListener('resize', function() {
+    if (isCarouselView && halteData.length > 0) {
+        setTimeout(() => {
+            updateCarouselContent(getCurrentFilteredData());
+        }, 100);
+    }
+});
+
+// Performance optimization: throttle scroll events
+function throttle(func, limit) {
+    let inThrottle;
+    return function() {
+        const args = arguments;
+        const context = this;
+        if (!inThrottle) {
+            func.apply(context, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    }
+}
+
+// Apply throttling to scroll events
+window.addEventListener('scroll', throttle(function() {
+    // Back to top visibility
+    const backToTop = document.getElementById('backToTop');
+    if (window.pageYOffset > 300) {
+        backToTop.classList.add('show');
+    } else {
+        backToTop.classList.remove('show');
+    }
+}, 100));
+
+// Add loading states for better UX
+function showLoading() {
+    const carouselContainer = document.getElementById('carouselContainer');
+    if (carouselContainer) {
+        carouselContainer.innerHTML = `
+            <div style="display: flex; justify-content: center; align-items: center; height: 600px;">
+                <div class="loading-spinner"></div>
+                <span style="margin-left: 15px; color: var(--dishub-blue); font-weight: 600;">Memuat galeri...</span>
+            </div>
+        `;
+    }
+}
+
+function hideLoading() {
+    // This will be called after carousel is updated
+}
+
+// Error handling for missing images
+function handleImageError(img) {
+    img.src = '/images/halte-default.png';
+    img.alt = 'Gambar tidak tersedia';
+}
+
+// Add error handlers to dynamically created images
+document.addEventListener('DOMContentLoaded', function() {
+    // Set up error handlers for all images
+    document.addEventListener('error', function(e) {
+        if (e.target.tagName === 'IMG') {
+            handleImageError(e.target);
+        }
+    }, true);
+});
+
+console.log('Gallery carousel initialized with', halteData.length, 'halte(s)');
 </script>
 @endpush
