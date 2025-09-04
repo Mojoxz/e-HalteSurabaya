@@ -2,7 +2,7 @@
 <aside class="admin-sidebar" id="adminSidebar">
     <div class="sidebar-header">
         <h4 class="sidebar-title">
-            <i class="fas fa-tachometer-alt"></i>
+            <i class="fas fa-th-large"></i>
             <span class="sidebar-text">Admin Panel</span>
         </h4>
         <button class="sidebar-toggle" id="sidebarToggle">

@@ -13,7 +13,7 @@
         <div class="page-header">
             <div class="page-header-content">
                 <h1 class="page-title">
-                    <i class="fas fa-tachometer-alt"></i>
+                    <i class="fas fa-chart-line"></i>
                     Dashboard Admin
                 </h1>
                 <div class="page-actions">
