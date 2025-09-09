@@ -407,6 +407,113 @@
         position: relative;
     }
 
+    /* Map Search Control */
+    .map-search-container {
+        position: absolute;
+        top: 20px;
+        left: 60px;
+        z-index: 1000;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        padding: 10px;
+        min-width: 300px;
+    }
+
+    .map-search-input {
+        border: none;
+        outline: none;
+        width: 100%;
+        padding: 10px 40px 10px 15px;
+        font-size: 14px;
+        border-radius: 8px;
+        background-color: #f8f9fa;
+        transition: all 0.3s ease;
+    }
+
+    .map-search-input:focus {
+        background-color: #fff;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+    }
+
+    .search-icon {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #666;
+        pointer-events: none;
+    }
+
+    .search-results {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 1001;
+        display: none;
+    }
+
+    .search-result-item {
+        padding: 12px 15px;
+        cursor: pointer;
+        border-bottom: 1px solid #eee;
+        font-size: 14px;
+        transition: background-color 0.2s ease;
+    }
+
+    .search-result-item:hover {
+        background-color: #f8f9fa;
+    }
+
+    .search-result-item:last-child {
+        border-bottom: none;
+    }
+
+    .search-result-name {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 3px;
+    }
+
+    .search-result-info {
+        font-size: 12px;
+        color: #666;
+    }
+
+    .no-results {
+        padding: 15px;
+        text-align: center;
+        color: #999;
+        font-style: italic;
+        font-size: 14px;
+    }
+
+    .clear-search {
+        position: absolute;
+        right: 45px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #999;
+        cursor: pointer;
+        font-size: 16px;
+        display: none;
+        padding: 5px;
+        border-radius: 3px;
+        transition: color 0.2s ease;
+    }
+
+    .clear-search:hover {
+        color: #666;
+    }
+
     .map-legend {
         position: absolute;
         bottom: 20px;
@@ -506,6 +613,12 @@
 
         .zigzag-section {
             padding: 60px 0;
+        }
+
+        .map-search-container {
+            left: 20px;
+            right: 20px;
+            min-width: auto;
         }
     }
 
@@ -727,6 +840,26 @@
         transform: translateY(-3px);
         box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);
     }
+
+    /* Highlight matched halte */
+    .highlighted-marker {
+        animation: pulse 1.5s ease-in-out 3;
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: scale(1);
+            opacity: 1;
+        }
+        50% {
+            transform: scale(1.3);
+            opacity: 0.7;
+        }
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
 </style>
 @endpush
 
@@ -888,11 +1021,30 @@
     <div class="container">
         <div class="text-center mb-5" data-aos="fade-up">
             <h2 class="display-5 fw-bold mb-4">Peta Lokasi Halte Bus</h2>
-            <p class="lead">Jelajahi lokasi halte bus di seluruh wilayah dengan peta interaktif</p>
+            <p class="lead">Jelajahi lokasi halte bus di seluruh wilayah dengan peta interaktif dan fitur pencarian</p>
         </div>
 
         <div class="map-container" data-aos="zoom-in">
             <div id="map"></div>
+            
+            <!-- Search Control -->
+            <div class="map-search-container">
+                <div style="position: relative;">
+                    <input type="text" 
+                           class="map-search-input" 
+                           id="halteSearchInput"
+                           placeholder="Cari halte berdasarkan nama, alamat, atau status..."
+                           autocomplete="off">
+                    <button class="clear-search" id="clearSearch" title="Hapus pencarian">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <div class="search-icon">
+                        <i class="fas fa-search"></i>
+                    </div>
+                </div>
+                <div class="search-results" id="searchResults"></div>
+            </div>
+
             <div class="map-legend">
                 <h6><strong>Keterangan:</strong></h6>
                 <div class="legend-item">
@@ -1073,13 +1225,16 @@ $(document).ready(function() {
     // Check if user is admin
     const isAdmin = @json(auth()->check() && auth()->user()->isAdmin());
 
-    // Initialize map centered on Sidoarjo, East Java
+    // Initialize map centered on Surabaya, East Java
     const map = L.map('map').setView([-7.2575, 112.7521], 12);
 
-    // Add OpenStreetMap tiles
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    attribution: 'Tiles &copy; Esri'
-}).addTo(map);
+    // Add OpenStreetMap tiles with better styling
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19,
+        tileSize: 256,
+        zoomOffset: 0
+    }).addTo(map);
 
     // Halte data from Laravel
     const haltesData = @json($haltesData);
@@ -1098,6 +1253,10 @@ $(document).ready(function() {
         iconSize: [20, 20],
         iconAnchor: [10, 10]
     });
+
+    // Store markers and halte data for search functionality
+    const markers = {};
+    const searchData = [];
 
     // Function to create photo carousel HTML
     function createPhotoCarousel(photos, halteName) {
@@ -1226,19 +1385,250 @@ $(document).ready(function() {
             </div>
         `;
 
-        // Add marker to map
-        L.marker([halte.latitude, halte.longitude], { icon: icon })
+        // Create marker
+        const marker = L.marker([halte.latitude, halte.longitude], { icon: icon })
             .bindPopup(popupContent, {
                 maxWidth: 370,
                 className: 'custom-popup',
                 closeButton: true
             })
             .addTo(map);
+
+        // Store marker for search functionality
+        markers[halte.id] = marker;
+
+        // Prepare search data
+        searchData.push({
+            id: halte.id,
+            name: halte.name,
+            address: halte.address || '',
+            description: halte.description || '',
+            status: halte.rental_status === 'rented' ? 'Disewa' : 'Tersedia',
+            simbada: halte.simbada_registered ? 'Terdaftar' : 'Tidak Terdaftar',
+            rented_by: halte.rented_by || '',
+            latitude: halte.latitude,
+            longitude: halte.longitude,
+            marker: marker
+        });
     });
+
+    // Search functionality
+    const searchInput = document.getElementById('halteSearchInput');
+    const searchResults = document.getElementById('searchResults');
+    const clearButton = document.getElementById('clearSearch');
+    let searchTimeout;
+
+    // Function to normalize text for search
+    function normalizeText(text) {
+        return text.toLowerCase()
+            .replace(/[àáâãäå]/g, 'a')
+            .replace(/[èéêë]/g, 'e')
+            .replace(/[ìíîï]/g, 'i')
+            .replace(/[òóôõö]/g, 'o')
+            .replace(/[ùúûü]/g, 'u')
+            .trim();
+    }
+
+    // Function to highlight marker
+    function highlightMarker(markerId) {
+        const marker = markers[markerId];
+        if (marker) {
+            const markerElement = marker._icon;
+            if (markerElement) {
+                markerElement.classList.add('highlighted-marker');
+                setTimeout(() => {
+                    markerElement.classList.remove('highlighted-marker');
+                }, 4500);
+            }
+        }
+    }
+
+    // Function to perform search
+    function performSearch(query) {
+        const normalizedQuery = normalizeText(query);
+        
+        if (normalizedQuery.length < 2) {
+            searchResults.style.display = 'none';
+            return;
+        }
+
+        const results = searchData.filter(halte => {
+            return normalizeText(halte.name).includes(normalizedQuery) ||
+                   normalizeText(halte.address).includes(normalizedQuery) ||
+                   normalizeText(halte.description).includes(normalizedQuery) ||
+                   normalizeText(halte.status).includes(normalizedQuery) ||
+                   normalizeText(halte.simbada).includes(normalizedQuery) ||
+                   normalizeText(halte.rented_by).includes(normalizedQuery);
+        });
+
+        displaySearchResults(results);
+    }
+
+    // Function to display search results
+    function displaySearchResults(results) {
+        if (results.length === 0) {
+            searchResults.innerHTML = '<div class="no-results">Tidak ada halte yang ditemukan</div>';
+            searchResults.style.display = 'block';
+            return;
+        }
+
+        let resultsHtml = '';
+        results.slice(0, 5).forEach(halte => { // Limit to 5 results
+            resultsHtml += `
+                <div class="search-result-item" data-halte-id="${halte.id}">
+                    <div class="search-result-name">${halte.name}</div>
+                    <div class="search-result-info">
+                        ${halte.address ? halte.address + ' • ' : ''}
+                        <span style="color: ${halte.status === 'Disewa' ? '#dc3545' : '#28a745'}">
+                            ${halte.status}
+                        </span>
+                    </div>
+                </div>
+            `;
+        });
+
+        if (results.length > 5) {
+            resultsHtml += `<div class="search-result-item" style="font-style: italic; color: #999;">...dan ${results.length - 5} hasil lainnya</div>`;
+        }
+
+        searchResults.innerHTML = resultsHtml;
+        searchResults.style.display = 'block';
+
+        // Add click handlers to search results
+        searchResults.querySelectorAll('.search-result-item[data-halte-id]').forEach(item => {
+            item.addEventListener('click', function() {
+                const halteId = this.dataset.halteId;
+                const halte = searchData.find(h => h.id == halteId);
+                
+                if (halte) {
+                    // Center map on halte
+                    map.setView([halte.latitude, halte.longitude], 16);
+                    
+                    // Highlight and open popup
+                    highlightMarker(halteId);
+                    setTimeout(() => {
+                        halte.marker.openPopup();
+                    }, 1000);
+                    
+                    // Hide search results
+                    searchResults.style.display = 'none';
+                    
+                    // Update search input with selected halte name
+                    searchInput.value = halte.name;
+                    clearButton.style.display = 'block';
+                }
+            });
+        });
+    }
+
+    // Search input event listeners
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        const query = this.value.trim();
+        
+        if (query.length === 0) {
+            searchResults.style.display = 'none';
+            clearButton.style.display = 'none';
+            return;
+        }
+        
+        clearButton.style.display = 'block';
+        
+        // Debounce search
+        searchTimeout = setTimeout(() => {
+            performSearch(query);
+        }, 300);
+    });
+
+    // Clear search functionality
+    clearButton.addEventListener('click', function() {
+        searchInput.value = '';
+        searchResults.style.display = 'none';
+        clearButton.style.display = 'none';
+        searchInput.focus();
+    });
+
+    // Hide search results when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.map-search-container')) {
+            searchResults.style.display = 'none';
+        }
+    });
+
+    // Show search results when input is focused and has value
+    searchInput.addEventListener('focus', function() {
+        if (this.value.trim().length >= 2) {
+            performSearch(this.value.trim());
+        }
+    });
+
+    // Keyboard navigation for search results
+    searchInput.addEventListener('keydown', function(e) {
+        const items = searchResults.querySelectorAll('.search-result-item[data-halte-id]');
+        const currentActive = searchResults.querySelector('.search-result-item.active');
+        
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (currentActive) {
+                currentActive.classList.remove('active');
+                const next = currentActive.nextElementSibling;
+                if (next && next.dataset.halteId) {
+                    next.classList.add('active');
+                } else if (items.length > 0) {
+                    items[0].classList.add('active');
+                }
+            } else if (items.length > 0) {
+                items[0].classList.add('active');
+            }
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (currentActive) {
+                currentActive.classList.remove('active');
+                const prev = currentActive.previousElementSibling;
+                if (prev && prev.dataset.halteId) {
+                    prev.classList.add('active');
+                } else if (items.length > 0) {
+                    items[items.length - 1].classList.add('active');
+                }
+            } else if (items.length > 0) {
+                items[items.length - 1].classList.add('active');
+            }
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (currentActive && currentActive.dataset.halteId) {
+                currentActive.click();
+            }
+        } else if (e.key === 'Escape') {
+            searchResults.style.display = 'none';
+            this.blur();
+        }
+    });
+
+    // Add hover effect for keyboard navigation
+    searchResults.addEventListener('mouseover', function(e) {
+        if (e.target.closest('.search-result-item[data-halte-id]')) {
+            // Remove active class from all items
+            this.querySelectorAll('.search-result-item.active').forEach(item => {
+                item.classList.remove('active');
+            });
+            // Add active class to hovered item
+            e.target.closest('.search-result-item[data-halte-id]').classList.add('active');
+        }
+    });
+
+    // CSS for active search result item
+    const style = document.createElement('style');
+    style.textContent = `
+        .search-result-item.active {
+            background-color: #f0f8ff !important;
+            border-left: 3px solid var(--dishub-accent);
+        }
+    `;
+    document.head.appendChild(style);
 
     // Auto-fit map to show all markers
     if (haltesData.length > 0) {
-        const group = new L.featureGroup(map._layers);
+        const group = new L.featureGroup(Object.values(markers));
         if (Object.keys(group._layers).length > 0) {
             map.fitBounds(group.getBounds().pad(0.1));
         }
@@ -1332,7 +1722,7 @@ $(document).ready(function() {
                     <div class="spinner-border text-primary" role="status">
                         <span class="visually-hidden">Loading...</span>
                     </div>
-                    <p style="margin-top: 10px; color: #666;">Memuat peta...</p>
+                    <p style="margin-top: 10px; color: #666;">Memuat peta dan data halte...</p>
                 </div>
             </div>
         `;
@@ -1345,8 +1735,98 @@ $(document).ready(function() {
                 if (loadingOverlay && loadingOverlay.parentNode) {
                     loadingOverlay.remove();
                 }
-            }, 1000);
+            }, 1500);
         });
+    }
+
+    // Add map controls for better user experience
+    map.on('zoomend', function() {
+        const zoom = map.getZoom();
+        // Adjust marker size based on zoom level
+        Object.values(markers).forEach(marker => {
+            const icon = marker.options.icon;
+            let size = 20;
+            if (zoom > 15) {
+                size = 25;
+            } else if (zoom < 10) {
+                size = 15;
+            }
+            
+            // Update marker icon size
+            const isRented = icon.options.html.includes('#dc3545');
+            const color = isRented ? '#dc3545' : '#28a745';
+            
+            const newIcon = L.divIcon({
+                className: 'custom-div-icon',
+                html: `<div style="background-color: ${color}; width: ${size}px; height: ${size}px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 10px rgba(0,0,0,0.3);"></div>`,
+                iconSize: [size, size],
+                iconAnchor: [size/2, size/2]
+            });
+            
+            marker.setIcon(newIcon);
+        });
+    });
+
+    // Add geolocation control
+    if (navigator.geolocation) {
+        const locationControl = L.Control.extend({
+            options: {
+                position: 'topleft'
+            },
+            
+            onAdd: function(map) {
+                const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
+                container.innerHTML = '<a href="#" title="Lokasi Saya"><i class="fas fa-crosshairs"></i></a>';
+                container.style.backgroundColor = 'white';
+                container.style.width = '30px';
+                container.style.height = '30px';
+                container.style.lineHeight = '30px';
+                container.style.textAlign = 'center';
+                container.style.textDecoration = 'none';
+                container.style.color = '#333';
+                
+                container.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    container.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                    
+                    navigator.geolocation.getCurrentPosition(function(position) {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        
+                        map.setView([lat, lng], 16);
+                        
+                        // Add temporary marker for user location
+                        const userIcon = L.divIcon({
+                            className: 'user-location-icon',
+                            html: '<div style="background-color: #007bff; width: 15px; height: 15px; border-radius: 50%; border: 3px solid white; box-shadow: 0 0 15px rgba(0,123,255,0.5);"></div>',
+                            iconSize: [15, 15],
+                            iconAnchor: [7.5, 7.5]
+                        });
+                        
+                        const userMarker = L.marker([lat, lng], { icon: userIcon })
+                            .addTo(map)
+                            .bindPopup('Lokasi Anda')
+                            .openPopup();
+                        
+                        // Remove user marker after 10 seconds
+                        setTimeout(() => {
+                            map.removeLayer(userMarker);
+                        }, 10000);
+                        
+                        container.innerHTML = '<i class="fas fa-crosshairs"></i>';
+                    }, function(error) {
+                        alert('Tidak dapat mengakses lokasi Anda');
+                        container.innerHTML = '<i class="fas fa-crosshairs"></i>';
+                    });
+                };
+                
+                return container;
+            }
+        });
+        
+        map.addControl(new locationControl());
     }
 });
 </script>
