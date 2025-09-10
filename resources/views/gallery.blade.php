@@ -1117,9 +1117,9 @@
             <button class="view-toggle-btn active" id="carouselViewBtn">
                 <i class="fas fa-film me-2"></i>Tampilan Carousel
             </button>
-            <!-- <button class="view-toggle-btn" id="gridViewBtn">
+            <button class="view-toggle-btn" id="gridViewBtn">
                 <i class="fas fa-th-large me-2"></i>Tampilan Grid
-            </button> -->
+            </button>
         </div>
 
         @if($haltes->count() > 0)
