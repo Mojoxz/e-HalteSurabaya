@@ -1,11 +1,11 @@
-@extends('layouts.app')
+@extends('layouts.admin')
 
 @section('title', 'Dashboard Admin')
 
 @section('content')
 <div class="dashboard-wrapper">
     <!-- Include Admin Sidebar -->
-    @include('admin.partials.sidebar')
+
 
     <!-- Main Content -->
     <main class="main-content" id="mainContent">
