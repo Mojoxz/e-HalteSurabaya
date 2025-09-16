@@ -675,6 +675,10 @@
                         <a class="nav-link" href="{{ route('gallery') }}">
                             <i class="fas fa-images me-1"></i> Gallery
                         </a>
+
+                        <a class="nav-link" href="{{ route('maps') }}">
+                            <i class="fas fa-map me-1"></i> Maps
+                        </a>
                 </ul>
 
                 <ul class="navbar-nav">

@@ -14,6 +14,11 @@ use App\Http\Controllers\UserDashboardController;
 |--------------------------------------------------------------------------
 */
 
+Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/gallery', [HomeController::class, 'gallery'])->name('gallery');
+Route::get('/maps', [HomeController::class, 'maps'])->name('maps'); // NEW MAPS ROUTE
+Route::get('/halte/{id}', [HomeController::class, 'showHalte'])->name('halte.show');
+Route::get('/halte/{id}/detail', [HomeController::class, 'detail'])->name('halte.detail');
 // Public Routes (User Interface)
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/gallery', [HomeController::class, 'gallery'])->name('gallery'); // NEW GALLERY ROUTE

@@ -171,4 +171,42 @@ class HomeController extends Controller
     {
         return file_exists(storage_path('app/public/' . $photoPath));
     }
+
+    public function maps()
+{
+    // Get all halte data
+    $haltes = Halte::with('photos')->get();
+    
+    // Calculate statistics
+    $statistics = [
+        'total' => $haltes->count(),
+        'available' => $haltes->where('rental_status', 'available')->count(),
+        'rented' => $haltes->where('rental_status', 'rented')->count(),
+    ];
+    
+    // Prepare halte data for map
+    $haltesData = $haltes->map(function ($halte) {
+        return [
+            'id' => $halte->id,
+            'name' => $halte->name,
+            'description' => $halte->description,
+            'address' => $halte->address,
+            'latitude' => (float) $halte->latitude,
+            'longitude' => (float) $halte->longitude,
+            'rental_status' => $halte->rental_status,
+            'is_rented' => $halte->rental_status === 'rented',
+            'rented_by' => $halte->rented_by,
+            'rent_end_date' => $halte->rent_end_date ? $halte->rent_end_date->format('d M Y') : null,
+            'simbada_registered' => $halte->simbada_registered,
+            'simbada_number' => $halte->simbada_number,
+            'photos' => $halte->photos->map(function ($photo) {
+                return asset('storage/' . $photo->path);
+            })->toArray(),
+        ];
+    })->toArray();
+    
+    return view('maps', compact('statistics', 'haltesData'));
+}
+
+
 }
