@@ -172,20 +172,32 @@ class HomeController extends Controller
         return file_exists(storage_path('app/public/' . $photoPath));
     }
 
-    public function maps()
+public function maps()
 {
-    // Get all halte data
-    $haltes = Halte::with('photos')->get();
+    // Get all halte data with photos - using same pattern as other methods
+    $haltes = Halte::with(['photos' => function($query) {
+        $query->orderBy('is_primary', 'desc')->orderBy('id', 'asc');
+    }])->get();
     
-    // Calculate statistics
+    // Calculate statistics using the same logic as index method
+    $totalHaltes = $haltes->count();
+    $availableCount = $haltes->filter(function($halte) {
+        return !$halte->isCurrentlyRented();
+    })->count();
+    $rentedCount = $haltes->filter(function($halte) {
+        return $halte->isCurrentlyRented();
+    })->count();
+    
     $statistics = [
-        'total' => $haltes->count(),
-        'available' => $haltes->where('rental_status', 'available')->count(),
-        'rented' => $haltes->where('rental_status', 'rented')->count(),
+        'total' => $totalHaltes,
+        'available' => $availableCount,
+        'rented' => $rentedCount,
     ];
     
-    // Prepare halte data for map
+    // Prepare halte data for map - using consistent logic
     $haltesData = $haltes->map(function ($halte) {
+        $isCurrentlyRented = $halte->isCurrentlyRented();
+
         return [
             'id' => $halte->id,
             'name' => $halte->name,
@@ -193,20 +205,22 @@ class HomeController extends Controller
             'address' => $halte->address,
             'latitude' => (float) $halte->latitude,
             'longitude' => (float) $halte->longitude,
-            'rental_status' => $halte->rental_status,
-            'is_rented' => $halte->rental_status === 'rented',
+            'rental_status' => $isCurrentlyRented ? 'rented' : 'available',
+            'is_rented' => $isCurrentlyRented,
             'rented_by' => $halte->rented_by,
+            'rent_start_date' => $halte->rent_start_date ? $halte->rent_start_date->format('d/m/Y') : null,
             'rent_end_date' => $halte->rent_end_date ? $halte->rent_end_date->format('d M Y') : null,
             'simbada_registered' => $halte->simbada_registered,
             'simbada_number' => $halte->simbada_number,
+            'primary_photo' => $this->getPrimaryPhotoUrl($halte),
             'photos' => $halte->photos->map(function ($photo) {
-                return asset('storage/' . $photo->path);
+                // Fixed: using correct photo_path field name
+                return asset('storage/' . $photo->photo_path);
             })->toArray(),
         ];
     })->toArray();
     
     return view('maps', compact('statistics', 'haltesData'));
 }
-
 
 }

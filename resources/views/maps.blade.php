@@ -814,10 +814,14 @@ $(document).ready(function() {
     // Check if user is admin
     const isAdmin = @json(auth()->check() && auth()->user()->isAdmin());
 
-    // Initialize map centered on Surabaya, East Java
+    // Initialize map centered on Surabaya, East Java with better options
     const map = L.map('map', {
         zoomControl: true,
-        attributionControl: true
+        attributionControl: true,
+        preferCanvas: false,
+        zoomAnimation: true,
+        fadeAnimation: true,
+        markerZoomAnimation: true
     }).setView([-7.2575, 112.7521], 12);
 
     // Add OpenStreetMap tiles with better styling
@@ -836,14 +840,16 @@ $(document).ready(function() {
         className: 'custom-div-icon',
         html: '<div style="background-color: #059669; width: 24px; height: 24px; border-radius: 50%; border: 4px solid white; box-shadow: 0 0 15px rgba(5, 150, 105, 0.5); position: relative;"><div style="position: absolute; top: -2px; left: -2px; width: 28px; height: 28px; border: 2px solid #059669; border-radius: 50%; opacity: 0.3; animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div></div>',
         iconSize: [24, 24],
-        iconAnchor: [12, 12]
+        iconAnchor: [12, 12],
+        popupAnchor: [0, -12]
     });
 
     const rentedIcon = L.divIcon({
         className: 'custom-div-icon',
         html: '<div style="background-color: #dc2626; width: 24px; height: 24px; border-radius: 50%; border: 4px solid white; box-shadow: 0 0 15px rgba(220, 38, 38, 0.5); position: relative;"><div style="position: absolute; top: -2px; left: -2px; width: 28px; height: 28px; border: 2px solid #dc2626; border-radius: 50%; opacity: 0.3; animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div></div>',
         iconSize: [24, 24],
-        iconAnchor: [12, 12]
+        iconAnchor: [12, 12],
+        popupAnchor: [0, -12]
     });
 
     // Add CSS for ping animation
@@ -854,6 +860,20 @@ $(document).ready(function() {
                 transform: scale(2);
                 opacity: 0;
             }
+        }
+        
+        /* Fix popup positioning */
+        .leaflet-popup {
+            margin-bottom: 20px !important;
+        }
+        
+        .leaflet-popup-tip-container {
+            pointer-events: none;
+        }
+        
+        .leaflet-popup-content-wrapper {
+            border-radius: 15px !important;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
         }
     `;
     document.head.appendChild(style);
@@ -949,6 +969,33 @@ $(document).ready(function() {
         }
     };
 
+    // Function to open marker popup properly
+    function openMarkerPopup(marker, halte) {
+        // First center the map on the marker
+        map.setView([halte.latitude, halte.longitude], Math.max(map.getZoom(), 15), {
+            animate: true,
+            duration: 0.5
+        });
+        
+        // Wait for map animation to complete, then open popup
+        setTimeout(() => {
+            // Ensure popup is created and positioned correctly
+            marker.openPopup();
+            
+            // Additional positioning fix
+            setTimeout(() => {
+                const popup = marker.getPopup();
+                if (popup && popup._container) {
+                    popup.update();
+                    map.panIntoView(popup._container, {
+                        paddingTopLeft: [20, 20],
+                        paddingBottomRight: [20, 20]
+                    });
+                }
+            }, 100);
+        }, 500);
+    }
+
     // Add markers for each halte
     haltesData.forEach(function(halte) {
         const icon = halte.rental_status === 'rented' ? rentedIcon : availableIcon;
@@ -994,16 +1041,29 @@ $(document).ready(function() {
             </div>
         `;
 
-        // Create marker
+        // Create marker with improved popup options
         const marker = L.marker([halte.latitude, halte.longitude], { icon: icon })
             .bindPopup(popupContent, {
                 maxWidth: 400,
+                minWidth: 300,
                 className: 'custom-popup',
                 closeButton: true,
                 autoPan: true,
-                autoPanPadding: [50, 50]
+                autoPanPaddingTopLeft: [50, 50],
+                autoPanPaddingBottomRight: [50, 50],
+                keepInView: true,
+                offset: [0, -12]
             })
             .addTo(map);
+
+        // Custom marker click handler for better popup positioning
+        marker.on('click', function(e) {
+            // Close any existing popups first
+            map.closePopup();
+            
+            // Open this marker's popup with proper positioning
+            openMarkerPopup(marker, halte);
+        });
 
         // Store marker for search functionality
         markers[halte.id] = marker;
@@ -1084,7 +1144,7 @@ $(document).ready(function() {
         }
 
         let resultsHtml = '';
-        results.slice(0, 8).forEach(halte => { // Increase limit to 8 results
+        results.slice(0, 8).forEach(halte => {
             const statusColor = halte.status === 'Disewa' ? '#dc2626' : '#059669';
             const statusIcon = halte.status === 'Disewa' ? 'clock' : 'check-circle';
             
@@ -1124,16 +1184,11 @@ $(document).ready(function() {
                 const halte = searchData.find(h => h.id == halteId);
                 
                 if (halte) {
-                    // Center map on halte with smooth animation
-                    map.flyTo([halte.latitude, halte.longitude], 17, {
-                        duration: 1.5
-                    });
+                    // Use the same popup opening function for consistency
+                    openMarkerPopup(halte.marker, halte);
                     
-                    // Highlight and open popup after animation
+                    // Highlight marker
                     highlightMarker(halteId);
-                    setTimeout(() => {
-                        halte.marker.openPopup();
-                    }, 1500);
                     
                     // Hide search results
                     searchResults.style.display = 'none';
@@ -1352,7 +1407,7 @@ $(document).ready(function() {
         }
     });
 
-    // Map controls and interactions
+    // Map controls and interactions with better popup handling
     map.on('zoomend', function() {
         const zoom = map.getZoom();
         // Adjust marker size based on zoom level
@@ -1373,11 +1428,30 @@ $(document).ready(function() {
                 className: 'custom-div-icon',
                 html: `<div style="background-color: ${color}; width: ${size}px; height: ${size}px; border-radius: 50%; border: 4px solid white; box-shadow: 0 0 15px rgba(${isRented ? '220, 38, 38' : '5, 150, 105'}, 0.5); position: relative;"><div style="position: absolute; top: -2px; left: -2px; width: ${size + 4}px; height: ${size + 4}px; border: 2px solid ${color}; border-radius: 50%; opacity: 0.3; animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div></div>`,
                 iconSize: [size, size],
-                iconAnchor: [size/2, size/2]
+                iconAnchor: [size/2, size/2],
+                popupAnchor: [0, -size/2]
             });
             
             marker.setIcon(newIcon);
         });
+        
+        // Update any open popup position after zoom
+        setTimeout(() => {
+            const popup = map._popup;
+            if (popup && popup._container) {
+                popup.update();
+            }
+        }, 100);
+    });
+
+    // Fix popup positioning after map movement
+    map.on('moveend', function() {
+        const popup = map._popup;
+        if (popup && popup._container) {
+            setTimeout(() => {
+                popup.update();
+            }, 50);
+        }
     });
 
     // Remove loading overlay after map loads
@@ -1391,6 +1465,11 @@ $(document).ready(function() {
                 }, 300);
             }
         }, 1000);
+        
+        // Invalidate size to ensure proper rendering
+        setTimeout(() => {
+            map.invalidateSize();
+        }, 1500);
     });
 
     // Add scale control
@@ -1400,18 +1479,48 @@ $(document).ready(function() {
         imperial: false
     }).addTo(map);
 
-    // Smooth popup opening
+    // Enhanced popup handling
     map.on('popupopen', function(e) {
         const popup = e.popup;
         const container = popup._container;
         if (container) {
+            // Initial animation
             container.style.opacity = '0';
             container.style.transform = 'scale(0.8)';
+            
             setTimeout(() => {
                 container.style.transition = 'all 0.3s ease';
                 container.style.opacity = '1';
                 container.style.transform = 'scale(1)';
+                
+                // Ensure proper positioning
+                popup.update();
+                
+                // Pan into view if needed
+                const popupLatLng = popup.getLatLng();
+                const pixelPoint = map.latLngToContainerPoint(popupLatLng);
+                const popupHeight = container.offsetHeight || 400;
+                const mapHeight = map.getContainer().offsetHeight;
+                
+                // Check if popup is outside viewport
+                if (pixelPoint.y < popupHeight + 50) {
+                    map.panBy([0, -(popupHeight + 50 - pixelPoint.y)], {
+                        animate: true,
+                        duration: 0.5
+                    });
+                }
             }, 50);
+        }
+    });
+
+    // Handle popup close
+    map.on('popupclose', function(e) {
+        const popup = e.popup;
+        const container = popup._container;
+        if (container) {
+            container.style.transition = 'all 0.2s ease';
+            container.style.opacity = '0';
+            container.style.transform = 'scale(0.9)';
         }
     });
 });
