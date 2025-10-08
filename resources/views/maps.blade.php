@@ -255,12 +255,12 @@
         box-shadow: 0 0 5px rgba(0,0,0,0.2);
     }
 
-    .legend-available { 
-        background-color: #059669; 
+    .legend-available {
+        background-color: #059669;
     }
-    
-    .legend-rented { 
-        background-color: #dc2626; 
+
+    .legend-rented {
+        background-color: #dc2626;
     }
 
     .legend-user {
@@ -511,7 +511,7 @@
         .maps-header h1 {
             font-size: 2rem;
         }
-        
+
         .maps-header p {
             font-size: 1rem;
         }
@@ -724,12 +724,12 @@
 
     <!-- Map Container -->
     <div id="map"></div>
-    
+
     <!-- Search Control -->
     <div class="map-search-container">
         <div style="position: relative;">
-            <input type="text" 
-                   class="map-search-input" 
+            <input type="text"
+                   class="map-search-input"
                    id="halteSearchInput"
                    placeholder="Cari halte berdasarkan nama, alamat, atau status..."
                    autocomplete="off">
@@ -861,16 +861,16 @@ $(document).ready(function() {
                 opacity: 0;
             }
         }
-        
+
         /* Fix popup positioning */
         .leaflet-popup {
             margin-bottom: 20px !important;
         }
-        
+
         .leaflet-popup-tip-container {
             pointer-events: none;
         }
-        
+
         .leaflet-popup-content-wrapper {
             border-radius: 15px !important;
             box-shadow: 0 8px 25px rgba(0,0,0,0.15) !important;
@@ -976,12 +976,12 @@ $(document).ready(function() {
             animate: true,
             duration: 0.5
         });
-        
+
         // Wait for map animation to complete, then open popup
         setTimeout(() => {
             // Ensure popup is created and positioned correctly
             marker.openPopup();
-            
+
             // Additional positioning fix
             setTimeout(() => {
                 const popup = marker.getPopup();
@@ -1030,7 +1030,7 @@ $(document).ready(function() {
                         ${halte.simbada_registered ? `<div class="info-row"><span class="info-label">SIMBADA:</span> <span class="info-value"><span style="background-color: #059669; color: white; padding: 3px 8px; border-radius: 12px; font-size: 0.75em; font-weight: 600;">TERDAFTAR</span></span></div>` : ''}
                         ${halte.simbada_number ? `<div class="info-row"><span class="info-label">No. SIMBADA:</span> <span class="info-value">${halte.simbada_number}</span></div>` : ''}
                         <div class="info-row">
-                            <span class="info-label">Koordinat:</span> 
+                            <span class="info-label">Koordinat:</span>
                             <span class="info-value">${halte.latitude.toFixed(6)}, ${halte.longitude.toFixed(6)}</span>
                         </div>
                     </div>
@@ -1060,7 +1060,7 @@ $(document).ready(function() {
         marker.on('click', function(e) {
             // Close any existing popups first
             map.closePopup();
-            
+
             // Open this marker's popup with proper positioning
             openMarkerPopup(marker, halte);
         });
@@ -1117,7 +1117,7 @@ $(document).ready(function() {
     // Function to perform search
     function performSearch(query) {
         const normalizedQuery = normalizeText(query);
-        
+
         if (normalizedQuery.length < 2) {
             searchResults.style.display = 'none';
             return;
@@ -1147,7 +1147,7 @@ $(document).ready(function() {
         results.slice(0, 8).forEach(halte => {
             const statusColor = halte.status === 'Disewa' ? '#dc2626' : '#059669';
             const statusIcon = halte.status === 'Disewa' ? 'clock' : 'check-circle';
-            
+
             resultsHtml += `
                 <div class="search-result-item" data-halte-id="${halte.id}">
                     <div class="search-result-name">
@@ -1182,17 +1182,17 @@ $(document).ready(function() {
             item.addEventListener('click', function() {
                 const halteId = this.dataset.halteId;
                 const halte = searchData.find(h => h.id == halteId);
-                
+
                 if (halte) {
                     // Use the same popup opening function for consistency
                     openMarkerPopup(halte.marker, halte);
-                    
+
                     // Highlight marker
                     highlightMarker(halteId);
-                    
+
                     // Hide search results
                     searchResults.style.display = 'none';
-                    
+
                     // Update search input with selected halte name
                     searchInput.value = halte.name;
                     clearButton.style.display = 'block';
@@ -1205,15 +1205,15 @@ $(document).ready(function() {
     searchInput.addEventListener('input', function() {
         clearTimeout(searchTimeout);
         const query = this.value.trim();
-        
+
         if (query.length === 0) {
             searchResults.style.display = 'none';
             clearButton.style.display = 'none';
             return;
         }
-        
+
         clearButton.style.display = 'block';
-        
+
         // Debounce search
         searchTimeout = setTimeout(() => {
             performSearch(query);
@@ -1246,7 +1246,7 @@ $(document).ready(function() {
     searchInput.addEventListener('keydown', function(e) {
         const items = searchResults.querySelectorAll('.search-result-item[data-halte-id]');
         const currentActive = searchResults.querySelector('.search-result-item.active');
-        
+
         if (e.key === 'ArrowDown') {
             e.preventDefault();
             if (currentActive) {
@@ -1310,7 +1310,7 @@ $(document).ready(function() {
             options: {
                 position: 'topleft'
             },
-            
+
             onAdd: function(map) {
                 const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
                 container.innerHTML = '<a href="#" title="Lokasi Saya" style="text-decoration: none;"><i class="fas fa-crosshairs"></i></a>';
@@ -1323,21 +1323,21 @@ $(document).ready(function() {
                 container.style.fontSize = '16px';
                 container.style.borderRadius = '4px';
                 container.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
-                
+
                 container.onclick = function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-                    
+
                     container.innerHTML = '<a href="#" style="text-decoration: none;"><i class="fas fa-spinner fa-spin"></i></a>';
-                    
+
                     navigator.geolocation.getCurrentPosition(function(position) {
                         const lat = position.coords.latitude;
                         const lng = position.coords.longitude;
-                        
+
                         map.flyTo([lat, lng], 16, {
                             duration: 1.5
                         });
-                        
+
                         // Add user location marker
                         const userIcon = L.divIcon({
                             className: 'user-location-icon',
@@ -1345,17 +1345,17 @@ $(document).ready(function() {
                             iconSize: [20, 20],
                             iconAnchor: [10, 10]
                         });
-                        
+
                         // Remove existing user marker if any
                         if (window.userMarker) {
                             map.removeLayer(window.userMarker);
                         }
-                        
+
                         window.userMarker = L.marker([lat, lng], { icon: userIcon })
                             .addTo(map)
                             .bindPopup('<div style="text-align: center; font-weight: 600; color: #2563eb;"><i class="fas fa-map-marker-alt me-2"></i>Lokasi Anda</div>')
                             .openPopup();
-                        
+
                         container.innerHTML = '<a href="#" title="Lokasi Saya" style="text-decoration: none;"><i class="fas fa-crosshairs"></i></a>';
                     }, function(error) {
                         alert('Tidak dapat mengakses lokasi Anda. Pastikan GPS aktif dan berikan izin lokasi.');
@@ -1366,11 +1366,11 @@ $(document).ready(function() {
                         maximumAge: 300000
                     });
                 };
-                
+
                 return container;
             }
         });
-        
+
         map.addControl(new locationControl());
     }
 
@@ -1393,7 +1393,7 @@ $(document).ready(function() {
             fullscreenToggle.title = 'Mode Layar Penuh';
             isFullscreen = false;
         }
-        
+
         // Refresh map size after fullscreen toggle
         setTimeout(() => {
             map.invalidateSize();
@@ -1419,11 +1419,11 @@ $(document).ready(function() {
             } else if (zoom < 10) {
                 size = 20;
             }
-            
+
             // Update marker icon size
             const isRented = icon.options.html.includes('#dc2626');
             const color = isRented ? '#dc2626' : '#059669';
-            
+
             const newIcon = L.divIcon({
                 className: 'custom-div-icon',
                 html: `<div style="background-color: ${color}; width: ${size}px; height: ${size}px; border-radius: 50%; border: 4px solid white; box-shadow: 0 0 15px rgba(${isRented ? '220, 38, 38' : '5, 150, 105'}, 0.5); position: relative;"><div style="position: absolute; top: -2px; left: -2px; width: ${size + 4}px; height: ${size + 4}px; border: 2px solid ${color}; border-radius: 50%; opacity: 0.3; animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div></div>`,
@@ -1431,10 +1431,10 @@ $(document).ready(function() {
                 iconAnchor: [size/2, size/2],
                 popupAnchor: [0, -size/2]
             });
-            
+
             marker.setIcon(newIcon);
         });
-        
+
         // Update any open popup position after zoom
         setTimeout(() => {
             const popup = map._popup;
@@ -1465,7 +1465,7 @@ $(document).ready(function() {
                 }, 300);
             }
         }, 1000);
-        
+
         // Invalidate size to ensure proper rendering
         setTimeout(() => {
             map.invalidateSize();
@@ -1487,21 +1487,21 @@ $(document).ready(function() {
             // Initial animation
             container.style.opacity = '0';
             container.style.transform = 'scale(0.8)';
-            
+
             setTimeout(() => {
                 container.style.transition = 'all 0.3s ease';
                 container.style.opacity = '1';
                 container.style.transform = 'scale(1)';
-                
+
                 // Ensure proper positioning
                 popup.update();
-                
+
                 // Pan into view if needed
                 const popupLatLng = popup.getLatLng();
                 const pixelPoint = map.latLngToContainerPoint(popupLatLng);
                 const popupHeight = container.offsetHeight || 400;
                 const mapHeight = map.getContainer().offsetHeight;
-                
+
                 // Check if popup is outside viewport
                 if (pixelPoint.y < popupHeight + 50) {
                     map.panBy([0, -(popupHeight + 50 - pixelPoint.y)], {
