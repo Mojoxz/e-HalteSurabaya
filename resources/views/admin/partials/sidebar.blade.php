@@ -96,7 +96,7 @@
                 <h6 class="nav-section-title">LAINNYA</h6>
                 <ul class="nav-list">
                     <li class="nav-item">
-                        <a href="{{ route('home') }}" class="nav-link" target="_blank">
+                        <a href="{{ route('maps') }}" class="nav-link" target="_blank">
                             <i class="fas fa-map"></i>
                             <span class="nav-text">Lihat Peta</span>
                             <i class="fas fa-external-link-alt ms-1" style="font-size: 0.75rem;"></i>
