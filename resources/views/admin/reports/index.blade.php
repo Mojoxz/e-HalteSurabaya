@@ -4,7 +4,7 @@
 @section('title', 'Laporan Penyewaan')
 
 @section('content')
-<div class="container-fluid">
+<div class="container-fluid px-4">
     {{-- Breadcrumb Navigation --}}
     <nav aria-label="breadcrumb" class="mb-3">
         <ol class="breadcrumb bg-light p-3 rounded">
@@ -22,7 +22,7 @@
     </nav>
 
     {{-- Page Header --}}
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         <div class="d-flex align-items-center">
             <a href="{{ route('admin.dashboard') }}" class="btn btn-outline-secondary me-3" title="Kembali ke Dashboard">
                 <i class="fas fa-arrow-left me-1"></i>
@@ -36,7 +36,7 @@
                 <p class="text-muted mb-0">Analisis dan statistik penyewaan halte</p>
             </div>
         </div>
-        <div class="d-flex gap-2">
+        <div class="d-flex gap-2 flex-wrap">
             <a href="{{ route('admin.rentals.index') }}" class="btn btn-outline-info">
                 <i class="fas fa-history me-1"></i>
                 Riwayat Sewa
@@ -46,7 +46,7 @@
                     <i class="fas fa-download me-1"></i>
                     Generate Laporan
                 </button>
-                <ul class="dropdown-menu">
+                <ul class="dropdown-menu dropdown-menu-end">
                     <li>
                         <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#monthlyReportModal">
                             <i class="fas fa-calendar-alt me-1"></i>
@@ -76,7 +76,7 @@
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
                     <form method="GET" action="{{ route('admin.reports.index') }}" class="row align-items-end">
-                        <div class="col-md-3">
+                        <div class="col-md-3 mb-3 mb-md-0">
                             <label for="year" class="form-label fw-bold">Tahun</label>
                             <select name="year" id="year" class="form-select">
                                 @for($i = date('Y'); $i >= date('Y') - 5; $i--)
@@ -86,7 +86,7 @@
                                 @endfor
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-3 mb-3 mb-md-0">
                             <label for="month" class="form-label fw-bold">Bulan</label>
                             <select name="month" id="month" class="form-select">
                                 <option value="">Semua Bulan</option>
@@ -195,8 +195,8 @@
     {{-- Charts Row --}}
     <div class="row mb-4">
         {{-- Revenue Chart --}}
-        <div class="col-xl-8 col-lg-7">
-            <div class="card shadow mb-4">
+        <div class="col-xl-8 col-lg-7 mb-4">
+            <div class="card shadow">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                     <h6 class="m-0 font-weight-bold text-primary">Pendapatan Bulanan {{ $year }}</h6>
                 </div>
@@ -209,8 +209,8 @@
         </div>
 
         {{-- Top Haltes --}}
-        <div class="col-xl-4 col-lg-5">
-            <div class="card shadow mb-4">
+        <div class="col-xl-4 col-lg-5 mb-4">
+            <div class="card shadow">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                     <h6 class="m-0 font-weight-bold text-primary">Halte Terpopuler</h6>
                 </div>
@@ -439,8 +439,8 @@
     gap: 0.5rem;
 }
 
-.d-flex.gap-2 > * + * {
-    margin-left: 0.5rem;
+.gap-3 {
+    gap: 1rem;
 }
 
 /* Button enhancements */
@@ -452,6 +452,18 @@
 .btn:hover {
     transform: translateY(-1px);
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .container-fluid {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+
+    .chart-area {
+        height: 250px;
+    }
 }
 </style>
 
@@ -589,3 +601,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 </script>
+@endsection
