@@ -9,7 +9,8 @@ export default defineConfig({
                     'resources/css/maps.css', 'resources/js/maps.js',
                     'resources/css/gallery.css', 'resources/js/gallery.js',
                     'resources/css/dashboard-admin.css', 'resources/js/dashboard-admin.js',
-                    'resources/css/login.css', 'resources/js/login.js'
+                    'resources/css/login.css', 'resources/js/login.js',
+                    'resources/css/admin.css', 'resources/js/admin.js'
             ],
             refresh: true,
         }),

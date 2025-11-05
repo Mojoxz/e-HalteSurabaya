@@ -108,7 +108,7 @@
                             <span class="nav-text">Profile</span>
                         </a>
                     </li>
-                    <li class="nav-item">
+                    <!-- <li class="nav-item">
                         <form method="POST" action="{{ route('logout') }}" class="d-inline">
                             @csrf
                             <button type="submit" class="nav-link border-0 bg-transparent text-start w-100"
@@ -117,7 +117,7 @@
                                 <span class="nav-text">Logout</span>
                             </button>
                         </form>
-                    </li>
+                    </li> -->
                 </ul>
             </div>
         </nav>
