@@ -10,7 +10,8 @@ export default defineConfig({
                     'resources/css/gallery.css', 'resources/js/gallery.js',
                     'resources/css/dashboard-admin.css', 'resources/js/dashboard-admin.js',
                     'resources/css/login.css', 'resources/js/login.js',
-                    'resources/css/admin.css', 'resources/js/admin.js'
+                    'resources/css/admin.css', 'resources/js/admin.js',
+                    'resources/css/admin/haltes-index.css', 'resources/js/admin/haltes-index.js'
             ],
             refresh: true,
         }),

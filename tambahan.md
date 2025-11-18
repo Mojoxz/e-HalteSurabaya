@@ -4,5 +4,6 @@ PEKERJAAN rumah :
 2. Memisahkan file dari css js yang menyatu
 3. menghosting file
 4. Kalau (Nutut) Membuat components untuk halte berhasil ditambahkan dan gagal ditambahkan
+5. Menambahkan component succes add dll
 
 
