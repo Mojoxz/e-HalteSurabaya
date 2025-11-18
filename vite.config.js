@@ -11,7 +11,9 @@ export default defineConfig({
                     'resources/css/dashboard-admin.css', 'resources/js/dashboard-admin.js',
                     'resources/css/login.css', 'resources/js/login.js',
                     'resources/css/admin.css', 'resources/js/admin.js',
-                    'resources/css/admin/haltes-index.css', 'resources/js/admin/haltes-index.js'
+                    'resources/css/admin/haltes-index.css', 'resources/js/admin/haltes-index.js',
+                    'resources/css/admin/haltes-edit.css', 'resources/js/admin/haltes-edit.js',
+                    'resources/css/admin/haltes-create.css', 'resources/js/admin/haltes-create.js'
             ],
             refresh: true,
         }),

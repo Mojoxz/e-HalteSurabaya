@@ -2,6 +2,10 @@
 
 @section('title', 'Edit Halte')
 
+@push('styles')
+    @vite(['resources/css/admin/haltes-edit.css'])
+@endpush
+
 @section('content')
 <div class="container-fluid">
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
@@ -265,19 +269,18 @@
                         <div class="row" id="existing-photos">
                             @foreach($halte->photos as $photo)
                             <div class="col-6 mb-3" id="photo-{{ $photo->id }}">
-                                <div class="position-relative">
+                                <div class="photo-container position-relative">
                                     <img src="{{ asset('storage/' . $photo->photo_path) }}"
                                          alt="{{ $photo->description }}"
-                                         class="img-thumbnail w-100"
-                                         style="height: 120px; object-fit: cover;">
+                                         class="img-thumbnail w-100 photo-thumbnail">
 
                                     @if($photo->is_primary)
-                                        <span class="badge badge-primary position-absolute" style="top: 5px; left: 5px;">
+                                        <span class="badge badge-primary photo-badge">
                                             <i class="fas fa-star"></i> Utama
                                         </span>
                                     @endif
 
-                                    <div class="btn-group position-absolute" style="top: 5px; right: 5px;">
+                                    <div class="btn-group photo-actions">
                                         @if(!$photo->is_primary)
                                             <button type="button"
                                                     class="btn btn-sm btn-warning"
@@ -318,8 +321,7 @@
                                    id="photos"
                                    name="photos[]"
                                    multiple
-                                   accept="image/*"
-                                   onchange="previewImages()">
+                                   accept="image/*">
                             <small class="form-text text-muted">
                                 Pilih satu atau lebih foto. Format: JPG, JPEG, PNG, GIF. Maksimal 2MB per file.
                             </small>
@@ -338,7 +340,7 @@
                         <h6 class="m-0 font-weight-bold text-primary">Preview Lokasi</h6>
                     </div>
                     <div class="card-body">
-                        <div id="map" style="height: 200px; background-color: #f8f9fa; display: flex; align-items: center; justify-content: center; border: 1px dashed #dee2e6;">
+                        <div id="map">
                             <div class="text-center">
                                 <i class="fas fa-map-marker-alt text-primary fa-2x mb-2"></i><br>
                                 <strong>Koordinat:</strong><br>
@@ -380,216 +382,8 @@
         </div>
     </div>
 </div>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // CSRF token for AJAX requests
-    $.ajaxSetup({
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-        }
-    });
-
-    // Toggle SIMBADA number field
-    document.getElementById('simbada_registered').addEventListener('change', function() {
-        const simbadaGroup = document.getElementById('simbada_number_group');
-        if (this.checked) {
-            simbadaGroup.style.display = 'block';
-        } else {
-            simbadaGroup.style.display = 'none';
-            document.getElementById('simbada_number').value = '';
-        }
-    });
-
-    // Toggle rental details
-    document.getElementById('is_rented').addEventListener('change', function() {
-        const rentalDetails = document.getElementById('rental_details');
-        if (this.checked) {
-            rentalDetails.style.display = 'block';
-        } else {
-            rentalDetails.style.display = 'none';
-            // Clear rental fields when hiding
-            document.getElementById('rented_by').value = '';
-            document.getElementById('rent_start_date').value = '';
-            document.getElementById('rent_end_date').value = '';
-            document.getElementById('rental_cost').value = '';
-            document.getElementById('rental_notes').value = '';
-        }
-    });
-
-    // Validate rental dates
-    document.getElementById('rent_start_date').addEventListener('change', function() {
-        const startDate = this.value;
-        const endDateInput = document.getElementById('rent_end_date');
-
-        if (startDate) {
-            endDateInput.min = startDate;
-            if (endDateInput.value && endDateInput.value < startDate) {
-                endDateInput.value = '';
-            }
-        }
-    });
-
-    // Update coordinates display
-    document.getElementById('latitude').addEventListener('input', updateCoordinatesDisplay);
-    document.getElementById('longitude').addEventListener('input', updateCoordinatesDisplay);
-
-    // Form submission with loading
-    document.getElementById('halte-form').addEventListener('submit', function() {
-        document.getElementById('submit-btn').disabled = true;
-        $('#loadingModal').modal('show');
-    });
-});
-
-function updateCoordinatesDisplay() {
-    const lat = document.getElementById('latitude').value;
-    const lng = document.getElementById('longitude').value;
-    document.getElementById('coords-display').textContent = `${lat || '0'}, ${lng || '0'}`;
-}
-
-// FIXED: Delete photo function with AJAX
-function deletePhoto(photoId) {
-    if (!confirm('Apakah Anda yakin ingin menghapus foto ini?')) {
-        return;
-    }
-
-    $.ajax({
-        url: `/admin/haltes/photos/${photoId}`,
-        type: 'DELETE',
-        data: {
-            _token: $('meta[name="csrf-token"]').attr('content')
-        },
-        success: function(response) {
-            if (response.success) {
-                // Remove photo element from DOM
-                $(`#photo-${photoId}`).fadeOut(300, function() {
-                    $(this).remove();
-
-                    // Update photos count
-                    const remainingPhotos = $('#existing-photos .col-6').length - 1;
-                    $('.card-header h6').first().text(`Foto Saat Ini (${remainingPhotos})`);
-
-                    if (remainingPhotos === 0) {
-                        $('#existing-photos').parent().parent().hide();
-                    }
-                });
-
-                // Show success message
-                showAlert('success', response.message);
-            }
-        },
-        error: function(xhr) {
-            const response = xhr.responseJSON;
-            showAlert('error', response ? response.message : 'Gagal menghapus foto');
-        }
-    });
-}
-
-// FIXED: Set primary photo function with AJAX
-function setPrimaryPhoto(photoId) {
-    $.ajax({
-        url: `/admin/haltes/photos/${photoId}/primary`,
-        type: 'PATCH',
-        data: {
-            _token: $('meta[name="csrf-token"]').attr('content')
-        },
-        success: function(response) {
-            if (response.success) {
-                // Remove all primary badges
-                $('.badge-primary').remove();
-                $('.btn-warning').show();
-
-                // Add primary badge to selected photo
-                $(`#photo-${photoId}`).find('.position-relative').append(
-                    '<span class="badge badge-primary position-absolute" style="top: 5px; left: 5px;"><i class="fas fa-star"></i> Utama</span>'
-                );
-
-                // Hide primary button for this photo
-                $(`#photo-${photoId}`).find('.btn-warning').hide();
-
-                // Show success message
-                showAlert('success', response.message);
-            }
-        },
-        error: function(xhr) {
-            const response = xhr.responseJSON;
-            showAlert('error', response ? response.message : 'Gagal mengatur foto utama');
-        }
-    });
-}
-
-// Preview uploaded images
-function previewImages() {
-    const files = document.getElementById('photos').files;
-    const previewContainer = document.getElementById('image-preview');
-    const descriptionsContainer = document.getElementById('photo-descriptions');
-
-    previewContainer.innerHTML = '';
-    descriptionsContainer.innerHTML = '';
-
-    if (files.length > 0) {
-        descriptionsContainer.innerHTML = '<label>Deskripsi Foto:</label>';
-    }
-
-    Array.from(files).forEach((file, index) => {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const col = document.createElement('div');
-            col.className = 'col-12 mb-2';
-
-            const img = document.createElement('img');
-            img.src = e.target.result;
-            img.className = 'img-thumbnail';
-            img.style.width = '100%';
-            img.style.height = '100px';
-            img.style.objectFit = 'cover';
-
-            const badge = document.createElement('span');
-            badge.className = 'badge badge-secondary';
-            badge.textContent = 'Foto Baru ' + (index + 1);
-            badge.style.position = 'absolute';
-            badge.style.top = '5px';
-            badge.style.left = '5px';
-
-            col.style.position = 'relative';
-            col.appendChild(img);
-            col.appendChild(badge);
-            previewContainer.appendChild(col);
-        };
-        reader.readAsDataURL(file);
-
-        // Add description input
-        const descInput = document.createElement('input');
-        descInput.type = 'text';
-        descInput.name = 'photo_descriptions[]';
-        descInput.className = 'form-control mb-2';
-        descInput.placeholder = 'Deskripsi foto ' + (index + 1) + ' (opsional)';
-        descriptionsContainer.appendChild(descInput);
-    });
-}
-
-// Show alert messages
-function showAlert(type, message) {
-    const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
-    const alertHtml = `
-        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
-            ${message}
-            <button type="button" class="close" data-dismiss="alert">
-                <span>&times;</span>
-            </button>
-        </div>
-    `;
-
-    // Remove existing alerts
-    $('.alert').remove();
-
-    // Add new alert at the top
-    $('.container-fluid').prepend(alertHtml);
-
-    // Auto-dismiss after 5 seconds
-    setTimeout(function() {
-        $('.alert').fadeOut();
-    }, 5000);
-}
-</script>
 @endsection
+
+@push('scripts')
+    @vite(['resources/js/admin/haltes-edit.js'])
+@endpush
