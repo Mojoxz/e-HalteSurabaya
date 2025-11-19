@@ -196,28 +196,25 @@
                                     </a>
 
                                     @if($user->id !== Auth::id())
-                                    <form method="POST" action="{{ route('admin.users.toggle-status', $user->id) }}"
-                                          class="d-inline">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button type="submit"
-                                                class="btn btn-sm {{ $user->is_active ? 'btn-secondary' : 'btn-success' }}"
-                                                title="{{ $user->is_active ? 'Nonaktifkan' : 'Aktifkan' }}"
-                                                onclick="return confirm('Yakin ingin {{ $user->is_active ? 'menonaktifkan' : 'mengaktifkan' }} user ini?')">
-                                            <i class="fas {{ $user->is_active ? 'fa-ban' : 'fa-check' }}"></i>
-                                        </button>
-                                    </form>
+                                    <!-- Toggle Status Button -->
+                                    <button type="button"
+                                            class="btn btn-sm {{ $user->is_active ? 'btn-secondary' : 'btn-success' }} btn-toggle-status"
+                                            data-user-id="{{ $user->id }}"
+                                            data-user-name="{{ $user->name }}"
+                                            data-is-active="{{ $user->is_active }}"
+                                            title="{{ $user->is_active ? 'Nonaktifkan' : 'Aktifkan' }}">
+                                        <i class="fas {{ $user->is_active ? 'fa-ban' : 'fa-check' }}"></i>
+                                    </button>
 
                                     @if(!$user->isAdmin() || Auth::user()->isSuperAdmin())
-                                    <form method="POST" action="{{ route('admin.users.destroy', $user->id) }}"
-                                          class="d-inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-danger" title="Hapus"
-                                                onclick="return confirm('Yakin ingin menghapus user ini? Tindakan ini tidak dapat dibatalkan!')">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </form>
+                                    <!-- Delete Button -->
+                                    <button type="button"
+                                            class="btn btn-sm btn-danger btn-delete-user"
+                                            data-user-id="{{ $user->id }}"
+                                            data-user-name="{{ $user->name }}"
+                                            title="Hapus">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
                                     @endif
                                     @endif
                                 </div>
@@ -253,6 +250,17 @@
         </div>
     </div>
 </div>
+
+<!-- Hidden Forms untuk Submit -->
+<form id="form-delete-user" method="POST" style="display: none;">
+    @csrf
+    @method('DELETE')
+</form>
+
+<form id="form-toggle-status" method="POST" style="display: none;">
+    @csrf
+    @method('PATCH')
+</form>
 
 <style>
 .avatar-sm {
@@ -293,4 +301,82 @@
     color: #dddfeb !important;
 }
 </style>
+
+@push('scripts')
+<script>
+$(document).ready(function() {
+    // Handle Delete User
+    $('.btn-delete-user').click(function() {
+        const userId = $(this).data('user-id');
+        const userName = $(this).data('user-name');
+
+        Swal.fire({
+            title: 'Apakah Anda yakin?',
+            text: `Apakah Anda yakin menghapus user "${userName}"?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#F44336',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes',
+            cancelButtonText: 'No'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Submit form delete
+                const form = $('#form-delete-user');
+                form.attr('action', `/admin/users/${userId}`);
+                form.submit();
+            }
+        });
+    });
+
+    // Handle Toggle Status
+    $('.btn-toggle-status').click(function() {
+        const userId = $(this).data('user-id');
+        const userName = $(this).data('user-name');
+        const isActive = $(this).data('is-active');
+        const action = isActive ? 'menonaktifkan' : 'mengaktifkan';
+
+        Swal.fire({
+            title: 'Konfirmasi',
+            text: `Yakin ingin ${action} user "${userName}"?`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: isActive ? '#6c757d' : '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes',
+            cancelButtonText: 'No'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Submit form toggle status
+                const form = $('#form-toggle-status');
+                form.attr('action', `/admin/users/${userId}/toggle-status`);
+                form.submit();
+            }
+        });
+    });
+
+    // Show success message if exists
+    @if(session('success'))
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: '{{ session('success') }}',
+            confirmButtonColor: '#28a745',
+            confirmButtonText: 'OK'
+        });
+    @endif
+
+    // Show error message if exists
+    @if(session('error'))
+        Swal.fire({
+            icon: 'error',
+            title: 'Gagal!',
+            text: '{{ session('error') }}',
+            confirmButtonColor: '#F44336',
+            confirmButtonText: 'OK'
+        });
+    @endif
+});
+</script>
+@endpush
 @endsection
