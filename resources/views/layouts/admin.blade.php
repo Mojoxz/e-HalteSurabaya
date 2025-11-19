@@ -10,6 +10,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <!-- Favicon -->
     <link rel="icon" type="image/svg" href="{{ asset('logo1.svg') }}">
 
@@ -129,6 +131,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <!-- Vite JS -->
     @vite(['resources/js/admin.js'])
@@ -136,6 +140,112 @@
     <script>
         // Set logout route globally
         window.logoutRoute = "{{ route('logout') }}";
+
+        // SweetAlert2 custom styling
+        const swalCustomClass = {
+            popup: 'rounded-4 shadow-lg',
+            title: 'fw-bold',
+            confirmButton: 'btn px-4 py-2',
+            cancelButton: 'btn px-4 py-2',
+            actions: 'gap-2'
+        };
+
+        // Auto show SweetAlert for flash messages
+        document.addEventListener('DOMContentLoaded', function() {
+            @if(session('success'))
+                setTimeout(() => {
+                    const successAlert = document.querySelector('.alert-success');
+                    if (successAlert) {
+                        const message = successAlert.textContent.trim().replace(/×/g, '').trim();
+                        successAlert.remove();
+
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: message,
+                            confirmButtonColor: '#198754',
+                            confirmButtonText: '<i class="fas fa-check me-2"></i>OK',
+                            timer: 3000,
+                            timerProgressBar: true,
+                            customClass: {
+                                ...swalCustomClass,
+                                confirmButton: 'btn btn-success px-4 py-2'
+                            },
+                            buttonsStyling: false
+                        });
+                    }
+                }, 100);
+            @endif
+
+            @if(session('error'))
+                setTimeout(() => {
+                    const errorAlert = document.querySelector('.alert-danger');
+                    if (errorAlert) {
+                        const message = errorAlert.textContent.trim().replace(/×/g, '').trim();
+                        errorAlert.remove();
+
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal!',
+                            text: message,
+                            confirmButtonColor: '#dc3545',
+                            confirmButtonText: '<i class="fas fa-times me-2"></i>OK',
+                            customClass: {
+                                ...swalCustomClass,
+                                confirmButton: 'btn btn-danger px-4 py-2'
+                            },
+                            buttonsStyling: false
+                        });
+                    }
+                }, 100);
+            @endif
+
+            @if(session('warning'))
+                setTimeout(() => {
+                    const warningAlert = document.querySelector('.alert-warning');
+                    if (warningAlert) {
+                        const message = warningAlert.textContent.trim().replace(/×/g, '').trim();
+                        warningAlert.remove();
+
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Perhatian!',
+                            text: message,
+                            confirmButtonColor: '#ffc107',
+                            confirmButtonText: '<i class="fas fa-exclamation-triangle me-2"></i>OK',
+                            customClass: {
+                                ...swalCustomClass,
+                                confirmButton: 'btn btn-warning px-4 py-2'
+                            },
+                            buttonsStyling: false
+                        });
+                    }
+                }, 100);
+            @endif
+
+            @if(session('info'))
+                setTimeout(() => {
+                    const infoAlert = document.querySelector('.alert-info');
+                    if (infoAlert) {
+                        const message = infoAlert.textContent.trim().replace(/×/g, '').trim();
+                        infoAlert.remove();
+
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Informasi',
+                            text: message,
+                            confirmButtonColor: '#0dcaf0',
+                            confirmButtonText: '<i class="fas fa-info-circle me-2"></i>OK',
+                            customClass: {
+                                ...swalCustomClass,
+                                confirmButton: 'btn btn-info px-4 py-2'
+                            },
+                            buttonsStyling: false
+                        });
+                    }
+                }, 100);
+            @endif
+        });
     </script>
 
     @stack('scripts')

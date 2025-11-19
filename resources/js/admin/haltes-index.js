@@ -1,4 +1,4 @@
-// Haltes Index Page JavaScript
+// Haltes Index Page JavaScript dengan SweetAlert2
 // Import Bootstrap (if needed)
 // import { Modal, Alert } from 'bootstrap';
 
@@ -68,53 +68,126 @@ window.showPhotoModal = function(photoUrl, halteName) {
 }
 
 /**
- * Delete confirmation functionality
+ * Delete confirmation dengan SweetAlert2
  */
-let deleteHalteId = null;
-
 window.confirmDelete = function(halteId, halteName) {
-    deleteHalteId = halteId;
-
-    const deleteNameEl = document.getElementById('deleteHalteName');
-    if (deleteNameEl) {
-        deleteNameEl.textContent = halteName;
+    // Cek apakah SweetAlert2 tersedia
+    if (typeof Swal === 'undefined') {
+        console.error('SweetAlert2 tidak ditemukan!');
+        // Fallback ke konfirmasi browser default
+        if (confirm('Apakah Anda yakin ingin menghapus halte: ' + halteName + '?')) {
+            document.getElementById('delete-form-' + halteId).submit();
+        }
+        return;
     }
 
-    const deleteModalEl = document.getElementById('deleteModal');
-    if (deleteModalEl && typeof bootstrap !== 'undefined') {
-        const deleteModal = new bootstrap.Modal(deleteModalEl);
-        deleteModal.show();
-    }
+    // Tampilkan SweetAlert2 konfirmasi
+    Swal.fire({
+        title: 'Apakah Anda yakin?',
+        html: `Apakah Anda yakin menghapus halte:<br><strong class="text-danger">${halteName}</strong>?<br><br>
+               <small class="text-muted">Tindakan ini tidak dapat dibatalkan. Semua foto dan data terkait akan ikut terhapus.</small>`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#F44336',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="fas fa-trash me-2"></i>Yes',
+        cancelButtonText: '<i class="fas fa-times me-2"></i>No',
+        reverseButtons: true,
+        focusCancel: true,
+        customClass: {
+            confirmButton: 'btn btn-danger px-4 py-2 me-2',
+            cancelButton: 'btn btn-secondary px-4 py-2'
+        },
+        buttonsStyling: false
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Jika user klik Yes, submit form
+            const deleteForm = document.getElementById('delete-form-' + halteId);
+            if (deleteForm) {
+                // Tampilkan loading
+                Swal.fire({
+                    title: 'Menghapus...',
+                    text: 'Mohon tunggu sebentar',
+                    icon: 'info',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    showConfirmButton: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                deleteForm.submit();
+            }
+        }
+        // Jika user klik No, modal akan otomatis tertutup
+    });
 }
 
 /**
- * Handle delete confirmation button
+ * Tampilkan SweetAlert sukses jika ada session success
  */
-function initDeleteConfirmation() {
-    const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+function showSuccessAlert() {
+    // Cek apakah ada alert success dari session
+    const successAlert = document.querySelector('.alert-success');
 
-    if (confirmDeleteBtn) {
-        confirmDeleteBtn.addEventListener('click', function() {
-            if (deleteHalteId) {
-                // Add loading state
-                this.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Menghapus...';
-                this.disabled = true;
+    if (successAlert && typeof Swal !== 'undefined') {
+        const successMessage = successAlert.textContent.trim();
 
-                const deleteForm = document.getElementById('delete-form-' + deleteHalteId);
-                if (deleteForm) {
-                    deleteForm.submit();
-                }
-            }
+        // Hapus alert default
+        successAlert.remove();
+
+        // Tampilkan SweetAlert2
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: successMessage.replace(/×/g, '').trim(),
+            confirmButtonColor: '#198754',
+            confirmButtonText: '<i class="fas fa-check me-2"></i>OK',
+            timer: 3000,
+            timerProgressBar: true,
+            customClass: {
+                confirmButton: 'btn btn-success px-4 py-2'
+            },
+            buttonsStyling: false
         });
     }
 }
 
 /**
- * Auto-hide alerts after 5 seconds
+ * Tampilkan SweetAlert error jika ada session error
+ */
+function showErrorAlert() {
+    // Cek apakah ada alert error dari session
+    const errorAlert = document.querySelector('.alert-danger');
+
+    if (errorAlert && typeof Swal !== 'undefined') {
+        const errorMessage = errorAlert.textContent.trim();
+
+        // Hapus alert default
+        errorAlert.remove();
+
+        // Tampilkan SweetAlert2
+        Swal.fire({
+            icon: 'error',
+            title: 'Gagal!',
+            text: errorMessage.replace(/×/g, '').trim(),
+            confirmButtonColor: '#dc3545',
+            confirmButtonText: '<i class="fas fa-times me-2"></i>OK',
+            customClass: {
+                confirmButton: 'btn btn-danger px-4 py-2'
+            },
+            buttonsStyling: false
+        });
+    }
+}
+
+/**
+ * Auto-hide alerts after 5 seconds (untuk alert lain yang bukan success/error)
  */
 function initAutoHideAlerts() {
     setTimeout(function() {
-        const alerts = document.querySelectorAll('.alert');
+        const alerts = document.querySelectorAll('.alert:not(.alert-success):not(.alert-danger)');
         alerts.forEach(function(alert) {
             if (typeof bootstrap !== 'undefined' && bootstrap.Alert) {
                 const bsAlert = new bootstrap.Alert(alert);
@@ -218,12 +291,15 @@ function initFormSubmissionStates() {
  */
 document.addEventListener('DOMContentLoaded', function() {
     initSortableHeaders();
-    initDeleteConfirmation();
     initAutoHideAlerts();
     initImageErrorHandling();
     initSearchForm();
     initPaginationLoading();
     initFormSubmissionStates();
+
+    // Tampilkan SweetAlert untuk success/error messages
+    showSuccessAlert();
+    showErrorAlert();
 });
 
 // Export functions if using module system
@@ -232,11 +308,12 @@ if (typeof module !== 'undefined' && module.exports) {
         showPhotoModal: window.showPhotoModal,
         confirmDelete: window.confirmDelete,
         initSortableHeaders,
-        initDeleteConfirmation,
         initAutoHideAlerts,
         initImageErrorHandling,
         initSearchForm,
         initPaginationLoading,
-        initFormSubmissionStates
+        initFormSubmissionStates,
+        showSuccessAlert,
+        showErrorAlert
     };
 }
