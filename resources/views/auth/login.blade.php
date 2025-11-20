@@ -92,7 +92,7 @@
             <div class="image-slider">
                 <div class="slider-track">
                     <div class="slide active">
-                        <img src="https://images.unsplash.com/photo-1570125909232-eb263c188f7e?w=800&h=1000&fit=crop" alt="Bus Stop 1">
+                        <img src="DISHUB SURABAYA3.jpg" alt="Bus Stop 1">
                         <div class="slide-overlay">
                             <div class="slide-content">
                                 <h3>Sistem Manajemen Halte Modern</h3>
@@ -101,7 +101,7 @@
                         </div>
                     </div>
                     <div class="slide">
-                        <img src="https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=800&h=1000&fit=crop" alt="Bus Stop 2">
+                        <img src="busid.jpg" alt="Bus Stop 2">
                         <div class="slide-overlay">
                             <div class="slide-content">
                                 <h3>Transportasi Publik Terintegrasi</h3>
@@ -110,7 +110,7 @@
                         </div>
                     </div>
                     <div class="slide">
-                        <img src="https://images.unsplash.com/photo-1506521781263-d8422e82f27a?w=800&h=1000&fit=crop" alt="Bus Stop 3">
+                        <img src="busid3.jpg" alt="Bus Stop 3">
                         <div class="slide-overlay">
                             <div class="slide-content">
                                 <h3>Monitoring dan Pelaporan</h3>
@@ -119,7 +119,7 @@
                         </div>
                     </div>
                     <div class="slide">
-                        <img src="https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=800&h=1000&fit=crop" alt="Bus Stop 4">
+                        <img src="DISHUB SURABAYA6.jpg" alt="Bus Stop 4">
                         <div class="slide-overlay">
                             <div class="slide-content">
                                 <h3>Layanan Terpercaya</h3>
