@@ -87,40 +87,45 @@
 
     <!-- Filter and Search -->
     <div class="card shadow mb-4">
-        <div class="card-header py-3">
+        <div class="card-header py-3 d-flex justify-content-between align-items-center">
             <h6 class="m-0 font-weight-bold text-primary">Filter & Pencarian</h6>
+            @if(request('search') || request('role') || request('status'))
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-clear-filter">
+                <i class="fas fa-times"></i> Clear Filter
+            </button>
+            @endif
         </div>
         <div class="card-body">
-            <form method="GET" action="{{ route('admin.users.index') }}" class="row g-3">
+            <form method="GET" action="{{ route('admin.users.index') }}" id="filter-form" class="row g-3">
                 <div class="col-md-4">
                     <label for="search" class="form-label">Pencarian</label>
-                    <input type="text" class="form-control" id="search" name="search"
-                           value="{{ request('search') }}"
-                           placeholder="Nama, email, atau telepon...">
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="fas fa-search"></i>
+                        </span>
+                        <input type="text"
+                               class="form-control auto-filter"
+                               id="search"
+                               name="search"
+                               value="{{ request('search') }}"
+                               placeholder="Nama, email, atau telepon...">
+                    </div>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <label for="role" class="form-label">Role</label>
-                    <select class="form-select" id="role" name="role">
+                    <select class="form-select auto-filter" id="role" name="role">
                         <option value="">Semua Role</option>
                         <option value="admin" {{ request('role') === 'admin' ? 'selected' : '' }}>Admin</option>
                         <option value="user" {{ request('role') === 'user' ? 'selected' : '' }}>User</option>
                     </select>
                 </div>
-                <div class="col-md-3">
+                <div class="col-md-4">
                     <label for="status" class="form-label">Status</label>
-                    <select class="form-select" id="status" name="status">
+                    <select class="form-select auto-filter" id="status" name="status">
                         <option value="">Semua Status</option>
                         <option value="active" {{ request('status') === 'active' ? 'selected' : '' }}>Aktif</option>
                         <option value="inactive" {{ request('status') === 'inactive' ? 'selected' : '' }}>Nonaktif</option>
                     </select>
-                </div>
-                <div class="col-md-2">
-                    <label class="form-label">&nbsp;</label>
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-search"></i> Filter
-                        </button>
-                    </div>
                 </div>
             </form>
         </div>
@@ -305,6 +310,29 @@
 @push('scripts')
 <script>
 $(document).ready(function() {
+    let searchTimeout;
+
+    // Auto filter untuk input search (dengan debounce)
+    $('#search').on('keyup', function() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(function() {
+            $('#filter-form').submit();
+        }, 500); // Delay 500ms setelah user berhenti mengetik
+    });
+
+    // Auto filter untuk select (langsung submit)
+    $('#role, #status').on('change', function() {
+        $('#filter-form').submit();
+    });
+
+    // Clear all filters
+    $('#btn-clear-filter').on('click', function() {
+        $('#search').val('');
+        $('#role').val('');
+        $('#status').val('');
+        $('#filter-form').submit();
+    });
+
     // Handle Delete User
     $('.btn-delete-user').click(function() {
         const userId = $(this).data('user-id');
@@ -321,7 +349,6 @@ $(document).ready(function() {
             cancelButtonText: 'No'
         }).then((result) => {
             if (result.isConfirmed) {
-                // Submit form delete
                 const form = $('#form-delete-user');
                 form.attr('action', `/admin/users/${userId}`);
                 form.submit();
@@ -347,7 +374,6 @@ $(document).ready(function() {
             cancelButtonText: 'No'
         }).then((result) => {
             if (result.isConfirmed) {
-                // Submit form toggle status
                 const form = $('#form-toggle-status');
                 form.attr('action', `/admin/users/${userId}/toggle-status`);
                 form.submit();

@@ -70,14 +70,17 @@
         </div>
     </div>
 
-    {{-- Filter Year/Month --}}
+    {{-- Filter Year/Month (Auto-submit) --}}
     <div class="row mb-4">
         <div class="col-md-12">
             <div class="card border-0 shadow-sm">
                 <div class="card-body">
-                    <form method="GET" action="{{ route('admin.reports.index') }}" class="row align-items-end">
-                        <div class="col-md-3 mb-3 mb-md-0">
-                            <label for="year" class="form-label fw-bold">Tahun</label>
+                    <form method="GET" action="{{ route('admin.reports.index') }}" id="filterForm" class="row align-items-end">
+                        <div class="col-md-4 mb-3 mb-md-0">
+                            <label for="year" class="form-label fw-bold">
+                                <i class="fas fa-calendar me-1"></i>
+                                Tahun
+                            </label>
                             <select name="year" id="year" class="form-select">
                                 @for($i = date('Y'); $i >= date('Y') - 5; $i--)
                                     <option value="{{ $i }}" {{ $year == $i ? 'selected' : '' }}>
@@ -86,8 +89,11 @@
                                 @endfor
                             </select>
                         </div>
-                        <div class="col-md-3 mb-3 mb-md-0">
-                            <label for="month" class="form-label fw-bold">Bulan</label>
+                        <div class="col-md-4 mb-3 mb-md-0">
+                            <label for="month" class="form-label fw-bold">
+                                <i class="fas fa-calendar-alt me-1"></i>
+                                Bulan
+                            </label>
                             <select name="month" id="month" class="form-select">
                                 <option value="">Semua Bulan</option>
                                 @for($i = 1; $i <= 12; $i++)
@@ -97,11 +103,7 @@
                                 @endfor
                             </select>
                         </div>
-                        <div class="col-md-3">
-                            <button type="submit" class="btn btn-outline-primary">
-                                <i class="fas fa-filter me-1"></i>
-                                Filter
-                            </button>
+                        <div class="col-md-4">
                         </div>
                     </form>
                 </div>
@@ -454,6 +456,38 @@
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+/* Loading overlay */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.loading-overlay.active {
+    display: flex;
+}
+
+.loading-spinner {
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid #4e73df;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .container-fluid {
@@ -467,10 +501,34 @@
 }
 </style>
 
+{{-- Loading Overlay --}}
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+</div>
+
 {{-- Scripts --}}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Auto-submit form on select change
+    const yearSelect = document.getElementById('year');
+    const monthSelect = document.getElementById('month');
+    const filterForm = document.getElementById('filterForm');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+
+    function submitFormWithLoading() {
+        loadingOverlay.classList.add('active');
+        filterForm.submit();
+    }
+
+    if (yearSelect) {
+        yearSelect.addEventListener('change', submitFormWithLoading);
+    }
+
+    if (monthSelect) {
+        monthSelect.addEventListener('change', submitFormWithLoading);
+    }
+
     // Revenue Chart
     const revenueCtx = document.getElementById('revenueChart');
     if (revenueCtx) {
