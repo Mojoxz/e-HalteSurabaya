@@ -1,4 +1,4 @@
-{{-- resources/views/admin/rentals/index.blade.php - IMPROVED VERSION --}}
+{{-- resources/views/admin/rentals/index.blade.php - AUTO SEARCH VERSION --}}
 @extends('layouts.admin')
 
 @section('title', 'Riwayat Sewa Halte')
@@ -127,35 +127,55 @@
         </div>
     </div>
 
-    {{-- Filter Section --}}
+    {{-- Filter Section - AUTO SEARCH --}}
     <div class="card shadow mb-4">
         <div class="card-header py-3 d-flex justify-content-between align-items-center">
             <h6 class="m-0 font-weight-bold text-primary">
                 <i class="fas fa-filter me-2"></i>
                 Filter Data
+                <span id="filterIndicator" class="badge bg-info ms-2" style="display: none;">
+                    <i class="fas fa-sync-alt fa-spin"></i> Mencari...
+                </span>
             </h6>
-            <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#filterCollapse" aria-expanded="false">
-                <i class="fas fa-chevron-down"></i>
-            </button>
+            <div class="d-flex align-items-center gap-2">
+                @if(request()->hasAny(['start_date', 'end_date', 'halte_id', 'rented_by']))
+                    <span class="badge bg-success">
+                        <i class="fas fa-filter me-1"></i>
+                        Filter Aktif
+                    </span>
+                @endif
+                <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#filterCollapse" aria-expanded="true">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+            </div>
         </div>
-        <div class="collapse" id="filterCollapse">
+        <div class="collapse show" id="filterCollapse">
             <div class="card-body">
-                <form method="GET" action="{{ route('admin.rentals.index') }}" class="row g-3">
+                <form method="GET" action="{{ route('admin.rentals.index') }}" id="autoFilterForm" class="row g-3">
                     <div class="col-md-3">
-                        <label for="start_date" class="form-label">Tanggal Mulai</label>
-                        <input type="date" class="form-control" id="start_date" name="start_date"
+                        <label for="start_date" class="form-label">
+                            <i class="fas fa-calendar-alt me-1"></i>
+                            Tanggal Mulai
+                        </label>
+                        <input type="date" class="form-control auto-search" id="start_date" name="start_date"
                                value="{{ request('start_date') }}">
                     </div>
                     <div class="col-md-3">
-                        <label for="end_date" class="form-label">Tanggal Selesai</label>
-                        <input type="date" class="form-control" id="end_date" name="end_date"
+                        <label for="end_date" class="form-label">
+                            <i class="fas fa-calendar-check me-1"></i>
+                            Tanggal Selesai
+                        </label>
+                        <input type="date" class="form-control auto-search" id="end_date" name="end_date"
                                value="{{ request('end_date') }}">
                     </div>
                     <div class="col-md-3">
-                        <label for="halte_id" class="form-label">Halte</label>
-                        <select class="form-select" id="halte_id" name="halte_id">
-                            <option value="">Pilih Halte</option>
+                        <label for="halte_id" class="form-label">
+                            <i class="fas fa-map-marker-alt me-1"></i>
+                            Halte
+                        </label>
+                        <select class="form-select auto-search" id="halte_id" name="halte_id">
+                            <option value="">Semua Halte</option>
                             @foreach($haltes as $halte)
                                 <option value="{{ $halte->id }}" {{ request('halte_id') == $halte->id ? 'selected' : '' }}>
                                     {{ $halte->name }}
@@ -164,19 +184,21 @@
                         </select>
                     </div>
                     <div class="col-md-3">
-                        <label for="rented_by" class="form-label">Penyewa</label>
-                        <input type="text" class="form-control" id="rented_by" name="rented_by"
-                               placeholder="Nama penyewa" value="{{ request('rented_by') }}">
+                        <label for="rented_by" class="form-label">
+                            <i class="fas fa-user me-1"></i>
+                            Penyewa
+                        </label>
+                        <input type="text" class="form-control auto-search" id="rented_by" name="rented_by"
+                               placeholder="Cari nama penyewa..." value="{{ request('rented_by') }}">
+                        <small class="text-muted">Pencarian otomatis saat mengetik</small>
                     </div>
                     <div class="col-12">
-                        <button type="submit" class="btn btn-primary me-2">
-                            <i class="fas fa-search me-1"></i>
-                            Filter
-                        </button>
-                        <a href="{{ route('admin.rentals.index') }}" class="btn btn-outline-secondary">
-                            <i class="fas fa-times me-1"></i>
-                            Reset
-                        </a>
+                        @if(request()->hasAny(['start_date', 'end_date', 'halte_id', 'rented_by']))
+                            <a href="{{ route('admin.rentals.index') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>
+                                Reset Filter
+                            </a>
+                        @endif
                     </div>
                 </form>
             </div>
@@ -496,16 +518,73 @@
     transform: translateY(-1px);
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
+
+/* Filter indicator animation */
+#filterIndicator {
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* Auto-search input highlight */
+.auto-search:focus {
+    border-color: #4e73df;
+    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+}
 </style>
 
-{{-- Custom Scripts --}}
+{{-- Custom Scripts - AUTO SEARCH --}}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Auto-search functionality
+    const form = document.getElementById('autoFilterForm');
+    const autoSearchInputs = document.querySelectorAll('.auto-search');
+    const filterIndicator = document.getElementById('filterIndicator');
+    let searchTimeout;
+
+    // Function to submit form
+    function submitForm() {
+        // Show loading indicator
+        if (filterIndicator) {
+            filterIndicator.style.display = 'inline-block';
+        }
+
+        // Submit form
+        form.submit();
+    }
+
+    // Add event listeners to all auto-search inputs
+    autoSearchInputs.forEach(input => {
+        // For text input - use debounce (delay 500ms after user stops typing)
+        if (input.type === 'text') {
+            input.addEventListener('input', function() {
+                clearTimeout(searchTimeout);
+
+                searchTimeout = setTimeout(() => {
+                    submitForm();
+                }, 500); // Wait 500ms after user stops typing
+            });
+        }
+        // For date and select - submit immediately
+        else if (input.type === 'date' || input.tagName === 'SELECT') {
+            input.addEventListener('change', function() {
+                submitForm();
+            });
+        }
+    });
+
     // Auto-collapse filter on mobile
     if (window.innerWidth < 768) {
         const filterCollapse = document.getElementById('filterCollapse');
         if (filterCollapse && !filterCollapse.classList.contains('show')) {
-            filterCollapse.style.display = 'none';
+            // Keep it open on first load if there are active filters
+            const hasActiveFilters = {{ request()->hasAny(['start_date', 'end_date', 'halte_id', 'rented_by']) ? 'true' : 'false' }};
+            if (!hasActiveFilters) {
+                filterCollapse.classList.remove('show');
+            }
         }
     }
 
@@ -515,19 +594,42 @@ document.addEventListener('DOMContentLoaded', function() {
         return new bootstrap.Tooltip(tooltipTriggerEl);
     });
 
-    // Add search functionality to table
-    const searchInput = document.getElementById('tableSearch');
-    if (searchInput) {
-        searchInput.addEventListener('keyup', function() {
-            const filter = this.value.toLowerCase();
-            const rows = document.querySelectorAll('#dataTable tbody tr');
+    // Preserve filter state in pagination links
+    const paginationLinks = document.querySelectorAll('.pagination a');
+    paginationLinks.forEach(link => {
+        if (link.href) {
+            const url = new URL(link.href);
 
-            rows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(filter) ? '' : 'none';
+            // Add current filter values to pagination links
+            autoSearchInputs.forEach(input => {
+                if (input.value) {
+                    url.searchParams.set(input.name, input.value);
+                }
             });
-        });
-    }
+
+            link.href = url.toString();
+        }
+    });
+
+    // Clear individual filter on ESC key
+    autoSearchInputs.forEach(input => {
+        if (input.type === 'text') {
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    this.value = '';
+                    submitForm();
+                }
+            });
+        }
+    });
+
+    // Add visual feedback for active filters
+    autoSearchInputs.forEach(input => {
+        if (input.value) {
+            input.style.borderColor = '#4e73df';
+            input.style.backgroundColor = '#f0f5ff';
+        }
+    });
 });
 </script>
 @endsection
