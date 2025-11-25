@@ -1,6 +1,4 @@
-// Haltes Index Page JavaScript dengan SweetAlert2
-// Import Bootstrap (if needed)
-// import { Modal, Alert } from 'bootstrap';
+// Haltes Index Page JavaScript dengan Auto Search dan SweetAlert2
 
 /**
  * Initialize sortable headers functionality
@@ -120,7 +118,6 @@ window.confirmDelete = function(halteId, halteName) {
                 deleteForm.submit();
             }
         }
-        // Jika user klik No, modal akan otomatis tertutup
     });
 }
 
@@ -128,16 +125,12 @@ window.confirmDelete = function(halteId, halteName) {
  * Tampilkan SweetAlert sukses jika ada session success
  */
 function showSuccessAlert() {
-    // Cek apakah ada alert success dari session
     const successAlert = document.querySelector('.alert-success');
 
     if (successAlert && typeof Swal !== 'undefined') {
         const successMessage = successAlert.textContent.trim();
-
-        // Hapus alert default
         successAlert.remove();
 
-        // Tampilkan SweetAlert2
         Swal.fire({
             icon: 'success',
             title: 'Berhasil!',
@@ -158,16 +151,12 @@ function showSuccessAlert() {
  * Tampilkan SweetAlert error jika ada session error
  */
 function showErrorAlert() {
-    // Cek apakah ada alert error dari session
     const errorAlert = document.querySelector('.alert-danger');
 
     if (errorAlert && typeof Swal !== 'undefined') {
         const errorMessage = errorAlert.textContent.trim();
-
-        // Hapus alert default
         errorAlert.remove();
 
-        // Tampilkan SweetAlert2
         Swal.fire({
             icon: 'error',
             title: 'Gagal!',
@@ -183,7 +172,7 @@ function showErrorAlert() {
 }
 
 /**
- * Auto-hide alerts after 5 seconds (untuk alert lain yang bukan success/error)
+ * Auto-hide alerts after 5 seconds
  */
 function initAutoHideAlerts() {
     setTimeout(function() {
@@ -209,43 +198,123 @@ function initImageErrorHandling() {
 }
 
 /**
- * Search form enhancement with auto-submit on filter change
+ * AUTO SEARCH FUNCTIONALITY - REVISED
+ * Pencarian otomatis tanpa perlu klik tombol Cari
  */
-function initSearchForm() {
+function initAutoSearch() {
     const searchInput = document.getElementById('search');
     const statusSelect = document.getElementById('status');
     const simbadaSelect = document.getElementById('simbada');
     const filterForm = document.getElementById('filterForm');
+    const searchBtn = document.querySelector('#filterForm button[type="submit"]');
 
     if (!filterForm) return;
 
-    // Auto-submit on filter change
+    let searchTimeout;
+    let isSearching = false;
+
+    /**
+     * Function to submit form with loading indicator
+     */
+    function submitFormWithLoading(trigger) {
+        if (isSearching) return;
+
+        isSearching = true;
+
+        // Show loading indicator on the trigger element
+        if (trigger && trigger !== searchInput) {
+            const originalHTML = trigger.innerHTML;
+            trigger.disabled = true;
+            trigger.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+        }
+
+        // Optional: Show global loading indicator
+        if (searchBtn) {
+            searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Mencari...';
+            searchBtn.disabled = true;
+        }
+
+        // Submit form
+        filterForm.submit();
+    }
+
+    /**
+     * AUTO SUBMIT on dropdown change (Status & SIMBADA)
+     */
     if (statusSelect) {
         statusSelect.addEventListener('change', function() {
-            filterForm.submit();
+            submitFormWithLoading(this);
         });
     }
 
     if (simbadaSelect) {
         simbadaSelect.addEventListener('change', function() {
-            filterForm.submit();
+            submitFormWithLoading(this);
         });
     }
 
-    // Search on Enter key
+    /**
+     * AUTO SUBMIT on search input with debounce (delay 800ms)
+     */
     if (searchInput) {
+        // Real-time search with debounce
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+
+            // Visual feedback - show that search is pending
+            if (searchBtn) {
+                searchBtn.innerHTML = '<i class="fas fa-clock me-2"></i> Menunggu...';
+            }
+
+            // Debounce - wait 800ms after user stops typing
+            searchTimeout = setTimeout(function() {
+                if (!isSearching) {
+                    submitFormWithLoading(searchInput);
+                }
+            }, 800);
+        });
+
+        // Instant search on Enter key
         searchInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
-                filterForm.submit();
+                clearTimeout(searchTimeout);
+                submitFormWithLoading(searchInput);
             }
         });
 
         // Clear search on Escape key
         searchInput.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
+                clearTimeout(searchTimeout);
                 this.value = '';
+
+                // Auto-submit after clearing
+                setTimeout(function() {
+                    if (!isSearching) {
+                        submitFormWithLoading(searchInput);
+                    }
+                }, 100);
             }
+        });
+    }
+
+    /**
+     * Hide manual search button (optional)
+     * Uncomment if you want to completely remove the search button
+     */
+    // if (searchBtn) {
+    //     searchBtn.style.display = 'none';
+    // }
+
+    /**
+     * Keep search button functional for manual trigger
+     */
+    if (searchBtn) {
+        searchBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            clearTimeout(searchTimeout);
+            submitFormWithLoading(this);
         });
     }
 }
@@ -269,33 +338,14 @@ function initPaginationLoading() {
 }
 
 /**
- * Form submission loading states
- */
-function initFormSubmissionStates() {
-    const filterForm = document.getElementById('filterForm');
-
-    if (filterForm) {
-        filterForm.addEventListener('submit', function() {
-            const submitBtn = this.querySelector('button[type="submit"]');
-
-            if (submitBtn) {
-                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Mencari...';
-                submitBtn.disabled = true;
-            }
-        });
-    }
-}
-
-/**
  * Initialize all functionality when DOM is ready
  */
 document.addEventListener('DOMContentLoaded', function() {
     initSortableHeaders();
     initAutoHideAlerts();
     initImageErrorHandling();
-    initSearchForm();
+    initAutoSearch(); // NEW: Replace initSearchForm with initAutoSearch
     initPaginationLoading();
-    initFormSubmissionStates();
 
     // Tampilkan SweetAlert untuk success/error messages
     showSuccessAlert();
@@ -310,9 +360,8 @@ if (typeof module !== 'undefined' && module.exports) {
         initSortableHeaders,
         initAutoHideAlerts,
         initImageErrorHandling,
-        initSearchForm,
+        initAutoSearch,
         initPaginationLoading,
-        initFormSubmissionStates,
         showSuccessAlert,
         showErrorAlert
     };

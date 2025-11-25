@@ -42,12 +42,22 @@
         </div>
     @endif
 
-    <!-- Filter & Search -->
+    <!-- Filter & Search - REVISED WITHOUT BUTTONS -->
     <div class="card mb-4 shadow-sm border-0">
         <div class="card-header bg-light border-bottom-0">
-            <h6 class="card-title mb-0 text-dark">
-                <i class="fas fa-filter me-2"></i>Filter & Pencarian
-            </h6>
+            <div class="d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-0 text-dark">
+                    <i class="fas fa-filter me-2"></i>Filter & Pencarian
+                    <!-- <small class="text-muted ms-2">(Auto search - ketik untuk mencari)</small> -->
+                </h6>
+                @if(request()->hasAny(['search', 'status', 'simbada']))
+                    <a href="{{ route('admin.haltes.index', ['reset' => '1']) }}"
+                       class="btn btn-sm btn-outline-secondary"
+                       title="Hapus semua filter">
+                        <i class="fas fa-times me-1"></i> Clear Filters
+                    </a>
+                @endif
+            </div>
         </div>
         <div class="card-body bg-white">
             <form method="GET" action="{{ route('admin.haltes.index') }}" id="filterForm">
@@ -55,50 +65,119 @@
                 <input type="hidden" name="direction" value="{{ $sortDirection }}">
 
                 <div class="row g-3">
-                    <div class="col-md-4">
+                    <!-- Search Input -->
+                    <div class="col-md-6">
                         <label for="search" class="form-label fw-semibold">
                             <i class="fas fa-search me-1"></i>Cari Halte
                         </label>
-                        <input type="text" name="search" id="search" class="form-control form-control-lg border-2"
-                               placeholder="Cari nama halte..." value="{{ request('search') }}">
+                        <div class="input-group input-group-lg">
+                            <span class="input-group-text bg-white border-2">
+                                <i class="fas fa-search text-primary"></i>
+                            </span>
+                            <input type="text"
+                                   name="search"
+                                   id="search"
+                                   class="form-control border-2"
+                                   placeholder="Ketik nama halte... (auto search)"
+                                   value="{{ request('search') }}"
+                                   autocomplete="off">
+                            @if(request('search'))
+                                <button class="btn btn-outline-secondary"
+                                        type="button"
+                                        onclick="document.getElementById('search').value=''; document.getElementById('search').dispatchEvent(new Event('input'));"
+                                        title="Hapus pencarian">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            @endif
+                        </div>
+                        <!-- <small class="text-muted d-block mt-1">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Tekan <kbd>Enter</kbd> untuk pencarian cepat, <kbd>Esc</kbd> untuk hapus
+                        </small> -->
                     </div>
-                    <div class="col-md-2">
+
+                    <!-- Status Filter -->
+                    <div class="col-md-3">
                         <label for="status" class="form-label fw-semibold">
                             <i class="fas fa-info-circle me-1"></i>Status
                         </label>
-                        <select name="status" id="status" class="form-select form-select-lg border-2">
+                        <select name="status"
+                                id="status"
+                                class="form-select form-select-lg border-2">
                             <option value="">Semua Status</option>
-                            <option value="available" {{ request('status') == 'available' ? 'selected' : '' }}>Tersedia</option>
-                            <option value="rented" {{ request('status') == 'rented' ? 'selected' : '' }}>Disewa</option>
+                            <option value="available" {{ request('status') == 'available' ? 'selected' : '' }}>
+                                <i class="fas fa-check-circle"></i> Tersedia
+                            </option>
+                            <option value="rented" {{ request('status') == 'rented' ? 'selected' : '' }}>
+                                <i class="fas fa-clock"></i> Disewa
+                            </option>
                         </select>
+                        <!-- <small class="text-muted d-block mt-1">
+                            <i class="fas fa-bolt me-1"></i>Auto filter
+                        </small> -->
                     </div>
-                    <div class="col-md-2">
+
+                    <!-- SIMBADA Filter -->
+                    <div class="col-md-3">
                         <label for="simbada" class="form-label fw-semibold">
                             <i class="fas fa-database me-1"></i>SIMBADA
                         </label>
-                        <select name="simbada" id="simbada" class="form-select form-select-lg border-2">
+                        <select name="simbada"
+                                id="simbada"
+                                class="form-select form-select-lg border-2">
                             <option value="">Semua</option>
-                            <option value="1" {{ request('simbada') == '1' ? 'selected' : '' }}>Terdaftar</option>
-                            <option value="0" {{ request('simbada') == '0' ? 'selected' : '' }}>Belum Terdaftar</option>
+                            <option value="1" {{ request('simbada') == '1' ? 'selected' : '' }}>
+                                <i class="fas fa-check"></i> Terdaftar
+                            </option>
+                            <option value="0" {{ request('simbada') == '0' ? 'selected' : '' }}>
+                                <i class="fas fa-times"></i> Belum Terdaftar
+                            </option>
                         </select>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">&nbsp;</label>
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="fas fa-search me-2"></i> Cari
-                            </button>
-                        </div>
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label">&nbsp;</label>
-                        <div class="d-grid">
-                            <a href="{{ route('admin.haltes.index', ['reset' => '1']) }}" class="btn btn-outline-secondary btn-lg">
-                                <i class="fas fa-times me-2"></i> Reset
-                            </a>
-                        </div>
+                        <!-- <small class="text-muted d-block mt-1">
+                            <i class="fas fa-bolt me-1"></i>Auto filter
+                        </small> -->
                     </div>
                 </div>
+
+                <!-- Active Filters Indicator -->
+                @if(request()->hasAny(['search', 'status', 'simbada']))
+                    <div class="mt-3 pt-3 border-top">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap">
+                            <div class="filter-badges">
+                                <span class="text-muted me-2">
+                                    <i class="fas fa-filter me-1"></i>Filter aktif:
+                                </span>
+
+                                @if(request('search'))
+                                    <span class="badge bg-primary me-2">
+                                        <i class="fas fa-search me-1"></i>
+                                        Pencarian: "{{ request('search') }}"
+                                    </span>
+                                @endif
+
+                                @if(request('status'))
+                                    <span class="badge bg-info me-2">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Status: {{ request('status') == 'available' ? 'Tersedia' : 'Disewa' }}
+                                    </span>
+                                @endif
+
+                                @if(request('simbada') !== null && request('simbada') !== '')
+                                    <span class="badge bg-warning text-dark me-2">
+                                        <i class="fas fa-database me-1"></i>
+                                        SIMBADA: {{ request('simbada') == '1' ? 'Terdaftar' : 'Belum Terdaftar' }}
+                                    </span>
+                                @endif
+                            </div>
+
+                            <div>
+                                <span class="text-muted me-2">
+                                    Menampilkan {{ $haltes->count() }} dari {{ $haltes->total() }} halte
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                @endif
             </form>
         </div>
     </div>
@@ -379,7 +458,7 @@
                             <h4 class="text-muted fw-bold">Tidak ada halte yang ditemukan</h4>
                             <p class="text-muted mb-4">Coba ubah kriteria pencarian atau filter Anda.</p>
                             <a href="{{ route('admin.haltes.index', ['reset' => '1']) }}" class="btn btn-outline-primary btn-lg">
-                                <i class="fas fa-times me-2"></i> Reset Filter
+                                <i class="fas fa-times me-2"></i> Hapus Semua Filter
                             </a>
                         </div>
                     @else
@@ -410,41 +489,6 @@
             </div>
             <div class="modal-body text-center p-4">
                 <img id="modalPhoto" src="" alt="" class="img-fluid rounded-3 shadow">
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Delete Confirmation Modal -->
-<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header bg-danger text-white border-0">
-                <h5 class="modal-title fw-bold" id="deleteModalLabel">
-                    <i class="fas fa-exclamation-triangle me-2"></i> Konfirmasi Hapus
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body p-4">
-                <div class="text-center mb-3">
-                    <i class="fas fa-trash-alt fa-3x text-danger opacity-50"></i>
-                </div>
-                <p class="mb-2 text-center">Apakah Anda yakin ingin menghapus halte:</p>
-                <div class="text-center mb-3">
-                    <strong id="deleteHalteName" class="text-danger fs-5"></strong>
-                </div>
-                <div class="alert alert-warning border-0">
-                    <i class="fas fa-warning me-2"></i>
-                    <strong>Perhatian:</strong> Tindakan ini tidak dapat dibatalkan. Semua foto dan data terkait akan ikut terhapus.
-                </div>
-            </div>
-            <div class="modal-footer border-0 justify-content-center">
-                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-2"></i> Batal
-                </button>
-                <button type="button" class="btn btn-danger px-4" id="confirmDeleteBtn">
-                    <i class="fas fa-trash me-2"></i> Hapus Halte
-                </button>
             </div>
         </div>
     </div>
