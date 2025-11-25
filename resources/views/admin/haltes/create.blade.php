@@ -199,25 +199,28 @@
                                 </div>
                             </div>
 
+
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label for="rental_cost">Biaya Sewa</label>
+                                        <label for="rental_cost_display">Biaya Sewa</label>
                                         <div class="input-group">
                                             <div class="input-group-prepend">
                                                 <span class="input-group-text">Rp</span>
                                             </div>
-                                            <input type="number"
-                                                   class="form-control @error('rental_cost') is-invalid @enderror"
-                                                   id="rental_cost"
-                                                   name="rental_cost"
-                                                   value="{{ old('rental_cost') }}"
-                                                   placeholder="0"
-                                                   min="0"
-                                                   step="1000">
+                                            <input type="text"
+                                                class="form-control @error('rental_cost') is-invalid @enderror"
+                                                id="rental_cost_display"
+                                                placeholder="0"
+                                                autocomplete="off">
+                                            <!-- Hidden input untuk value asli -->
+                                            <input type="hidden"
+                                                id="rental_cost"
+                                                name="rental_cost"
+                                                value="{{ old('rental_cost') }}">
                                         </div>
                                         @error('rental_cost')
-                                            <div class="invalid-feedback">{{ $message }}</div>
+                                            <div class="invalid-feedback d-block">{{ $message }}</div>
                                         @enderror
                                     </div>
                                 </div>

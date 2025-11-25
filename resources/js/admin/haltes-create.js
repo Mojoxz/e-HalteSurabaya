@@ -34,6 +34,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('rent_start_date').value = '';
                 document.getElementById('rent_end_date').value = '';
                 document.getElementById('rental_cost').value = '';
+                document.getElementById('rental_cost_display').value = '';
                 document.getElementById('rental_notes').value = '';
             }
         });
@@ -61,6 +62,33 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Format Rental Cost
+    const rentalCostInput = document.getElementById('rental_cost');
+    const rentalCostDisplay = document.getElementById('rental_cost_display');
+
+    if (rentalCostInput && rentalCostDisplay) {
+        // Set initial display value if exists (for old() values)
+        if (rentalCostInput.value) {
+            rentalCostDisplay.value = formatRupiah(rentalCostInput.value);
+        }
+
+        // Format on input
+        rentalCostDisplay.addEventListener('input', function(e) {
+            let value = this.value.replace(/[^\d]/g, '');
+            this.value = formatRupiah(value);
+            rentalCostInput.value = value;
+        });
+
+        // Handle paste event
+        rentalCostDisplay.addEventListener('paste', function(e) {
+            e.preventDefault();
+            let pastedData = (e.clipboardData || window.clipboardData).getData('text');
+            let value = pastedData.replace(/[^\d]/g, '');
+            this.value = formatRupiah(value);
+            rentalCostInput.value = value;
+        });
+    }
+
     // Update map preview when coordinates change
     const latInput = document.getElementById('latitude');
     const lngInput = document.getElementById('longitude');
@@ -74,6 +102,27 @@ document.addEventListener('DOMContentLoaded', function() {
         photosInput.addEventListener('change', previewImages);
     }
 });
+
+/**
+ * Format number to Rupiah format
+ */
+function formatRupiah(angka) {
+    if (!angka) return '';
+
+    let number_string = angka.toString().replace(/[^,\d]/g, '');
+    let split = number_string.split(',');
+    let sisa = split[0].length % 3;
+    let rupiah = split[0].substr(0, sisa);
+    let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+    if (ribuan) {
+        let separator = sisa ? '.' : '';
+        rupiah += separator + ribuan.join('.');
+    }
+
+    rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+    return rupiah;
+}
 
 /**
  * Preview uploaded images
