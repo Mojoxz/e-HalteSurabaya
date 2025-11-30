@@ -1,14 +1,12 @@
 <?php
-// app/Http/Controllers/AdminController.php - FIXED VERSION WITH AUTO SORTING AND DOCUMENT UPLOAD
+// app/Http/Controllers/AdminController.php - FIXED VERSION WITH AUTO SORTING
 
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Halte;
 use App\Models\HaltePhoto;
-use App\Models\HalteDocument;
 use App\Models\RentalHistory;
-use App\Models\RentalDocument;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -66,7 +64,7 @@ class AdminController extends Controller
 
         $query = Halte::with(['photos' => function($query) {
             $query->orderBy('is_primary', 'desc')->orderBy('id', 'asc');
-        }, 'documents', 'rentalHistories']);
+        }, 'rentalHistories']);
 
         // Apply search filter
         if ($request->filled('search')) {
@@ -122,14 +120,11 @@ class AdminController extends Controller
         return view('admin.haltes.create');
     }
 
-/**
- * Update halte - FIXED RENTAL DOCUMENT UPLOAD
- */
-public function halteUpdate(Request $request, $id)
-{
-    try {
-        $halte = Halte::findOrFail($id);
-
+    /**
+     * Store new halte - FIXED RENTAL STATUS LOGIC
+     */
+    public function halteStore(Request $request)
+    {
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -138,22 +133,18 @@ public function halteUpdate(Request $request, $id)
             'address' => 'nullable|string',
             'simbada_number' => 'nullable|string',
             'photos.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'simbada_documents.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
-            'simbada_document_descriptions.*' => 'nullable|string',
             'rent_start_date' => 'nullable|date',
             'rent_end_date' => 'nullable|date|after:rent_start_date',
             'rented_by' => 'nullable|string|max:255',
             'rental_cost' => 'nullable|numeric|min:0',
-            'rental_notes' => 'nullable|string',
-            'rental_documents.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
-            'rental_document_descriptions.*' => 'nullable|string'
+            'rental_notes' => 'nullable|string'
         ]);
 
         // FIXED: Proper rental status logic
         $isRented = $request->has('is_rented') && $request->is_rented;
         $hasValidRentalDates = $request->filled('rent_start_date') && $request->filled('rent_end_date');
 
-        $updateData = [
+        $halteData = [
             'name' => $request->name,
             'description' => $request->description,
             'latitude' => $request->latitude,
@@ -169,99 +160,44 @@ public function halteUpdate(Request $request, $id)
             $endDate = Carbon::parse($request->rent_end_date);
             $now = Carbon::now();
 
-            $updateData['is_rented'] = true;
-            $updateData['rent_start_date'] = $startDate;
-            $updateData['rent_end_date'] = $endDate;
-            $updateData['rented_by'] = $request->rented_by;
+            $halteData['is_rented'] = true;
+            $halteData['rent_start_date'] = $startDate;
+            $halteData['rent_end_date'] = $endDate;
+            $halteData['rented_by'] = $request->rented_by;
 
             // Set proper status based on dates
             if ($now->between($startDate, $endDate)) {
-                $updateData['status'] = 'rented';
+                $halteData['status'] = 'rented';
             } elseif ($now->isBefore($startDate)) {
-                $updateData['status'] = 'available'; // Future rental
+                $halteData['status'] = 'available'; // Future rental
             } else {
-                $updateData['status'] = 'available'; // Expired rental
-                $updateData['is_rented'] = false;
-            }
-
-            // FIXED: Always handle rental documents if uploaded
-            // Check if we should create new rental history
-            $currentRental = $halte->rentalHistories()->latest()->first();
-            $shouldCreateNewHistory = !$currentRental ||
-                                      $currentRental->rent_start_date->format('Y-m-d') != $startDate->format('Y-m-d') ||
-                                      $currentRental->rent_end_date->format('Y-m-d') != $endDate->format('Y-m-d') ||
-                                      $currentRental->rented_by != $request->rented_by;
-
-            if ($shouldCreateNewHistory) {
-                // Create new rental history
-                $rentalHistory = RentalHistory::create([
-                    'halte_id' => $halte->id,
-                    'rented_by' => $request->rented_by,
-                    'rent_start_date' => $startDate,
-                    'rent_end_date' => $endDate,
-                    'rental_cost' => $request->rental_cost ?? 0,
-                    'notes' => $request->rental_notes,
-                    'created_by' => Auth::id()
-                ]);
-
-                // Upload documents to NEW rental history
-                if ($request->hasFile('rental_documents')) {
-                    foreach ($request->file('rental_documents') as $index => $document) {
-                        try {
-                            $originalName = $document->getClientOriginalName();
-                            $extension = $document->getClientOriginalExtension();
-                            $path = $document->store('rental-documents', 'public');
-
-                            RentalDocument::create([
-                                'rental_history_id' => $rentalHistory->id,
-                                'document_name' => $originalName,
-                                'document_path' => $path,
-                                'file_type' => $extension,
-                                'file_size' => $document->getSize(),
-                                'description' => $request->rental_document_descriptions[$index] ?? null,
-                                'uploaded_by' => Auth::id()
-                            ]);
-                        } catch (\Exception $e) {
-                            Log::error('Error uploading rental document: ' . $e->getMessage());
-                        }
-                    }
-                }
-            } else {
-                // FIXED: Upload documents to EXISTING rental history (this was missing!)
-                if ($request->hasFile('rental_documents') && $currentRental) {
-                    foreach ($request->file('rental_documents') as $index => $document) {
-                        try {
-                            $originalName = $document->getClientOriginalName();
-                            $extension = $document->getClientOriginalExtension();
-                            $path = $document->store('rental-documents', 'public');
-
-                            RentalDocument::create([
-                                'rental_history_id' => $currentRental->id, // Use existing rental history
-                                'document_name' => $originalName,
-                                'document_path' => $path,
-                                'file_type' => $extension,
-                                'file_size' => $document->getSize(),
-                                'description' => $request->rental_document_descriptions[$index] ?? null,
-                                'uploaded_by' => Auth::id()
-                            ]);
-                        } catch (\Exception $e) {
-                            Log::error('Error uploading rental document: ' . $e->getMessage());
-                        }
-                    }
-                }
+                $halteData['status'] = 'available'; // Expired rental
+                $halteData['is_rented'] = false;
             }
         } else {
-            $updateData['is_rented'] = false;
-            $updateData['rent_start_date'] = null;
-            $updateData['rent_end_date'] = null;
-            $updateData['rented_by'] = null;
-            $updateData['status'] = 'available';
+            $halteData['is_rented'] = false;
+            $halteData['rent_start_date'] = null;
+            $halteData['rent_end_date'] = null;
+            $halteData['rented_by'] = null;
+            $halteData['status'] = 'available';
         }
 
-        // Update halte data
-        $halte->update($updateData);
+        $halte = Halte::create($halteData);
 
-        // Handle new photo uploads
+        // Create rental history if halte is rented
+        if ($isRented && $hasValidRentalDates) {
+            RentalHistory::create([
+                'halte_id' => $halte->id,
+                'rented_by' => $request->rented_by,
+                'rent_start_date' => $request->rent_start_date,
+                'rent_end_date' => $request->rent_end_date,
+                'rental_cost' => $request->rental_cost ?? 0,
+                'notes' => $request->rental_notes,
+                'created_by' => Auth::id()
+            ]);
+        }
+
+        // Handle photo uploads - FIXED
         if ($request->hasFile('photos')) {
             foreach ($request->file('photos') as $index => $photo) {
                 try {
@@ -271,7 +207,7 @@ public function halteUpdate(Request $request, $id)
                         'halte_id' => $halte->id,
                         'photo_path' => $path,
                         'description' => $request->photo_descriptions[$index] ?? null,
-                        'is_primary' => false
+                        'is_primary' => $index === 0
                     ]);
                 } catch (\Exception $e) {
                     Log::error('Error uploading photo: ' . $e->getMessage());
@@ -279,46 +215,159 @@ public function halteUpdate(Request $request, $id)
             }
         }
 
-        // Handle SIMBADA document uploads
-        if ($request->hasFile('simbada_documents')) {
-            foreach ($request->file('simbada_documents') as $index => $document) {
-                try {
-                    $originalName = $document->getClientOriginalName();
-                    $extension = $document->getClientOriginalExtension();
-                    $path = $document->store('halte-documents/simbada', 'public');
-
-                    HalteDocument::create([
-                        'halte_id' => $halte->id,
-                        'document_type' => 'simbada',
-                        'document_name' => $originalName,
-                        'document_path' => $path,
-                        'file_type' => $extension,
-                        'file_size' => $document->getSize(),
-                        'description' => $request->simbada_document_descriptions[$index] ?? null,
-                        'uploaded_by' => Auth::id()
-                    ]);
-                } catch (\Exception $e) {
-                    Log::error('Error uploading SIMBADA document: ' . $e->getMessage());
-                }
-            }
-        }
-
-        // Redirect with preserved sort parameters
+        // FIXED: Redirect with preserved sort parameters
         $redirectParams = [];
         if ($request->session()->has('halte_sort')) {
             $redirectParams = $request->session()->get('halte_sort');
         }
 
-        return redirect()->route('admin.haltes.index', $redirectParams)
-            ->with('success', 'Halte berhasil diupdate');
-
-    } catch (\Exception $e) {
-        Log::error('Error updating halte: ' . $e->getMessage());
-        return back()->withInput()
-            ->with('error', 'Gagal mengupdate halte: ' . $e->getMessage());
+        return redirect()->route('admin.haltes.index', $redirectParams)->with('success', 'Halte berhasil ditambahkan');
     }
-}
 
+    /**
+     * Show halte details
+     */
+    public function halteShow($id)
+    {
+        $halte = Halte::with(['photos' => function($query) {
+            $query->orderBy('is_primary', 'desc');
+        }, 'rentalHistories' => function($query) {
+            $query->orderBy('created_at', 'desc');
+        }])->findOrFail($id);
+
+        return view('admin.haltes.show', compact('halte'));
+    }
+
+    /**
+     * Show edit halte form
+     */
+    public function halteEdit($id)
+    {
+        $halte = Halte::with(['photos' => function($query) {
+            $query->orderBy('is_primary', 'desc');
+        }])->findOrFail($id);
+
+        return view('admin.haltes.edit', compact('halte'));
+    }
+
+    /**
+     * Update halte - FIXED WITH PERSISTENT SORT STATE
+     */
+    public function halteUpdate(Request $request, $id)
+    {
+        try {
+            $halte = Halte::findOrFail($id);
+
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'latitude' => 'required|numeric|between:-90,90',
+                'longitude' => 'required|numeric|between:-180,180',
+                'address' => 'nullable|string',
+                'simbada_number' => 'nullable|string',
+                'photos.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'rent_start_date' => 'nullable|date',
+                'rent_end_date' => 'nullable|date|after:rent_start_date',
+                'rented_by' => 'nullable|string|max:255',
+                'rental_cost' => 'nullable|numeric|min:0',
+                'rental_notes' => 'nullable|string'
+            ]);
+
+            // FIXED: Proper rental status logic
+            $isRented = $request->has('is_rented') && $request->is_rented;
+            $hasValidRentalDates = $request->filled('rent_start_date') && $request->filled('rent_end_date');
+
+            $updateData = [
+                'name' => $request->name,
+                'description' => $request->description,
+                'latitude' => $request->latitude,
+                'longitude' => $request->longitude,
+                'address' => $request->address,
+                'simbada_registered' => $request->has('simbada_registered'),
+                'simbada_number' => $request->simbada_number,
+            ];
+
+            // Handle rental information with proper validation
+            if ($isRented && $hasValidRentalDates) {
+                $startDate = Carbon::parse($request->rent_start_date);
+                $endDate = Carbon::parse($request->rent_end_date);
+                $now = Carbon::now();
+
+                $updateData['is_rented'] = true;
+                $updateData['rent_start_date'] = $startDate;
+                $updateData['rent_end_date'] = $endDate;
+                $updateData['rented_by'] = $request->rented_by;
+
+                // Set proper status based on dates
+                if ($now->between($startDate, $endDate)) {
+                    $updateData['status'] = 'rented';
+                } elseif ($now->isBefore($startDate)) {
+                    $updateData['status'] = 'available'; // Future rental
+                } else {
+                    $updateData['status'] = 'available'; // Expired rental
+                    $updateData['is_rented'] = false;
+                }
+
+                // Create rental history only if this is a new rental or rental info changed
+                $currentRental = $halte->rentalHistories()->latest()->first();
+                $shouldCreateNewHistory = !$currentRental ||
+                                          $currentRental->rent_start_date->format('Y-m-d') != $startDate->format('Y-m-d') ||
+                                          $currentRental->rent_end_date->format('Y-m-d') != $endDate->format('Y-m-d') ||
+                                          $currentRental->rented_by != $request->rented_by;
+
+                if ($shouldCreateNewHistory) {
+                    RentalHistory::create([
+                        'halte_id' => $halte->id,
+                        'rented_by' => $request->rented_by,
+                        'rent_start_date' => $startDate,
+                        'rent_end_date' => $endDate,
+                        'rental_cost' => $request->rental_cost ?? 0,
+                        'notes' => $request->rental_notes,
+                        'created_by' => Auth::id()
+                    ]);
+                }
+            } else {
+                $updateData['is_rented'] = false;
+                $updateData['rent_start_date'] = null;
+                $updateData['rent_end_date'] = null;
+                $updateData['rented_by'] = null;
+                $updateData['status'] = 'available';
+            }
+
+            // FIXED: Update halte data
+            $halte->update($updateData);
+
+            // Handle new photo uploads - FIXED
+            if ($request->hasFile('photos')) {
+                foreach ($request->file('photos') as $index => $photo) {
+                    try {
+                        $path = $photo->store('halte-photos', 'public');
+
+                        HaltePhoto::create([
+                            'halte_id' => $halte->id,
+                            'photo_path' => $path,
+                            'description' => $request->photo_descriptions[$index] ?? null,
+                            'is_primary' => false // New photos are not primary by default
+                        ]);
+                    } catch (\Exception $e) {
+                        Log::error('Error uploading photo: ' . $e->getMessage());
+                    }
+                }
+            }
+
+            // FIXED: Redirect with preserved sort parameters
+            $redirectParams = [];
+            if ($request->session()->has('halte_sort')) {
+                $redirectParams = $request->session()->get('halte_sort');
+            }
+
+            return redirect()->route('admin.haltes.index', $redirectParams)->with('success', 'Halte berhasil diupdate');
+
+        } catch (\Exception $e) {
+            Log::error('Error updating halte: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Gagal mengupdate halte: ' . $e->getMessage());
+        }
+    }
 
     /**
      * Delete halte - FIXED WITH PERSISTENT SORT STATE
@@ -332,13 +381,6 @@ public function halteUpdate(Request $request, $id)
             foreach ($halte->photos as $photo) {
                 if (Storage::disk('public')->exists($photo->photo_path)) {
                     Storage::disk('public')->delete($photo->photo_path);
-                }
-            }
-
-            // Delete documents from storage - NEW
-            foreach ($halte->documents as $document) {
-                if (Storage::disk('public')->exists($document->document_path)) {
-                    Storage::disk('public')->delete($document->document_path);
                 }
             }
 
@@ -428,164 +470,11 @@ public function halteUpdate(Request $request, $id)
     }
 
     /**
-     * Delete document - NEW METHOD
-     */
-    public function deleteDocument($id)
-    {
-        try {
-            $document = HalteDocument::findOrFail($id);
-
-            // Delete file from storage
-            if (Storage::disk('public')->exists($document->document_path)) {
-                Storage::disk('public')->delete($document->document_path);
-            }
-
-            $document->delete();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Dokumen berhasil dihapus'
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Error deleting document: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal menghapus dokumen: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    /**
-     * Delete rental document - NEW METHOD
-     */
-    public function deleteRentalDocument($id)
-    {
-        try {
-            $document = RentalDocument::findOrFail($id);
-
-            // Delete file from storage
-            if (Storage::disk('public')->exists($document->document_path)) {
-                Storage::disk('public')->delete($document->document_path);
-            }
-
-            $document->delete();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Dokumen sewa berhasil dihapus'
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Error deleting rental document: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal menghapus dokumen: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-/**
- * View SIMBADA document - FIXED FOR INLINE VIEWING
- */
-public function viewDocument($id)
-{
-    try {
-        $document = HalteDocument::findOrFail($id);
-
-        if (!Storage::disk('public')->exists($document->document_path)) {
-            abort(404, 'File tidak ditemukan');
-        }
-
-        $path = Storage::disk('public')->path($document->document_path);
-        $mimeType = Storage::disk('public')->mimeType($document->document_path);
-
-        // FIXED: Return response untuk viewing inline
-        return response()->file($path, [
-            'Content-Type' => $mimeType,
-            'Content-Disposition' => 'inline; filename="' . $document->document_name . '"'
-        ]);
-    } catch (\Exception $e) {
-        Log::error('Error viewing document: ' . $e->getMessage());
-        abort(404, 'Dokumen tidak dapat ditampilkan');
-    }
-}
-
-/**
- * Download SIMBADA document
- */
-public function downloadDocument($id)
-{
-    try {
-        $document = HalteDocument::findOrFail($id);
-
-        if (!Storage::disk('public')->exists($document->document_path)) {
-            abort(404, 'File tidak ditemukan');
-        }
-
-        return Storage::disk('public')->download(
-            $document->document_path,
-            $document->document_name
-        );
-    } catch (\Exception $e) {
-        Log::error('Error downloading document: ' . $e->getMessage());
-        abort(404, 'Dokumen tidak dapat diunduh');
-    }
-}
-
-/**
- * View rental document - FIXED FOR INLINE VIEWING
- */
-public function viewRentalDocument($id)
-{
-    try {
-        $document = RentalDocument::findOrFail($id);
-
-        if (!Storage::disk('public')->exists($document->document_path)) {
-            abort(404, 'File tidak ditemukan');
-        }
-
-        $path = Storage::disk('public')->path($document->document_path);
-        $mimeType = Storage::disk('public')->mimeType($document->document_path);
-
-        // FIXED: Return response untuk viewing inline
-        return response()->file($path, [
-            'Content-Type' => $mimeType,
-            'Content-Disposition' => 'inline; filename="' . $document->document_name . '"'
-        ]);
-    } catch (\Exception $e) {
-        Log::error('Error viewing rental document: ' . $e->getMessage());
-        abort(404, 'Dokumen tidak dapat ditampilkan');
-    }
-}
-
-/**
- * Download rental document
- */
-public function downloadRentalDocument($id)
-{
-    try {
-        $document = RentalDocument::findOrFail($id);
-
-        if (!Storage::disk('public')->exists($document->document_path)) {
-            abort(404, 'File tidak ditemukan');
-        }
-
-        return Storage::disk('public')->download(
-            $document->document_path,
-            $document->document_name
-        );
-    } catch (\Exception $e) {
-        Log::error('Error downloading rental document: ' . $e->getMessage());
-        abort(404, 'Dokumen tidak dapat diunduh');
-    }
-}
-    /**
      * Rental history list - IMPROVED WITH FILTERS
      */
     public function rentalHistory(Request $request)
     {
-        $query = RentalHistory::with(['halte', 'creator', 'documents'])
+        $query = RentalHistory::with(['halte', 'creator'])
                              ->orderBy('created_at', 'desc');
 
         // Apply date filter
