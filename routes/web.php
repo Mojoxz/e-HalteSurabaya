@@ -1,5 +1,5 @@
 <?php
-// routes/web.php - UPDATED WITH GALLERY ROUTE
+// routes/web.php - UPDATED WITH DOCUMENT MANAGEMENT ROUTES
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
@@ -14,14 +14,10 @@ use App\Http\Controllers\UserDashboardController;
 |--------------------------------------------------------------------------
 */
 
-Route::get('/', [HomeController::class, 'index'])->name('home');
-Route::get('/gallery', [HomeController::class, 'gallery'])->name('gallery');
-Route::get('/maps', [HomeController::class, 'maps'])->name('maps'); // NEW MAPS ROUTE
-Route::get('/halte/{id}', [HomeController::class, 'showHalte'])->name('halte.show');
-Route::get('/halte/{id}/detail', [HomeController::class, 'detail'])->name('halte.detail');
 // Public Routes (User Interface)
 Route::get('/', [HomeController::class, 'index'])->name('home');
-Route::get('/gallery', [HomeController::class, 'gallery'])->name('gallery'); // NEW GALLERY ROUTE
+Route::get('/gallery', [HomeController::class, 'gallery'])->name('gallery');
+Route::get('/maps', [HomeController::class, 'maps'])->name('maps');
 Route::get('/halte/{id}', [HomeController::class, 'showHalte'])->name('halte.show');
 Route::get('/halte/{id}/detail', [HomeController::class, 'detail'])->name('halte.detail');
 
@@ -71,6 +67,25 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         // Photo Management
         Route::delete('/photos/{id}', [AdminController::class, 'deletePhoto'])->name('photos.delete');
         Route::patch('/photos/{id}/primary', [AdminController::class, 'setPrimaryPhoto'])->name('photos.primary');
+
+        // Document Management - NEW ROUTES
+        Route::prefix('documents')->name('documents.')->group(function () {
+            Route::get('/{id}/view', [AdminController::class, 'viewDocument'])->name('view');
+            Route::get('/{id}/download', [AdminController::class, 'downloadDocument'])->name('download');
+            Route::delete('/{id}', [AdminController::class, 'deleteDocument'])->name('delete');
+        });
+    });
+
+    // Rental History Management
+    Route::prefix('rentals')->name('rentals.')->group(function () {
+        Route::get('/', [AdminController::class, 'rentalHistory'])->name('index');
+
+        // Rental Document Management - NEW ROUTES
+        Route::prefix('documents')->name('documents.')->group(function () {
+            Route::get('/{id}/view', [AdminController::class, 'viewRentalDocument'])->name('view');
+            Route::get('/{id}/download', [AdminController::class, 'downloadRentalDocument'])->name('download');
+            Route::delete('/{id}', [AdminController::class, 'deleteRentalDocument'])->name('delete');
+        });
     });
 
     // User Management
@@ -85,14 +100,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         Route::patch('/{id}/toggle-status', [UserController::class, 'toggleStatus'])->name('toggle-status');
     });
 
-    // Admin Profile Management (separate from regular profile)
+    // Admin Profile Management
     Route::get('/profile', [UserController::class, 'profile'])->name('profile');
     Route::put('/profile', [UserController::class, 'updateProfile'])->name('profile.update');
-
-    // Rental History Management
-    Route::prefix('rentals')->name('rentals.')->group(function () {
-        Route::get('/', [AdminController::class, 'rentalHistory'])->name('index');
-    });
 
     // Reports Management
     Route::prefix('reports')->name('reports.')->group(function () {

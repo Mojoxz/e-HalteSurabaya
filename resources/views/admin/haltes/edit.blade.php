@@ -152,6 +152,88 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
+
+                        {{-- EXISTING SIMBADA DOCUMENTS - NEW --}}
+                        @if($halte->simbadaDocuments->count() > 0)
+                        <div class="form-group" id="existing_simbada_documents">
+                            <label>
+                                <i class="fas fa-file-pdf text-danger me-1"></i>
+                                Dokumen SIMBADA Saat Ini ({{ $halte->simbadaDocuments->count() }})
+                            </label>
+                            <div class="row">
+                                @foreach($halte->simbadaDocuments as $document)
+                                <div class="col-md-6 mb-2" id="simbada-doc-{{ $document->id }}">
+                                    <div class="card border-left-info">
+                                        <div class="card-body p-2">
+                                            <div class="d-flex align-items-center">
+                                                <i class="{{ $document->icon_class }} fa-2x me-2"></i>
+                                                <div class="flex-grow-1">
+                                                    <strong class="d-block text-truncate" style="max-width: 200px;" title="{{ $document->document_name }}">
+                                                        {{ $document->document_name }}
+                                                    </strong>
+                                                    <small class="text-muted">{{ $document->formatted_file_size }}</small>
+                                                    @if($document->description)
+                                                    <small class="d-block text-muted">{{ $document->description }}</small>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                            <div class="btn-group btn-group-sm mt-2 w-100">
+                                                @if($document->isPdf())
+                                                <a href="{{ route('admin.haltes.documents.view', $document->id) }}"
+                                                   target="_blank"
+                                                   class="btn btn-info btn-sm"
+                                                   title="Lihat">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                @else
+                                                <button type="button"
+                                                        class="btn btn-info btn-sm"
+                                                        onclick="showDocumentModal('{{ $document->document_url }}', '{{ $document->document_name }}')"
+                                                        title="Lihat">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                @endif
+                                                <a href="{{ route('admin.haltes.documents.download', $document->id) }}"
+                                                   class="btn btn-success btn-sm"
+                                                   title="Download">
+                                                    <i class="fas fa-download"></i>
+                                                </a>
+                                                <button type="button"
+                                                        class="btn btn-danger btn-sm"
+                                                        onclick="deleteDocument({{ $document->id }}, 'simbada')"
+                                                        title="Hapus">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                @endforeach
+                            </div>
+                        </div>
+                        @endif
+
+                        {{-- NEW SIMBADA DOCUMENT UPLOAD - NEW --}}
+                        <div class="form-group" id="simbada_document_group" style="{{ old('simbada_registered', $halte->simbada_registered) ? 'display: block;' : 'display: none;' }}">
+                            <label for="simbada_documents">
+                                <i class="fas fa-upload text-primary me-1"></i>
+                                Tambah Dokumen SIMBADA Baru
+                            </label>
+                            <input type="file"
+                                   class="form-control-file @error('simbada_documents.*') is-invalid @enderror"
+                                   id="simbada_documents"
+                                   name="simbada_documents[]"
+                                   multiple
+                                   accept=".pdf,.jpg,.jpeg,.png">
+                            <small class="form-text text-muted">
+                                Format: PDF, JPG, JPEG, PNG. Maksimal 5MB per file.
+                            </small>
+                            @error('simbada_documents.*')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                            <div id="simbada_document_descriptions" class="mt-2"></div>
+                            <div id="simbada_document_preview" class="row mt-2"></div>
+                        </div>
                     </div>
                 </div>
 
@@ -218,7 +300,6 @@
                                 </div>
                             </div>
 
-
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
@@ -232,7 +313,6 @@
                                                 id="rental_cost_display"
                                                 placeholder="0"
                                                 autocomplete="off">
-                                            <!-- Hidden input untuk value asli -->
                                             <input type="hidden"
                                                 id="rental_cost"
                                                 name="rental_cost"
@@ -255,6 +335,88 @@
                                 @error('rental_notes')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                            </div>
+
+                            {{-- EXISTING RENTAL DOCUMENTS - NEW --}}
+                            @if($halte->rentalHistories->first() && $halte->rentalHistories->first()->documents->count() > 0)
+                            <div class="form-group">
+                                <label>
+                                    <i class="fas fa-file-contract text-info me-1"></i>
+                                    Dokumen Penyewaan Saat Ini ({{ $halte->rentalHistories->first()->documents->count() }})
+                                </label>
+                                <div class="row">
+                                    @foreach($halte->rentalHistories->first()->documents as $document)
+                                    <div class="col-md-6 mb-2" id="rental-doc-{{ $document->id }}">
+                                        <div class="card border-left-success">
+                                            <div class="card-body p-2">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="{{ $document->icon_class }} fa-2x me-2"></i>
+                                                    <div class="flex-grow-1">
+                                                        <strong class="d-block text-truncate" style="max-width: 200px;" title="{{ $document->document_name }}">
+                                                            {{ $document->document_name }}
+                                                        </strong>
+                                                        <small class="text-muted">{{ $document->formatted_file_size }}</small>
+                                                        @if($document->description)
+                                                        <small class="d-block text-muted">{{ $document->description }}</small>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                                <div class="btn-group btn-group-sm mt-2 w-100">
+                                                    @if($document->isPdf())
+                                                    <a href="{{ route('admin.rentals.documents.view', $document->id) }}"
+                                                       target="_blank"
+                                                       class="btn btn-info btn-sm"
+                                                       title="Lihat">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    @else
+                                                    <button type="button"
+                                                            class="btn btn-info btn-sm"
+                                                            onclick="showDocumentModal('{{ $document->document_url }}', '{{ $document->document_name }}')"
+                                                            title="Lihat">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                    @endif
+                                                    <a href="{{ route('admin.rentals.documents.download', $document->id) }}"
+                                                       class="btn btn-success btn-sm"
+                                                       title="Download">
+                                                        <i class="fas fa-download"></i>
+                                                    </a>
+                                                    <button type="button"
+                                                            class="btn btn-danger btn-sm"
+                                                            onclick="deleteRentalDocument({{ $document->id }})"
+                                                            title="Hapus">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                            @endif
+
+                            {{-- NEW RENTAL DOCUMENT UPLOAD - NEW --}}
+                            <div class="form-group">
+                                <label for="rental_documents">
+                                    <i class="fas fa-upload text-primary me-1"></i>
+                                    Tambah Dokumen Penyewaan Baru
+                                </label>
+                                <input type="file"
+                                       class="form-control-file @error('rental_documents.*') is-invalid @enderror"
+                                       id="rental_documents"
+                                       name="rental_documents[]"
+                                       multiple
+                                       accept=".pdf,.jpg,.jpeg,.png">
+                                <small class="form-text text-muted">
+                                    Kontrak sewa, bukti pembayaran, dll. Format: PDF, JPG, JPEG, PNG. Maksimal 5MB per file.
+                                </small>
+                                @error('rental_documents.*')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                                <div id="rental_document_descriptions" class="mt-2"></div>
+                                <div id="rental_document_preview" class="row mt-2"></div>
                             </div>
                         </div>
                     </div>
@@ -370,6 +532,23 @@
             </div>
         </div>
     </form>
+</div>
+
+<!-- Document Modal for Images -->
+<div class="modal fade" id="documentModal" tabindex="-1" aria-labelledby="documentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header bg-primary text-white border-0">
+                <h5 class="modal-title fw-bold" id="documentModalLabel">
+                    <i class="fas fa-file me-2"></i>Dokumen
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <img id="modalDocument" src="" alt="" class="img-fluid rounded-3 shadow">
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Loading Modal -->

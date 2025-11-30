@@ -158,6 +158,70 @@
                 </div>
             </div>
 
+            {{-- SIMBADA DOCUMENTS SECTION - NEW --}}
+            @if($halte->simbadaDocuments->count() > 0)
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-file-pdf me-2"></i>
+                        Dokumen SIMBADA ({{ $halte->simbadaDocuments->count() }})
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        @foreach($halte->simbadaDocuments as $document)
+                        <div class="col-md-6">
+                            <div class="card border-left-info h-100">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-start mb-2">
+                                        <i class="{{ $document->icon_class }} fa-3x me-3"></i>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1 text-truncate" title="{{ $document->document_name }}">
+                                                {{ $document->document_name }}
+                                            </h6>
+                                            <small class="text-muted d-block">
+                                                <i class="fas fa-weight-hanging me-1"></i>{{ $document->formatted_file_size }}
+                                            </small>
+                                            @if($document->description)
+                                            <small class="text-muted d-block mt-1">
+                                                <i class="fas fa-info-circle me-1"></i>{{ $document->description }}
+                                            </small>
+                                            @endif
+                                            <small class="text-muted d-block">
+                                                <i class="fas fa-user me-1"></i>
+                                                {{ $document->uploader->name ?? 'System' }} •
+                                                {{ $document->created_at->format('d M Y, H:i') }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                    <div class="btn-group w-100">
+                                        @if($document->isPdf())
+                                        <a href="{{ route('admin.haltes.documents.view', $document->id) }}"
+                                           target="_blank"
+                                           class="btn btn-info btn-sm">
+                                            <i class="fas fa-eye me-1"></i> Lihat
+                                        </a>
+                                        @else
+                                        <button type="button"
+                                                class="btn btn-info btn-sm"
+                                                onclick="showDocumentModal('{{ $document->document_url }}', '{{ $document->document_name }}')">
+                                            <i class="fas fa-eye me-1"></i> Lihat
+                                        </button>
+                                        @endif
+                                        <a href="{{ route('admin.haltes.documents.download', $document->id) }}"
+                                           class="btn btn-success btn-sm">
+                                            <i class="fas fa-download me-1"></i> Download
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+            @endif
+
             <!-- Rental Information Card -->
             @if($halte->is_rented)
                 <div class="card shadow-sm mb-4">
@@ -207,6 +271,59 @@
                                 </div>
                             </div>
                         </div>
+
+                        {{-- RENTAL DOCUMENTS SECTION - NEW --}}
+                        @php
+                            $currentRental = $halte->rentalHistories->first();
+                        @endphp
+                        @if($currentRental && $currentRental->documents->count() > 0)
+                        <hr>
+                        <h6 class="mb-3">
+                            <i class="fas fa-file-contract text-info me-2"></i>
+                            Dokumen Penyewaan ({{ $currentRental->documents->count() }})
+                        </h6>
+                        <div class="row g-3">
+                            @foreach($currentRental->documents as $document)
+                            <div class="col-md-6">
+                                <div class="card border-left-success h-100">
+                                    <div class="card-body p-3">
+                                        <div class="d-flex align-items-start mb-2">
+                                            <i class="{{ $document->icon_class }} fa-2x me-2"></i>
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-1 text-truncate small" title="{{ $document->document_name }}">
+                                                    {{ $document->document_name }}
+                                                </h6>
+                                                <small class="text-muted d-block">{{ $document->formatted_file_size }}</small>
+                                                @if($document->description)
+                                                <small class="text-muted d-block">{{ $document->description }}</small>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        <div class="btn-group btn-group-sm w-100">
+                                            @if($document->isPdf())
+                                            <a href="{{ route('admin.rentals.documents.view', $document->id) }}"
+                                               target="_blank"
+                                               class="btn btn-info">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            @else
+                                            <button type="button"
+                                                    class="btn btn-info"
+                                                    onclick="showDocumentModal('{{ $document->document_url }}', '{{ $document->document_name }}')">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            @endif
+                                            <a href="{{ route('admin.rentals.documents.download', $document->id) }}"
+                                               class="btn btn-success">
+                                                <i class="fas fa-download"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                        @endif
                     </div>
                 </div>
             @endif
@@ -290,6 +407,13 @@
                                                 {{ \Carbon\Carbon::parse($history->rent_start_date)->format('d M Y') }} -
                                                 {{ \Carbon\Carbon::parse($history->rent_end_date)->format('d M Y') }}
                                             </small>
+                                            {{-- RENTAL HISTORY DOCUMENTS - NEW --}}
+                                            @if($history->hasDocuments())
+                                            <small class="d-block mt-1 text-info">
+                                                <i class="fas fa-paperclip me-1"></i>
+                                                {{ $history->documents->count() }} dokumen terlampir
+                                            </small>
+                                            @endif
                                         </div>
                                         @if($history->rental_cost > 0)
                                             <span class="badge bg-success">
@@ -332,6 +456,21 @@
             </div>
             <div class="modal-body text-center">
                 <img src="" id="modalImage" class="img-fluid rounded" alt="Foto Halte">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Document Modal for Images - NEW -->
+<div class="modal fade" id="documentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="documentModalLabel">Dokumen</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img src="" id="modalDocument" class="img-fluid rounded" alt="Dokumen">
             </div>
         </div>
     </div>
@@ -394,6 +533,14 @@
     .list-group-item:last-child {
         border-bottom: none;
     }
+
+    .border-left-info {
+        border-left: 4px solid #36b9cc;
+    }
+
+    .border-left-success {
+        border-left: 4px solid #1cc88a;
+    }
 </style>
 @endpush
 
@@ -403,33 +550,58 @@
     function showImageModal(imageSrc, description) {
         document.getElementById('modalImage').src = imageSrc;
         document.getElementById('imageModalLabel').textContent = description;
-        new bootstrap.Modal(document.getElementById('imageModal')).show();
+
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            new bootstrap.Modal(document.getElementById('imageModal')).show();
+        } else {
+            $('#imageModal').modal('show');
+        }
+    }
+
+    // Show document in modal - NEW FUNCTION
+    function showDocumentModal(documentSrc, documentName) {
+        document.getElementById('modalDocument').src = documentSrc;
+        document.getElementById('documentModalLabel').textContent = documentName;
+
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            new bootstrap.Modal(document.getElementById('documentModal')).show();
+        } else {
+            $('#documentModal').modal('show');
+        }
     }
 
     // Confirm delete
     function confirmDelete(halteId) {
-        Swal.fire({
-            title: 'Hapus Halte?',
-            text: "Data halte dan semua foto akan dihapus permanen!",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#dc3545',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: '<i class="fas fa-trash me-2"></i>Ya, Hapus!',
-            cancelButtonText: '<i class="fas fa-times me-2"></i>Batal',
-            customClass: {
-                popup: 'rounded-4 shadow-lg',
-                confirmButton: 'btn btn-danger px-4 py-2',
-                cancelButton: 'btn btn-secondary px-4 py-2'
-            },
-            buttonsStyling: false
-        }).then((result) => {
-            if (result.isConfirmed) {
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Hapus Halte?',
+                text: "Data halte, semua foto, dan dokumen akan dihapus permanen!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="fas fa-trash me-2"></i>Ya, Hapus!',
+                cancelButtonText: '<i class="fas fa-times me-2"></i>Batal',
+                customClass: {
+                    popup: 'rounded-4 shadow-lg',
+                    confirmButton: 'btn btn-danger px-4 py-2',
+                    cancelButton: 'btn btn-secondary px-4 py-2'
+                },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const form = document.getElementById('deleteForm');
+                    form.action = '{{ route("admin.haltes.destroy", ":id") }}'.replace(':id', halteId);
+                    form.submit();
+                }
+            });
+        } else {
+            if (confirm('Apakah Anda yakin ingin menghapus halte ini? Semua data, foto, dan dokumen akan dihapus permanen!')) {
                 const form = document.getElementById('deleteForm');
                 form.action = '{{ route("admin.haltes.destroy", ":id") }}'.replace(':id', halteId);
                 form.submit();
             }
-        });
+        }
     }
 
     // Auto-dismiss alerts
@@ -437,8 +609,12 @@
         setTimeout(() => {
             const alerts = document.querySelectorAll('.alert');
             alerts.forEach(alert => {
-                const bsAlert = new bootstrap.Alert(alert);
-                bsAlert.close();
+                if (typeof bootstrap !== 'undefined' && bootstrap.Alert) {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                } else if (typeof $ !== 'undefined') {
+                    $(alert).fadeOut();
+                }
             });
         }, 5000);
     });

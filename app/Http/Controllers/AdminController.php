@@ -1,12 +1,14 @@
 <?php
-// app/Http/Controllers/AdminController.php - FIXED VERSION WITH AUTO SORTING
+// app/Http/Controllers/AdminController.php - FIXED VERSION WITH AUTO SORTING AND DOCUMENT UPLOAD
 
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Halte;
 use App\Models\HaltePhoto;
+use App\Models\HalteDocument;
 use App\Models\RentalHistory;
+use App\Models\RentalDocument;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -64,7 +66,7 @@ class AdminController extends Controller
 
         $query = Halte::with(['photos' => function($query) {
             $query->orderBy('is_primary', 'desc')->orderBy('id', 'asc');
-        }, 'rentalHistories']);
+        }, 'documents', 'rentalHistories']);
 
         // Apply search filter
         if ($request->filled('search')) {
@@ -121,7 +123,7 @@ class AdminController extends Controller
     }
 
     /**
-     * Store new halte - FIXED RENTAL STATUS LOGIC
+     * Store new halte - FIXED RENTAL STATUS LOGIC WITH DOCUMENT UPLOAD
      */
     public function halteStore(Request $request)
     {
@@ -133,11 +135,15 @@ class AdminController extends Controller
             'address' => 'nullable|string',
             'simbada_number' => 'nullable|string',
             'photos.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'simbada_documents.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'simbada_document_descriptions.*' => 'nullable|string',
             'rent_start_date' => 'nullable|date',
             'rent_end_date' => 'nullable|date|after:rent_start_date',
             'rented_by' => 'nullable|string|max:255',
             'rental_cost' => 'nullable|numeric|min:0',
-            'rental_notes' => 'nullable|string'
+            'rental_notes' => 'nullable|string',
+            'rental_documents.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+            'rental_document_descriptions.*' => 'nullable|string'
         ]);
 
         // FIXED: Proper rental status logic
@@ -184,19 +190,6 @@ class AdminController extends Controller
 
         $halte = Halte::create($halteData);
 
-        // Create rental history if halte is rented
-        if ($isRented && $hasValidRentalDates) {
-            RentalHistory::create([
-                'halte_id' => $halte->id,
-                'rented_by' => $request->rented_by,
-                'rent_start_date' => $request->rent_start_date,
-                'rent_end_date' => $request->rent_end_date,
-                'rental_cost' => $request->rental_cost ?? 0,
-                'notes' => $request->rental_notes,
-                'created_by' => Auth::id()
-            ]);
-        }
-
         // Handle photo uploads - FIXED
         if ($request->hasFile('photos')) {
             foreach ($request->file('photos') as $index => $photo) {
@@ -211,6 +204,66 @@ class AdminController extends Controller
                     ]);
                 } catch (\Exception $e) {
                     Log::error('Error uploading photo: ' . $e->getMessage());
+                }
+            }
+        }
+
+        // Handle SIMBADA document uploads - NEW
+        if ($request->hasFile('simbada_documents')) {
+            foreach ($request->file('simbada_documents') as $index => $document) {
+                try {
+                    $originalName = $document->getClientOriginalName();
+                    $extension = $document->getClientOriginalExtension();
+                    $path = $document->store('halte-documents/simbada', 'public');
+
+                    HalteDocument::create([
+                        'halte_id' => $halte->id,
+                        'document_type' => 'simbada',
+                        'document_name' => $originalName,
+                        'document_path' => $path,
+                        'file_type' => $extension,
+                        'file_size' => $document->getSize(),
+                        'description' => $request->simbada_document_descriptions[$index] ?? null,
+                        'uploaded_by' => Auth::id()
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('Error uploading SIMBADA document: ' . $e->getMessage());
+                }
+            }
+        }
+
+        // Create rental history if halte is rented
+        if ($isRented && $hasValidRentalDates) {
+            $rentalHistory = RentalHistory::create([
+                'halte_id' => $halte->id,
+                'rented_by' => $request->rented_by,
+                'rent_start_date' => $request->rent_start_date,
+                'rent_end_date' => $request->rent_end_date,
+                'rental_cost' => $request->rental_cost ?? 0,
+                'notes' => $request->rental_notes,
+                'created_by' => Auth::id()
+            ]);
+
+            // Handle rental document uploads - NEW
+            if ($request->hasFile('rental_documents')) {
+                foreach ($request->file('rental_documents') as $index => $document) {
+                    try {
+                        $originalName = $document->getClientOriginalName();
+                        $extension = $document->getClientOriginalExtension();
+                        $path = $document->store('rental-documents', 'public');
+
+                        RentalDocument::create([
+                            'rental_history_id' => $rentalHistory->id,
+                            'document_name' => $originalName,
+                            'document_path' => $path,
+                            'file_type' => $extension,
+                            'file_size' => $document->getSize(),
+                            'description' => $request->rental_document_descriptions[$index] ?? null,
+                            'uploaded_by' => Auth::id()
+                        ]);
+                    } catch (\Exception $e) {
+                        Log::error('Error uploading rental document: ' . $e->getMessage());
+                    }
                 }
             }
         }
@@ -231,7 +284,7 @@ class AdminController extends Controller
     {
         $halte = Halte::with(['photos' => function($query) {
             $query->orderBy('is_primary', 'desc');
-        }, 'rentalHistories' => function($query) {
+        }, 'documents', 'rentalHistories' => function($query) {
             $query->orderBy('created_at', 'desc');
         }])->findOrFail($id);
 
@@ -245,13 +298,13 @@ class AdminController extends Controller
     {
         $halte = Halte::with(['photos' => function($query) {
             $query->orderBy('is_primary', 'desc');
-        }])->findOrFail($id);
+        }, 'documents'])->findOrFail($id);
 
         return view('admin.haltes.edit', compact('halte'));
     }
 
     /**
-     * Update halte - FIXED WITH PERSISTENT SORT STATE
+     * Update halte - FIXED WITH PERSISTENT SORT STATE AND DOCUMENT UPLOAD
      */
     public function halteUpdate(Request $request, $id)
     {
@@ -266,11 +319,15 @@ class AdminController extends Controller
                 'address' => 'nullable|string',
                 'simbada_number' => 'nullable|string',
                 'photos.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'simbada_documents.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+                'simbada_document_descriptions.*' => 'nullable|string',
                 'rent_start_date' => 'nullable|date',
                 'rent_end_date' => 'nullable|date|after:rent_start_date',
                 'rented_by' => 'nullable|string|max:255',
                 'rental_cost' => 'nullable|numeric|min:0',
-                'rental_notes' => 'nullable|string'
+                'rental_notes' => 'nullable|string',
+                'rental_documents.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+                'rental_document_descriptions.*' => 'nullable|string'
             ]);
 
             // FIXED: Proper rental status logic
@@ -316,7 +373,7 @@ class AdminController extends Controller
                                           $currentRental->rented_by != $request->rented_by;
 
                 if ($shouldCreateNewHistory) {
-                    RentalHistory::create([
+                    $rentalHistory = RentalHistory::create([
                         'halte_id' => $halte->id,
                         'rented_by' => $request->rented_by,
                         'rent_start_date' => $startDate,
@@ -325,6 +382,29 @@ class AdminController extends Controller
                         'notes' => $request->rental_notes,
                         'created_by' => Auth::id()
                     ]);
+
+                    // Handle rental document uploads - NEW
+                    if ($request->hasFile('rental_documents')) {
+                        foreach ($request->file('rental_documents') as $index => $document) {
+                            try {
+                                $originalName = $document->getClientOriginalName();
+                                $extension = $document->getClientOriginalExtension();
+                                $path = $document->store('rental-documents', 'public');
+
+                                RentalDocument::create([
+                                    'rental_history_id' => $rentalHistory->id,
+                                    'document_name' => $originalName,
+                                    'document_path' => $path,
+                                    'file_type' => $extension,
+                                    'file_size' => $document->getSize(),
+                                    'description' => $request->rental_document_descriptions[$index] ?? null,
+                                    'uploaded_by' => Auth::id()
+                                ]);
+                            } catch (\Exception $e) {
+                                Log::error('Error uploading rental document: ' . $e->getMessage());
+                            }
+                        }
+                    }
                 }
             } else {
                 $updateData['is_rented'] = false;
@@ -355,6 +435,30 @@ class AdminController extends Controller
                 }
             }
 
+            // Handle SIMBADA document uploads - NEW
+            if ($request->hasFile('simbada_documents')) {
+                foreach ($request->file('simbada_documents') as $index => $document) {
+                    try {
+                        $originalName = $document->getClientOriginalName();
+                        $extension = $document->getClientOriginalExtension();
+                        $path = $document->store('halte-documents/simbada', 'public');
+
+                        HalteDocument::create([
+                            'halte_id' => $halte->id,
+                            'document_type' => 'simbada',
+                            'document_name' => $originalName,
+                            'document_path' => $path,
+                            'file_type' => $extension,
+                            'file_size' => $document->getSize(),
+                            'description' => $request->simbada_document_descriptions[$index] ?? null,
+                            'uploaded_by' => Auth::id()
+                        ]);
+                    } catch (\Exception $e) {
+                        Log::error('Error uploading SIMBADA document: ' . $e->getMessage());
+                    }
+                }
+            }
+
             // FIXED: Redirect with preserved sort parameters
             $redirectParams = [];
             if ($request->session()->has('halte_sort')) {
@@ -381,6 +485,13 @@ class AdminController extends Controller
             foreach ($halte->photos as $photo) {
                 if (Storage::disk('public')->exists($photo->photo_path)) {
                     Storage::disk('public')->delete($photo->photo_path);
+                }
+            }
+
+            // Delete documents from storage - NEW
+            foreach ($halte->documents as $document) {
+                if (Storage::disk('public')->exists($document->document_path)) {
+                    Storage::disk('public')->delete($document->document_path);
                 }
             }
 
@@ -470,11 +581,135 @@ class AdminController extends Controller
     }
 
     /**
+     * Delete document - NEW METHOD
+     */
+    public function deleteDocument($id)
+    {
+        try {
+            $document = HalteDocument::findOrFail($id);
+
+            // Delete file from storage
+            if (Storage::disk('public')->exists($document->document_path)) {
+                Storage::disk('public')->delete($document->document_path);
+            }
+
+            $document->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Dokumen berhasil dihapus'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error deleting document: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus dokumen: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete rental document - NEW METHOD
+     */
+    public function deleteRentalDocument($id)
+    {
+        try {
+            $document = RentalDocument::findOrFail($id);
+
+            // Delete file from storage
+            if (Storage::disk('public')->exists($document->document_path)) {
+                Storage::disk('public')->delete($document->document_path);
+            }
+
+            $document->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Dokumen sewa berhasil dihapus'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error deleting rental document: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal menghapus dokumen: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * View document - NEW METHOD
+     */
+    public function viewDocument($id)
+    {
+        $document = HalteDocument::findOrFail($id);
+
+        if (!Storage::disk('public')->exists($document->document_path)) {
+            abort(404, 'File tidak ditemukan');
+        }
+
+        $path = Storage::disk('public')->path($document->document_path);
+
+        return response()->file($path, [
+            'Content-Type' => Storage::disk('public')->mimeType($document->document_path),
+            'Content-Disposition' => 'inline; filename="' . $document->document_name . '"'
+        ]);
+    }
+
+    /**
+     * Download document - NEW METHOD
+     */
+    public function downloadDocument($id)
+    {
+        $document = HalteDocument::findOrFail($id);
+
+        if (!Storage::disk('public')->exists($document->document_path)) {
+            abort(404, 'File tidak ditemukan');
+        }
+
+        return Storage::disk('public')->download($document->document_path, $document->document_name);
+    }
+
+    /**
+     * View rental document - NEW METHOD
+     */
+    public function viewRentalDocument($id)
+    {
+        $document = RentalDocument::findOrFail($id);
+
+        if (!Storage::disk('public')->exists($document->document_path)) {
+            abort(404, 'File tidak ditemukan');
+        }
+
+        $path = Storage::disk('public')->path($document->document_path);
+
+        return response()->file($path, [
+            'Content-Type' => Storage::disk('public')->mimeType($document->document_path),
+            'Content-Disposition' => 'inline; filename="' . $document->document_name . '"'
+        ]);
+    }
+
+    /**
+     * Download rental document - NEW METHOD
+     */
+    public function downloadRentalDocument($id)
+    {
+        $document = RentalDocument::findOrFail($id);
+
+        if (!Storage::disk('public')->exists($document->document_path)) {
+            abort(404, 'File tidak ditemukan');
+        }
+
+        return Storage::disk('public')->download($document->document_path, $document->document_name);
+    }
+
+    /**
      * Rental history list - IMPROVED WITH FILTERS
      */
     public function rentalHistory(Request $request)
     {
-        $query = RentalHistory::with(['halte', 'creator'])
+        $query = RentalHistory::with(['halte', 'creator', 'documents'])
                              ->orderBy('created_at', 'desc');
 
         // Apply date filter

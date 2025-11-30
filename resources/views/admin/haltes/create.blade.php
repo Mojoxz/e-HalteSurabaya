@@ -133,6 +133,28 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
+
+                        {{-- SIMBADA DOCUMENT UPLOAD - NEW --}}
+                        <div class="form-group" id="simbada_document_group" style="display: none;">
+                            <label for="simbada_documents">
+                                <i class="fas fa-file-pdf text-danger me-1"></i>
+                                Dokumen SIMBADA (PDF/Gambar)
+                            </label>
+                            <input type="file"
+                                   class="form-control-file @error('simbada_documents.*') is-invalid @enderror"
+                                   id="simbada_documents"
+                                   name="simbada_documents[]"
+                                   multiple
+                                   accept=".pdf,.jpg,.jpeg,.png">
+                            <small class="form-text text-muted">
+                                Format: PDF, JPG, JPEG, PNG. Maksimal 5MB per file. Bisa upload multiple files.
+                            </small>
+                            @error('simbada_documents.*')
+                                <div class="invalid-feedback d-block">{{ $message }}</div>
+                            @enderror
+                            <div id="simbada_document_descriptions" class="mt-2"></div>
+                            <div id="simbada_document_preview" class="row mt-2"></div>
+                        </div>
                     </div>
                 </div>
 
@@ -199,7 +221,6 @@
                                 </div>
                             </div>
 
-
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
@@ -213,7 +234,6 @@
                                                 id="rental_cost_display"
                                                 placeholder="0"
                                                 autocomplete="off">
-                                            <!-- Hidden input untuk value asli -->
                                             <input type="hidden"
                                                 id="rental_cost"
                                                 name="rental_cost"
@@ -236,6 +256,28 @@
                                 @error('rental_notes')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
+                            </div>
+
+                            {{-- RENTAL DOCUMENT UPLOAD - NEW --}}
+                            <div class="form-group">
+                                <label for="rental_documents">
+                                    <i class="fas fa-file-contract text-info me-1"></i>
+                                    Dokumen Penyewaan (PDF/Gambar)
+                                </label>
+                                <input type="file"
+                                       class="form-control-file @error('rental_documents.*') is-invalid @enderror"
+                                       id="rental_documents"
+                                       name="rental_documents[]"
+                                       multiple
+                                       accept=".pdf,.jpg,.jpeg,.png">
+                                <small class="form-text text-muted">
+                                    Kontrak sewa, bukti pembayaran, dll. Format: PDF, JPG, JPEG, PNG. Maksimal 5MB per file.
+                                </small>
+                                @error('rental_documents.*')
+                                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                                @enderror
+                                <div id="rental_document_descriptions" class="mt-2"></div>
+                                <div id="rental_document_preview" class="row mt-2"></div>
                             </div>
                         </div>
                     </div>

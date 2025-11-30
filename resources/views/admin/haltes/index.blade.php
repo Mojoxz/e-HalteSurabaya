@@ -42,13 +42,12 @@
         </div>
     @endif
 
-    <!-- Filter & Search - REVISED WITHOUT BUTTONS -->
+    <!-- Filter & Search -->
     <div class="card mb-4 shadow-sm border-0">
         <div class="card-header bg-light border-bottom-0">
             <div class="d-flex justify-content-between align-items-center">
                 <h6 class="card-title mb-0 text-dark">
                     <i class="fas fa-filter me-2"></i>Filter & Pencarian
-                    <!-- <small class="text-muted ms-2">(Auto search - ketik untuk mencari)</small> -->
                 </h6>
                 @if(request()->hasAny(['search', 'status', 'simbada']))
                     <a href="{{ route('admin.haltes.index', ['reset' => '1']) }}"
@@ -90,10 +89,6 @@
                                 </button>
                             @endif
                         </div>
-                        <!-- <small class="text-muted d-block mt-1">
-                            <i class="fas fa-info-circle me-1"></i>
-                            Tekan <kbd>Enter</kbd> untuk pencarian cepat, <kbd>Esc</kbd> untuk hapus
-                        </small> -->
                     </div>
 
                     <!-- Status Filter -->
@@ -106,15 +101,12 @@
                                 class="form-select form-select-lg border-2">
                             <option value="">Semua Status</option>
                             <option value="available" {{ request('status') == 'available' ? 'selected' : '' }}>
-                                <i class="fas fa-check-circle"></i> Tersedia
+                                Tersedia
                             </option>
                             <option value="rented" {{ request('status') == 'rented' ? 'selected' : '' }}>
-                                <i class="fas fa-clock"></i> Disewa
+                                Disewa
                             </option>
                         </select>
-                        <!-- <small class="text-muted d-block mt-1">
-                            <i class="fas fa-bolt me-1"></i>Auto filter
-                        </small> -->
                     </div>
 
                     <!-- SIMBADA Filter -->
@@ -127,15 +119,12 @@
                                 class="form-select form-select-lg border-2">
                             <option value="">Semua</option>
                             <option value="1" {{ request('simbada') == '1' ? 'selected' : '' }}>
-                                <i class="fas fa-check"></i> Terdaftar
+                                Terdaftar
                             </option>
                             <option value="0" {{ request('simbada') == '0' ? 'selected' : '' }}>
-                                <i class="fas fa-times"></i> Belum Terdaftar
+                                Belum Terdaftar
                             </option>
                         </select>
-                        <!-- <small class="text-muted d-block mt-1">
-                            <i class="fas fa-bolt me-1"></i>Auto filter
-                        </small> -->
                     </div>
                 </div>
 
@@ -332,6 +321,13 @@
                                         @if($halte->simbada_number)
                                             <small class="text-muted d-block">{{ $halte->simbada_number }}</small>
                                         @endif
+                                        {{-- DOCUMENT INDICATOR - NEW --}}
+                                        @if($halte->hasSimbadaDocuments())
+                                            <small class="d-block mt-1">
+                                                <i class="fas fa-file-pdf text-danger"></i>
+                                                <span class="text-muted">{{ $halte->simbadaDocuments->count() }} dok</span>
+                                            </small>
+                                        @endif
                                     @else
                                         <span class="badge bg-warning text-dark fs-7 px-3 py-2">
                                             <i class="fas fa-exclamation-triangle me-1"></i> Belum
@@ -349,6 +345,16 @@
                                             <i class="fas fa-calendar me-1 text-primary"></i>
                                             <span>{{ $halte->rent_start_date->format('d/m/Y') }} - {{ $halte->rent_end_date->format('d/m/Y') }}</span>
                                         </small>
+                                        {{-- RENTAL DOCUMENT INDICATOR - NEW --}}
+                                        @php
+                                            $currentRental = $halte->rentalHistories->first();
+                                        @endphp
+                                        @if($currentRental && $currentRental->hasDocuments())
+                                            <small class="d-block mt-1">
+                                                <i class="fas fa-file-contract text-info"></i>
+                                                <span class="text-muted">{{ $currentRental->documents->count() }} dok</span>
+                                            </small>
+                                        @endif
                                     @else
                                         <small class="text-muted d-flex align-items-center">
                                             <i class="fas fa-minus-circle me-1"></i> Tidak disewa

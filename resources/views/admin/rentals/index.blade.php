@@ -1,4 +1,4 @@
-{{-- resources/views/admin/rentals/index.blade.php - AUTO SEARCH VERSION --}}
+{{-- resources/views/admin/rentals/index.blade.php - AUTO SEARCH VERSION WITH DOCUMENTS --}}
 @extends('layouts.admin')
 
 @section('title', 'Riwayat Sewa Halte')
@@ -20,6 +20,21 @@
             </li>
         </ol>
     </nav>
+
+    {{-- Success/Error Messages --}}
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="fas fa-exclamation-circle me-2"></i> {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
 
     {{-- Page Header --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
@@ -220,14 +235,15 @@
                         <thead class="table-light">
                             <tr>
                                 <th width="5%">#</th>
-                                <th width="20%">Halte</th>
-                                <th width="15%">Penyewa</th>
-                                <th width="12%">Tanggal Mulai</th>
-                                <th width="12%">Tanggal Selesai</th>
+                                <th width="15%">Halte</th>
+                                <th width="12%">Penyewa</th>
+                                <th width="15%">Periode Sewa</th>
                                 <th width="10%">Status</th>
-                                <th width="12%">Biaya Sewa</th>
+                                <th width="10%">Biaya Sewa</th>
+                                <th width="8%">Dokumen</th>
+                                <th width="12%">Catatan</th>
                                 <th width="10%">Dibuat Oleh</th>
-                                <th width="4%">Aksi</th>
+                                <th width="5%">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -259,29 +275,18 @@
                                     </td>
                                     <td>
                                         <strong>{{ $history->rented_by }}</strong>
-                                        @if($history->notes)
-                                            <br><small class="text-muted" title="{{ $history->notes }}">
-                                                <i class="fas fa-sticky-note me-1"></i>
-                                                {{ Str::limit($history->notes, 30) }}
-                                            </small>
-                                        @endif
                                     </td>
                                     <td>
-                                        <span class="text-nowrap">
-                                            {{ $history->rent_start_date->format('d/m/Y') }}
-                                        </span>
-                                        <br>
-                                        <small class="text-muted">
-                                            {{ $history->rent_start_date->format('H:i') }}
+                                        <small class="d-block">
+                                            <i class="fas fa-calendar-alt text-success me-1"></i>
+                                            <strong>Mulai:</strong> {{ $history->rent_start_date->format('d M Y') }}
                                         </small>
-                                    </td>
-                                    <td>
-                                        <span class="text-nowrap">
-                                            {{ $history->rent_end_date->format('d/m/Y') }}
-                                        </span>
-                                        <br>
-                                        <small class="text-muted">
-                                            {{ $history->rent_end_date->format('H:i') }}
+                                        <small class="d-block">
+                                            <i class="fas fa-calendar-times text-danger me-1"></i>
+                                            <strong>Selesai:</strong> {{ $history->rent_end_date->format('d M Y') }}
+                                        </small>
+                                        <small class="d-block text-muted">
+                                            ({{ $history->rent_start_date->diffInDays($history->rent_end_date) }} hari)
                                         </small>
                                     </td>
                                     <td>
@@ -313,11 +318,28 @@
                                         <strong class="text-success">
                                             Rp {{ number_format($history->rental_cost, 0, ',', '.') }}
                                         </strong>
-                                        @if($history->rental_cost > 0)
-                                            <br>
-                                            <small class="text-muted">
-                                                {{ $history->rent_start_date->diffInDays($history->rent_end_date) }} hari
+                                    </td>
+                                    {{-- DOCUMENTS COLUMN - NEW --}}
+                                    <td class="text-center">
+                                        @if($history->hasDocuments())
+                                            <button type="button"
+                                                    class="btn btn-sm btn-info"
+                                                    data-bs-toggle="modal"
+                                                    data-bs-target="#documentsModal{{ $history->id }}">
+                                                <i class="fas fa-file-pdf me-1"></i>
+                                                {{ $history->documents->count() }}
+                                            </button>
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @if($history->notes)
+                                            <small class="text-muted" title="{{ $history->notes }}">
+                                                {{ Str::limit($history->notes, 30) }}
                                             </small>
+                                        @else
+                                            <span class="text-muted">-</span>
                                         @endif
                                     </td>
                                     <td>
@@ -414,6 +436,103 @@
                     </p>
                 </div>
             @endif
+        </div>
+    </div>
+</div>
+
+{{-- DOCUMENTS MODALS - NEW --}}
+@foreach($histories as $history)
+    @if($history->hasDocuments())
+        <div class="modal fade" id="documentsModal{{ $history->id }}" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header bg-info text-white">
+                        <h5 class="modal-title">
+                            <i class="fas fa-file-pdf me-2"></i>
+                            Dokumen Penyewaan - {{ $history->halte->name }}
+                        </h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <strong>Penyewa:</strong> {{ $history->rented_by }}<br>
+                            <strong>Periode:</strong>
+                            {{ $history->rent_start_date->format('d M Y') }} -
+                            {{ $history->rent_end_date->format('d M Y') }}
+                        </div>
+                        <hr>
+                        <div class="row g-3">
+                            @foreach($history->documents as $document)
+                                <div class="col-md-6">
+                                    <div class="card border h-100">
+                                        <div class="card-body">
+                                            <div class="d-flex align-items-start mb-2">
+                                                <i class="{{ $document->icon_class }} fa-2x me-2"></i>
+                                                <div class="flex-grow-1">
+                                                    <h6 class="mb-1 text-truncate" title="{{ $document->document_name }}">
+                                                        {{ $document->document_name }}
+                                                    </h6>
+                                                    <small class="text-muted d-block">
+                                                        {{ $document->formatted_file_size }}
+                                                    </small>
+                                                    @if($document->description)
+                                                        <small class="text-muted d-block">
+                                                            {{ $document->description }}
+                                                        </small>
+                                                    @endif
+                                                    <small class="text-muted d-block">
+                                                        <i class="fas fa-user me-1"></i>
+                                                        {{ $document->uploader->name ?? 'System' }}
+                                                    </small>
+                                                </div>
+                                            </div>
+                                            <div class="btn-group w-100">
+                                                @if($document->isPdf())
+                                                    <a href="{{ route('admin.rentals.documents.view', $document->id) }}"
+                                                       target="_blank"
+                                                       class="btn btn-info btn-sm">
+                                                        <i class="fas fa-eye"></i> Lihat
+                                                    </a>
+                                                @else
+                                                    <button type="button"
+                                                            class="btn btn-info btn-sm"
+                                                            onclick="showDocumentModal('{{ $document->document_url }}', '{{ $document->document_name }}')">
+                                                        <i class="fas fa-eye"></i> Lihat
+                                                    </button>
+                                                @endif
+                                                <a href="{{ route('admin.rentals.documents.download', $document->id) }}"
+                                                   class="btn btn-success btn-sm">
+                                                    <i class="fas fa-download"></i> Download
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            Tutup
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+@endforeach
+
+{{-- Document Modal for Images - NEW --}}
+<div class="modal fade" id="documentImageModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="documentImageModalLabel">Dokumen</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img src="" id="modalDocumentImage" class="img-fluid rounded" alt="Dokumen">
+            </div>
         </div>
     </div>
 </div>
@@ -536,7 +655,7 @@
 }
 </style>
 
-{{-- Custom Scripts - AUTO SEARCH --}}
+{{-- Custom Scripts - AUTO SEARCH WITH DOCUMENTS --}}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Auto-search functionality
@@ -630,6 +749,31 @@ document.addEventListener('DOMContentLoaded', function() {
             input.style.backgroundColor = '#f0f5ff';
         }
     });
+
+    // Auto-dismiss alerts
+    setTimeout(() => {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+            if (typeof bootstrap !== 'undefined' && bootstrap.Alert) {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            } else if (typeof $ !== 'undefined') {
+                $(alert).fadeOut();
+            }
+        });
+    }, 5000);
 });
+
+// Show document in modal for images
+function showDocumentModal(documentSrc, documentName) {
+    document.getElementById('modalDocumentImage').src = documentSrc;
+    document.getElementById('documentImageModalLabel').textContent = documentName;
+
+    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+        new bootstrap.Modal(document.getElementById('documentImageModal')).show();
+    } else if (typeof $ !== 'undefined') {
+        $('#documentImageModal').modal('show');
+    }
+}
 </script>
 @endsection

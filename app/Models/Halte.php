@@ -1,5 +1,5 @@
 <?php
-// app/Models/Halte.php - FIXED VERSION
+// app/Models/Halte.php - UPDATED WITH DOCUMENTS
 
 namespace App\Models;
 
@@ -43,6 +43,34 @@ class Halte extends Model
         return $this->hasMany(HaltePhoto::class)
                    ->orderBy('is_primary', 'desc')
                    ->orderBy('created_at', 'asc');
+    }
+
+    /**
+     * Relationship with documents
+     */
+    public function documents()
+    {
+        return $this->hasMany(HalteDocument::class)->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Get SIMBADA documents only
+     */
+    public function simbadaDocuments()
+    {
+        return $this->hasMany(HalteDocument::class)
+                    ->where('document_type', 'simbada')
+                    ->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Get other documents
+     */
+    public function otherDocuments()
+    {
+        return $this->hasMany(HalteDocument::class)
+                    ->where('document_type', 'other')
+                    ->orderBy('created_at', 'desc');
     }
 
     /**
@@ -210,6 +238,22 @@ class Halte extends Model
     }
 
     /**
+     * Check if halte has documents
+     */
+    public function hasDocuments()
+    {
+        return $this->documents()->count() > 0;
+    }
+
+    /**
+     * Check if halte has SIMBADA documents
+     */
+    public function hasSimbadaDocuments()
+    {
+        return $this->simbadaDocuments()->count() > 0;
+    }
+
+    /**
      * Scope for available haltes
      */
     public function scopeAvailable($query)
@@ -250,22 +294,25 @@ class Halte extends Model
     }
 
     /**
-     * FIXED: Boot method - REMOVED AUTO-UPDATE TO PREVENT CONFLICTS
+     * Boot method
      */
     protected static function boot()
     {
         parent::boot();
 
-        // When deleting halte, also delete associated photos from storage
+        // When deleting halte, also delete associated files
         static::deleting(function ($halte) {
             foreach ($halte->photos as $photo) {
                 if (\Storage::disk('public')->exists($photo->photo_path)) {
                     \Storage::disk('public')->delete($photo->photo_path);
                 }
             }
-        });
 
-        // REMOVED: Auto-update status to prevent conflicts during manual updates
-        // Status will be handled manually in controller
+            foreach ($halte->documents as $document) {
+                if (\Storage::disk('public')->exists($document->document_path)) {
+                    \Storage::disk('public')->delete($document->document_path);
+                }
+            }
+        });
     }
 }

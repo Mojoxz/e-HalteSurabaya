@@ -1,0 +1,6 @@
+upload file registrasi simbada
+upload file perjanjian sewa
+
+dan ditampilkan di rewayat sewa
+dan halte diurutkan sesuai dengan INDEX EXCEL NO 1
+DENGAN NAMA H-001 DST

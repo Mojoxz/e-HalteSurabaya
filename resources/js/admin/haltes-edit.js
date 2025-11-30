@@ -1,4 +1,4 @@
-// resources/js/admin/haltes-edit.js
+// resources/js/admin/haltes-edit.js - UPDATED WITH DOCUMENT MANAGEMENT
 
 document.addEventListener('DOMContentLoaded', function() {
     // CSRF token for AJAX requests
@@ -8,15 +8,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Toggle SIMBADA number field
+    // Toggle SIMBADA number field and document upload
     const simbadaCheckbox = document.getElementById('simbada_registered');
     if (simbadaCheckbox) {
         simbadaCheckbox.addEventListener('change', function() {
             const simbadaGroup = document.getElementById('simbada_number_group');
+            const simbadaDocGroup = document.getElementById('simbada_document_group');
             if (this.checked) {
                 simbadaGroup.style.display = 'block';
+                simbadaDocGroup.style.display = 'block';
             } else {
                 simbadaGroup.style.display = 'none';
+                simbadaDocGroup.style.display = 'none';
                 document.getElementById('simbada_number').value = '';
             }
         });
@@ -31,7 +34,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 rentalDetails.style.display = 'block';
             } else {
                 rentalDetails.style.display = 'none';
-                // Clear rental fields when hiding
                 document.getElementById('rented_by').value = '';
                 document.getElementById('rent_start_date').value = '';
                 document.getElementById('rent_end_date').value = '';
@@ -63,19 +65,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const rentalCostDisplay = document.getElementById('rental_cost_display');
 
     if (rentalCostInput && rentalCostDisplay) {
-        // Set initial display value
         if (rentalCostInput.value) {
             rentalCostDisplay.value = formatRupiah(rentalCostInput.value);
         }
 
-        // Format on input
         rentalCostDisplay.addEventListener('input', function(e) {
             let value = this.value.replace(/[^\d]/g, '');
             this.value = formatRupiah(value);
             rentalCostInput.value = value;
         });
 
-        // Handle paste event
         rentalCostDisplay.addEventListener('paste', function(e) {
             e.preventDefault();
             let pastedData = (e.clipboardData || window.clipboardData).getData('text');
@@ -105,6 +104,22 @@ document.addEventListener('DOMContentLoaded', function() {
     const photosInput = document.getElementById('photos');
     if (photosInput) {
         photosInput.addEventListener('change', previewImages);
+    }
+
+    // SIMBADA document input change - NEW
+    const simbadaDocsInput = document.getElementById('simbada_documents');
+    if (simbadaDocsInput) {
+        simbadaDocsInput.addEventListener('change', function() {
+            previewDocuments(this, 'simbada_document_descriptions', 'simbada_document_preview', 'simbada_document_descriptions');
+        });
+    }
+
+    // Rental document input change - NEW
+    const rentalDocsInput = document.getElementById('rental_documents');
+    if (rentalDocsInput) {
+        rentalDocsInput.addEventListener('change', function() {
+            previewDocuments(this, 'rental_document_descriptions', 'rental_document_preview', 'rental_document_descriptions');
+        });
     }
 });
 
@@ -157,11 +172,9 @@ window.deletePhoto = function(photoId) {
         },
         success: function(response) {
             if (response.success) {
-                // Remove photo element from DOM
                 $(`#photo-${photoId}`).fadeOut(300, function() {
                     $(this).remove();
 
-                    // Update photos count
                     const remainingPhotos = $('#existing-photos .col-6').length - 1;
                     $('.card-header h6').first().text(`Foto Saat Ini (${remainingPhotos})`);
 
@@ -170,7 +183,6 @@ window.deletePhoto = function(photoId) {
                     }
                 });
 
-                // Show success message
                 showAlert('success', response.message);
             }
         },
@@ -193,19 +205,15 @@ window.setPrimaryPhoto = function(photoId) {
         },
         success: function(response) {
             if (response.success) {
-                // Remove all primary badges
                 $('.badge-primary').remove();
                 $('.btn-warning').show();
 
-                // Add primary badge to selected photo
                 $(`#photo-${photoId}`).find('.position-relative').append(
                     '<span class="badge badge-primary position-absolute" style="top: 5px; left: 5px;"><i class="fas fa-star"></i> Utama</span>'
                 );
 
-                // Hide primary button for this photo
                 $(`#photo-${photoId}`).find('.btn-warning').hide();
 
-                // Show success message
                 showAlert('success', response.message);
             }
         },
@@ -214,6 +222,91 @@ window.setPrimaryPhoto = function(photoId) {
             showAlert('error', response ? response.message : 'Gagal mengatur foto utama');
         }
     });
+};
+
+/**
+ * Delete document with AJAX - NEW FUNCTION
+ */
+window.deleteDocument = function(documentId, type) {
+    if (!confirm('Apakah Anda yakin ingin menghapus dokumen ini?')) {
+        return;
+    }
+
+    $.ajax({
+        url: `/admin/haltes/documents/${documentId}`,
+        type: 'DELETE',
+        data: {
+            _token: $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function(response) {
+            if (response.success) {
+                $(`#simbada-doc-${documentId}`).fadeOut(300, function() {
+                    $(this).remove();
+
+                    const remainingDocs = $('#existing_simbada_documents .col-md-6').length - 1;
+                    if (remainingDocs === 0) {
+                        $('#existing_simbada_documents').hide();
+                    } else {
+                        $('#existing_simbada_documents label').text(
+                            `Dokumen SIMBADA Saat Ini (${remainingDocs})`
+                        );
+                    }
+                });
+
+                showAlert('success', response.message);
+            }
+        },
+        error: function(xhr) {
+            const response = xhr.responseJSON;
+            showAlert('error', response ? response.message : 'Gagal menghapus dokumen');
+        }
+    });
+};
+
+/**
+ * Delete rental document with AJAX - NEW FUNCTION
+ */
+window.deleteRentalDocument = function(documentId) {
+    if (!confirm('Apakah Anda yakin ingin menghapus dokumen sewa ini?')) {
+        return;
+    }
+
+    $.ajax({
+        url: `/admin/rentals/documents/${documentId}`,
+        type: 'DELETE',
+        data: {
+            _token: $('meta[name="csrf-token"]').attr('content')
+        },
+        success: function(response) {
+            if (response.success) {
+                $(`#rental-doc-${documentId}`).fadeOut(300, function() {
+                    $(this).remove();
+                });
+
+                showAlert('success', response.message);
+            }
+        },
+        error: function(xhr) {
+            const response = xhr.responseJSON;
+            showAlert('error', response ? response.message : 'Gagal menghapus dokumen');
+        }
+    });
+};
+
+/**
+ * Show document modal for images - NEW FUNCTION
+ */
+window.showDocumentModal = function(documentUrl, documentName) {
+    document.getElementById('modalDocument').src = documentUrl;
+    document.getElementById('documentModalLabel').textContent = documentName;
+
+    // Use Bootstrap 5 modal if available, otherwise Bootstrap 4
+    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+        const modal = new bootstrap.Modal(document.getElementById('documentModal'));
+        modal.show();
+    } else {
+        $('#documentModal').modal('show');
+    }
 };
 
 /**
@@ -258,13 +351,87 @@ function previewImages() {
         };
         reader.readAsDataURL(file);
 
-        // Add description input
         const descInput = document.createElement('input');
         descInput.type = 'text';
         descInput.name = 'photo_descriptions[]';
         descInput.className = 'form-control mb-2';
         descInput.placeholder = 'Deskripsi foto ' + (index + 1) + ' (opsional)';
         descriptionsContainer.appendChild(descInput);
+    });
+}
+
+/**
+ * Preview uploaded documents - NEW FUNCTION
+ */
+function previewDocuments(input, descContainerId, previewContainerId, descInputName) {
+    const files = input.files;
+    const previewContainer = document.getElementById(previewContainerId);
+    const descriptionsContainer = document.getElementById(descContainerId);
+
+    previewContainer.innerHTML = '';
+    descriptionsContainer.innerHTML = '';
+
+    if (files.length > 0) {
+        descriptionsContainer.innerHTML = '<label class="mt-2">Deskripsi Dokumen:</label>';
+    }
+
+    Array.from(files).forEach((file, index) => {
+        const fileName = file.name;
+        const fileExt = fileName.split('.').pop().toLowerCase();
+        const fileSize = (file.size / 1024 / 1024).toFixed(2);
+
+        const col = document.createElement('div');
+        col.className = 'col-12 mb-2';
+
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.style.fontSize = '0.85rem';
+
+        const cardBody = document.createElement('div');
+        cardBody.className = 'card-body p-2 d-flex align-items-center';
+
+        const icon = document.createElement('i');
+        if (fileExt === 'pdf') {
+            icon.className = 'fas fa-file-pdf fa-2x text-danger me-2';
+        } else if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExt)) {
+            icon.className = 'fas fa-file-image fa-2x text-primary me-2';
+        } else {
+            icon.className = 'fas fa-file fa-2x text-secondary me-2';
+        }
+
+        const textDiv = document.createElement('div');
+        textDiv.className = 'flex-grow-1';
+        textDiv.innerHTML = `
+            <strong>${fileName}</strong><br>
+            <small class="text-muted">${fileSize} MB • ${fileExt.toUpperCase()}</small>
+        `;
+
+        cardBody.appendChild(icon);
+        cardBody.appendChild(textDiv);
+        card.appendChild(cardBody);
+        col.appendChild(card);
+        previewContainer.appendChild(col);
+
+        const descInput = document.createElement('input');
+        descInput.type = 'text';
+        descInput.name = descInputName + '[]';
+        descInput.className = 'form-control mb-2';
+        descInput.placeholder = 'Deskripsi dokumen ' + (index + 1) + ' (opsional)';
+        descriptionsContainer.appendChild(descInput);
+
+        if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExt)) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.className = 'img-thumbnail mt-1';
+                img.style.width = '100%';
+                img.style.height = '100px';
+                img.style.objectFit = 'cover';
+                col.appendChild(img);
+            };
+            reader.readAsDataURL(file);
+        }
     });
 }
 
@@ -282,13 +449,10 @@ function showAlert(type, message) {
         </div>
     `;
 
-    // Remove existing alerts
     $('.alert').remove();
 
-    // Add new alert at the top
     $('.container-fluid').prepend(alertHtml);
 
-    // Auto-dismiss after 5 seconds
     setTimeout(function() {
         $('.alert').fadeOut();
     }, 5000);

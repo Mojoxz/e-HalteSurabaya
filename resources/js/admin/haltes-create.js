@@ -1,22 +1,29 @@
-// resources/js/admin/haltes-create.js
+// resources/js/admin/haltes-create.js - UPDATED WITH DOCUMENT PREVIEW
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Toggle SIMBADA number field
+    // Toggle SIMBADA number field and document upload
     const simbadaCheckbox = document.getElementById('simbada_registered');
     if (simbadaCheckbox) {
         simbadaCheckbox.addEventListener('change', function() {
             const simbadaGroup = document.getElementById('simbada_number_group');
+            const simbadaDocGroup = document.getElementById('simbada_document_group');
             if (this.checked) {
                 simbadaGroup.style.display = 'block';
+                simbadaDocGroup.style.display = 'block';
             } else {
                 simbadaGroup.style.display = 'none';
+                simbadaDocGroup.style.display = 'none';
                 document.getElementById('simbada_number').value = '';
+                document.getElementById('simbada_documents').value = '';
+                document.getElementById('simbada_document_descriptions').innerHTML = '';
+                document.getElementById('simbada_document_preview').innerHTML = '';
             }
         });
 
         // Initialize field visibility on page load
         if (simbadaCheckbox.checked) {
             document.getElementById('simbada_number_group').style.display = 'block';
+            document.getElementById('simbada_document_group').style.display = 'block';
         }
     }
 
@@ -36,6 +43,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.getElementById('rental_cost').value = '';
                 document.getElementById('rental_cost_display').value = '';
                 document.getElementById('rental_notes').value = '';
+                document.getElementById('rental_documents').value = '';
+                document.getElementById('rental_document_descriptions').innerHTML = '';
+                document.getElementById('rental_document_preview').innerHTML = '';
             }
         });
 
@@ -54,7 +64,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (startDate) {
                 endDateInput.min = startDate;
-                // If end date is before start date, clear it
                 if (endDateInput.value && endDateInput.value < startDate) {
                     endDateInput.value = '';
                 }
@@ -67,19 +76,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const rentalCostDisplay = document.getElementById('rental_cost_display');
 
     if (rentalCostInput && rentalCostDisplay) {
-        // Set initial display value if exists (for old() values)
         if (rentalCostInput.value) {
             rentalCostDisplay.value = formatRupiah(rentalCostInput.value);
         }
 
-        // Format on input
         rentalCostDisplay.addEventListener('input', function(e) {
             let value = this.value.replace(/[^\d]/g, '');
             this.value = formatRupiah(value);
             rentalCostInput.value = value;
         });
 
-        // Handle paste event
         rentalCostDisplay.addEventListener('paste', function(e) {
             e.preventDefault();
             let pastedData = (e.clipboardData || window.clipboardData).getData('text');
@@ -100,6 +106,22 @@ document.addEventListener('DOMContentLoaded', function() {
     const photosInput = document.getElementById('photos');
     if (photosInput) {
         photosInput.addEventListener('change', previewImages);
+    }
+
+    // SIMBADA document input change - NEW
+    const simbadaDocsInput = document.getElementById('simbada_documents');
+    if (simbadaDocsInput) {
+        simbadaDocsInput.addEventListener('change', function() {
+            previewDocuments(this, 'simbada_document_descriptions', 'simbada_document_preview', 'simbada_document_descriptions');
+        });
+    }
+
+    // Rental document input change - NEW
+    const rentalDocsInput = document.getElementById('rental_documents');
+    if (rentalDocsInput) {
+        rentalDocsInput.addEventListener('change', function() {
+            previewDocuments(this, 'rental_document_descriptions', 'rental_document_preview', 'rental_document_descriptions');
+        });
     }
 });
 
@@ -173,6 +195,85 @@ function previewImages() {
         descInput.className = 'form-control mb-2';
         descInput.placeholder = 'Deskripsi foto ' + (index + 1) + ' (opsional)';
         descriptionsContainer.appendChild(descInput);
+    });
+}
+
+/**
+ * Preview uploaded documents - NEW FUNCTION
+ */
+function previewDocuments(input, descContainerId, previewContainerId, descInputName) {
+    const files = input.files;
+    const previewContainer = document.getElementById(previewContainerId);
+    const descriptionsContainer = document.getElementById(descContainerId);
+
+    previewContainer.innerHTML = '';
+    descriptionsContainer.innerHTML = '';
+
+    if (files.length > 0) {
+        descriptionsContainer.innerHTML = '<label class="mt-2">Deskripsi Dokumen:</label>';
+    }
+
+    Array.from(files).forEach((file, index) => {
+        const fileName = file.name;
+        const fileExt = fileName.split('.').pop().toLowerCase();
+        const fileSize = (file.size / 1024 / 1024).toFixed(2); // MB
+
+        // Create preview card
+        const col = document.createElement('div');
+        col.className = 'col-12 mb-2';
+
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.style.fontSize = '0.85rem';
+
+        const cardBody = document.createElement('div');
+        cardBody.className = 'card-body p-2 d-flex align-items-center';
+
+        // Icon based on file type
+        const icon = document.createElement('i');
+        if (fileExt === 'pdf') {
+            icon.className = 'fas fa-file-pdf fa-2x text-danger me-2';
+        } else if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExt)) {
+            icon.className = 'fas fa-file-image fa-2x text-primary me-2';
+        } else {
+            icon.className = 'fas fa-file fa-2x text-secondary me-2';
+        }
+
+        const textDiv = document.createElement('div');
+        textDiv.className = 'flex-grow-1';
+        textDiv.innerHTML = `
+            <strong>${fileName}</strong><br>
+            <small class="text-muted">${fileSize} MB • ${fileExt.toUpperCase()}</small>
+        `;
+
+        cardBody.appendChild(icon);
+        cardBody.appendChild(textDiv);
+        card.appendChild(cardBody);
+        col.appendChild(card);
+        previewContainer.appendChild(col);
+
+        // Add description input
+        const descInput = document.createElement('input');
+        descInput.type = 'text';
+        descInput.name = descInputName + '[]';
+        descInput.className = 'form-control mb-2';
+        descInput.placeholder = 'Deskripsi dokumen ' + (index + 1) + ' (opsional)';
+        descriptionsContainer.appendChild(descInput);
+
+        // If it's an image, show preview
+        if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExt)) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.className = 'img-thumbnail mt-1';
+                img.style.width = '100%';
+                img.style.height = '100px';
+                img.style.objectFit = 'cover';
+                col.appendChild(img);
+            };
+            reader.readAsDataURL(file);
+        }
     });
 }
 
