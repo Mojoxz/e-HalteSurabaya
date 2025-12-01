@@ -5,7 +5,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 
 class HalteDocument extends Model
 {
@@ -39,11 +38,37 @@ class HalteDocument extends Model
     }
 
     /**
-     * Get document URL
+     * Check if file is PDF
      */
-    public function getDocumentUrlAttribute()
+    public function isPdf()
     {
-        return asset('storage/' . $this->document_path);
+        return strtolower($this->file_type) === 'pdf';
+    }
+
+    /**
+     * Check if file is image
+     */
+    public function isImage()
+    {
+        $imageTypes = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
+        return in_array(strtolower($this->file_type), $imageTypes);
+    }
+
+    /**
+     * Check if file is document (Word, Excel, etc)
+     */
+    public function isDocument()
+    {
+        $docTypes = ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
+        return in_array(strtolower($this->file_type), $docTypes);
+    }
+
+    /**
+     * Check if this is SIMBADA document
+     */
+    public function isSimbadaDocument()
+    {
+        return $this->document_type === 'simbada';
     }
 
     /**
@@ -65,22 +90,6 @@ class HalteDocument extends Model
     }
 
     /**
-     * Check if document is PDF
-     */
-    public function isPdf()
-    {
-        return strtolower($this->file_type) === 'pdf';
-    }
-
-    /**
-     * Check if document is image
-     */
-    public function isImage()
-    {
-        return in_array(strtolower($this->file_type), ['jpg', 'jpeg', 'png', 'gif', 'webp']);
-    }
-
-    /**
      * Get icon class based on file type
      */
     public function getIconClassAttribute()
@@ -99,17 +108,39 @@ class HalteDocument extends Model
     }
 
     /**
-     * Boot method
+     * Get document URL
      */
-    protected static function boot()
+    public function getDocumentUrlAttribute()
     {
-        parent::boot();
+        return asset('storage/' . $this->document_path);
+    }
 
-        // Delete file from storage when document is deleted
-        static::deleting(function ($document) {
-            if (Storage::disk('public')->exists($document->document_path)) {
-                Storage::disk('public')->delete($document->document_path);
-            }
-        });
+    /**
+     * Get view URL
+     */
+    public function getViewUrlAttribute()
+    {
+        return route('admin.haltes.documents.view', $this->id);
+    }
+
+    /**
+     * Get download URL
+     */
+    public function getDownloadUrlAttribute()
+    {
+        return route('admin.haltes.documents.download', $this->id);
+    }
+
+    /**
+     * Scope untuk filter by document type
+     */
+    public function scopeSimbada($query)
+    {
+        return $query->where('document_type', 'simbada');
+    }
+
+    public function scopeOther($query)
+    {
+        return $query->where('document_type', 'other');
     }
 }

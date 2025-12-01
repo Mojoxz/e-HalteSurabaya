@@ -1,5 +1,5 @@
 <?php
-// app/Http/Controllers/DocumentController.php
+// app/Http/Controllers/DocumentController.php - FINAL FIX
 
 namespace App\Http\Controllers;
 
@@ -10,6 +10,7 @@ use App\Models\RentalDocument;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DocumentController extends Controller
 {
@@ -19,42 +20,38 @@ class DocumentController extends Controller
     }
 
     /**
-     * View Halte Document in Browser
+     * View Halte Document in Browser - DIRECT VIEW (NO WRAPPER)
      */
     public function viewHalteDocument($id)
     {
         try {
             $document = HalteDocument::findOrFail($id);
-            $path = storage_path('app/public/' . $document->document_path);
+            $filePath = storage_path('app/public/' . $document->document_path);
 
-            if (!file_exists($path)) {
+            if (!file_exists($filePath)) {
                 abort(404, 'File tidak ditemukan');
             }
 
-            // Get mime type
-            $mimeType = mime_content_type($path);
+            $mimeType = mime_content_type($filePath);
 
-            // For PDF, display inline
+            // For PDF - Direct view in browser
             if ($document->isPdf()) {
-                return response()->file($path, [
+                return response()->file($filePath, [
                     'Content-Type' => 'application/pdf',
-                    'Content-Disposition' => 'inline; filename="' . $document->document_name . '"'
+                    'Content-Disposition' => 'inline; filename="' . basename($document->document_name) . '"',
                 ]);
             }
 
-            // For images, display inline
+            // For images - Direct view in browser
             if ($document->isImage()) {
-                return response()->file($path, [
+                return response()->file($filePath, [
                     'Content-Type' => $mimeType,
-                    'Content-Disposition' => 'inline; filename="' . $document->document_name . '"'
+                    'Content-Disposition' => 'inline; filename="' . basename($document->document_name) . '"',
                 ]);
             }
 
-            // For other files, show in viewer page
-            return view('admin.documents.viewer', [
-                'document' => $document,
-                'type' => 'halte'
-            ]);
+            // For other files, redirect to download
+            return redirect()->route('admin.haltes.documents.download', $id);
 
         } catch (\Exception $e) {
             Log::error('Error viewing halte document: ' . $e->getMessage());
@@ -75,7 +72,9 @@ class DocumentController extends Controller
                 abort(404, 'File tidak ditemukan');
             }
 
-            return response()->download($path, $document->document_name);
+            return response()->download($path, $document->document_name, [
+                'Content-Type' => mime_content_type($path)
+            ]);
 
         } catch (\Exception $e) {
             Log::error('Error downloading halte document: ' . $e->getMessage());
@@ -114,47 +113,57 @@ class DocumentController extends Controller
     }
 
     /**
-     * View Rental Document in Browser
+     * View Rental Document in Browser - DIRECT VIEW (NO WRAPPER)
      */
     public function viewRentalDocument($id)
     {
         try {
             $document = RentalDocument::findOrFail($id);
-            $path = storage_path('app/public/' . $document->document_path);
+            $filePath = storage_path('app/public/' . $document->document_path);
 
-            if (!file_exists($path)) {
+            if (!file_exists($filePath)) {
+                Log::error('File not found: ' . $filePath);
                 abort(404, 'File tidak ditemukan');
             }
 
-            // Get mime type
-            $mimeType = mime_content_type($path);
+            $mimeType = mime_content_type($filePath);
 
-            // For PDF, display inline
+            // For PDF - Direct view in browser
             if ($document->isPdf()) {
-                return response()->file($path, [
+                return response()->file($filePath, [
                     'Content-Type' => 'application/pdf',
-                    'Content-Disposition' => 'inline; filename="' . $document->document_name . '"'
+                    'Content-Disposition' => 'inline; filename="' . basename($document->document_name) . '"',
                 ]);
             }
 
-            // For images, display inline
+            // For images - Direct view in browser
             if ($document->isImage()) {
-                return response()->file($path, [
+                return response()->file($filePath, [
                     'Content-Type' => $mimeType,
-                    'Content-Disposition' => 'inline; filename="' . $document->document_name . '"'
+                    'Content-Disposition' => 'inline; filename="' . basename($document->document_name) . '"',
                 ]);
             }
 
-            // For other files, show in viewer page
-            return view('admin.documents.viewer', [
-                'document' => $document,
-                'type' => 'rental'
-            ]);
+            // For other files, redirect to download
+            return redirect()->route('admin.rentals.documents.download', $id);
 
         } catch (\Exception $e) {
             Log::error('Error viewing rental document: ' . $e->getMessage());
+            Log::error('Document ID: ' . $id);
+            if (isset($filePath)) {
+                Log::error('File path: ' . $filePath);
+            }
             abort(404, 'Dokumen tidak ditemukan');
         }
+    }
+
+    /**
+     * Serve Rental Document (for embedding in viewer)
+     */
+    public function serveRentalDocument($id)
+    {
+        // Same as viewRentalDocument - kept for backward compatibility
+        return $this->viewRentalDocument($id);
     }
 
     /**
@@ -170,7 +179,9 @@ class DocumentController extends Controller
                 abort(404, 'File tidak ditemukan');
             }
 
-            return response()->download($path, $document->document_name);
+            return response()->download($path, $document->document_name, [
+                'Content-Type' => mime_content_type($path)
+            ]);
 
         } catch (\Exception $e) {
             Log::error('Error downloading rental document: ' . $e->getMessage());

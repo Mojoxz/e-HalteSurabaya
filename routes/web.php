@@ -1,5 +1,5 @@
 <?php
-// routes/web.php - UPDATED WITH DOCUMENT CONTROLLER ROUTES
+// routes/web.php - COMPLETE WITH DOCUMENT SERVE ROUTES
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
@@ -64,7 +64,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         Route::delete('/photos/{id}', [AdminController::class, 'deletePhoto'])->name('photos.delete');
         Route::patch('/photos/{id}/primary', [AdminController::class, 'setPrimaryPhoto'])->name('photos.primary');
 
-        // Halte Document Management - UPDATED ROUTES
+        // Halte Document Management - SIMPLIFIED (Direct View)
         Route::prefix('documents')->name('documents.')->group(function () {
             Route::get('/{id}/view', [DocumentController::class, 'viewHalteDocument'])->name('view');
             Route::get('/{id}/download', [DocumentController::class, 'downloadHalteDocument'])->name('download');
@@ -77,7 +77,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::prefix('rentals')->name('rentals.')->group(function () {
         Route::get('/', [AdminController::class, 'rentalHistory'])->name('index');
 
-        // Rental Document Management - UPDATED ROUTES
+        // Rental Document Management - SIMPLIFIED (Direct View)
         Route::prefix('documents')->name('documents.')->group(function () {
             Route::get('/{id}/view', [DocumentController::class, 'viewRentalDocument'])->name('view');
             Route::get('/{id}/download', [DocumentController::class, 'downloadRentalDocument'])->name('download');

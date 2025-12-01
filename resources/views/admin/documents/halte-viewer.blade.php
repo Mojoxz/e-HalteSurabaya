@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $document->document_name }} - Rental Document Viewer</title>
+    <title>{{ $document->document_name }} - Halte Document Viewer</title>
 
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -16,7 +16,7 @@
             margin: 0;
             padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
         }
 
@@ -42,7 +42,7 @@
 
         .doc-title i {
             font-size: 1.8rem;
-            color: #f5576c;
+            color: #667eea;
         }
 
         .action-buttons {
@@ -61,13 +61,13 @@
         }
 
         .btn-download {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
         }
 
         .btn-download:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 25px rgba(245, 87, 108, 0.4);
+            box-shadow: 0 6px 25px rgba(102, 126, 234, 0.4);
         }
 
         .btn-close-viewer {
@@ -78,12 +78,19 @@
         .btn-close-viewer:hover {
             background-color: #5a6268;
             transform: translateY(-2px);
-            box-shadow: 0 6px 25px rgba(108, 117, 125, 0.3);
         }
 
         .viewer-content {
             padding: 2.5rem 0;
             min-height: calc(100vh - 100px);
+        }
+
+        .halte-info-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1.5rem;
         }
 
         .document-container {
@@ -92,7 +99,6 @@
             padding: 2.5rem;
             box-shadow: 0 8px 30px rgba(0,0,0,0.1);
             text-align: center;
-            position: relative;
         }
 
         .document-preview {
@@ -108,7 +114,6 @@
             border: none;
             border-radius: 10px;
             box-shadow: 0 6px 25px rgba(0,0,0,0.15);
-            background: #f5f5f5;
         }
 
         .no-preview {
@@ -118,59 +123,17 @@
 
         .no-preview i {
             font-size: 6rem;
-            color: #f5576c;
+            color: #667eea;
             margin-bottom: 1.5rem;
             opacity: 0.7;
         }
 
-        .rental-info-box {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        .badge-simbada {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 1.5rem;
-            border-radius: 10px;
-            margin-bottom: 1.5rem;
-        }
-
-        .loading-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(255, 255, 255, 0.9);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 15px;
-            z-index: 10;
-        }
-
-        .loading-overlay.hidden {
-            display: none;
-        }
-
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid #f3f3f3;
-            border-top: 5px solid #f5576c;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .debug-info {
-            background: #f8f9fa;
-            padding: 1rem;
-            border-radius: 5px;
-            margin-top: 1rem;
-            text-align: left;
-            font-size: 0.9rem;
-            color: #666;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
         }
     </style>
 </head>
@@ -184,7 +147,7 @@
                     <span>{{ $document->document_name }}</span>
                 </h1>
                 <div class="action-buttons">
-                    <a href="{{ route('admin.rentals.documents.download', $document->id) }}"
+                    <a href="{{ route('admin.haltes.documents.download', $document->id) }}"
                        class="btn btn-custom btn-download">
                         <i class="fas fa-download me-2"></i>Download
                     </a>
@@ -199,65 +162,45 @@
     <!-- Content -->
     <div class="viewer-content">
         <div class="container">
-            <!-- Rental Info Box -->
-            <div class="rental-info-box">
+            <!-- Halte Info Box -->
+            <div class="halte-info-box">
                 <div class="row align-items-center">
                     <div class="col-md-8">
                         <h6>
-                            <i class="fas fa-file-contract me-2"></i>
-                            Dokumen Penyewaan
+                            <i class="fas fa-bus me-2"></i>
+                            Dokumen Halte {{ $document->isSimbadaDocument() ? 'SIMBADA' : '' }}
                         </h6>
                         <p class="mb-0">
-                            <strong>{{ $document->rentalHistory->halte->name }}</strong> •
-                            Disewa oleh <strong>{{ $document->rentalHistory->rented_by }}</strong>
+                            <strong>{{ $document->halte->name }}</strong>
                         </p>
-                        <small>
-                            {{ $document->rentalHistory->rent_start_date->format('d M Y') }} -
-                            {{ $document->rentalHistory->rent_end_date->format('d M Y') }}
-                        </small>
+                        @if($document->halte->address)
+                        <small>{{ $document->halte->address }}</small>
+                        @endif
                     </div>
                     <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                        @if($document->isSimbadaDocument())
                         <div class="badge bg-white text-dark fs-6">
-                            <i class="fas fa-money-bill-wave me-1"></i>
-                            Rp {{ number_format($document->rentalHistory->rental_cost, 0, ',', '.') }}
+                            <i class="fas fa-database me-1"></i>
+                            SIMBADA
                         </div>
+                        @endif
                     </div>
                 </div>
             </div>
 
             <!-- Document Viewer -->
             <div class="document-container">
-                <div class="loading-overlay" id="loadingOverlay">
-                    <div class="spinner"></div>
-                </div>
-
                 @if($document->isPdf())
-                    <!-- PDF Viewer -->
-                    <iframe src="{{ route('admin.rentals.documents.serve', $document->id) }}"
-                            id="pdfViewer"
+                    <!-- PDF Viewer - Using serve route to avoid IDM -->
+                    <iframe src="{{ route('admin.haltes.documents.serve', $document->id) }}"
                             class="pdf-viewer"
-                            title="{{ $document->document_name }}"
-                            onload="hideLoading()"
-                            onerror="showError()">
+                            title="{{ $document->document_name }}">
                     </iframe>
-
-                    <!-- Debug Info -->
-                    <div class="debug-info">
-                        <strong>Debug Info:</strong><br>
-                        Document ID: {{ $document->id }}<br>
-                        File Type: {{ $document->file_type }}<br>
-                        Serve URL: {{ route('admin.rentals.documents.serve', $document->id) }}<br>
-                        File Path: {{ $document->document_path }}<br>
-                        File Exists: {{ Storage::disk('public')->exists($document->document_path) ? 'Yes' : 'No' }}
-                    </div>
-
                 @elseif($document->isImage())
-                    <!-- Image Viewer -->
-                    <img src="{{ route('admin.rentals.documents.serve', $document->id) }}"
+                    <!-- Image Viewer - Using serve route -->
+                    <img src="{{ route('admin.haltes.documents.serve', $document->id) }}"
                          alt="{{ $document->document_name }}"
-                         class="document-preview"
-                         onload="hideLoading()"
-                         onerror="showError()">
+                         class="document-preview">
                 @else
                     <!-- No Preview Available -->
                     <div class="no-preview">
@@ -265,7 +208,7 @@
                         <h3 class="mb-3">Preview Tidak Tersedia</h3>
                         <p class="text-muted mb-2">Tipe file <strong>{{ strtoupper($document->file_type) }}</strong> tidak dapat ditampilkan di browser.</p>
                         <p class="text-muted mb-4">Silakan download file untuk melihat isinya.</p>
-                        <a href="{{ route('admin.rentals.documents.download', $document->id) }}"
+                        <a href="{{ route('admin.haltes.documents.download', $document->id) }}"
                            class="btn btn-custom btn-download btn-lg">
                             <i class="fas fa-download me-2"></i>Download File
                         </a>
@@ -279,32 +222,6 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        function hideLoading() {
-            document.getElementById('loadingOverlay').classList.add('hidden');
-        }
-
-        function showError() {
-            document.getElementById('loadingOverlay').innerHTML = `
-                <div class="text-center">
-                    <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
-                    <h5>Gagal Memuat Dokumen</h5>
-                    <p class="text-muted mb-3">Dokumen tidak dapat ditampilkan</p>
-                    <a href="{{ route('admin.rentals.documents.download', $document->id) }}"
-                       class="btn btn-custom btn-download">
-                        <i class="fas fa-download me-2"></i>Download Saja
-                    </a>
-                </div>
-            `;
-        }
-
-        // Hide loading after 10 seconds if still showing
-        setTimeout(function() {
-            const loading = document.getElementById('loadingOverlay');
-            if (!loading.classList.contains('hidden')) {
-                showError();
-            }
-        }, 10000);
-
         // Keyboard shortcuts
         document.addEventListener('keydown', function(e) {
             // ESC to close
@@ -314,23 +231,9 @@
             // Ctrl/Cmd + D to download
             if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
                 e.preventDefault();
-                window.location.href = '{{ route("admin.rentals.documents.download", $document->id) }}';
+                window.location.href = '{{ route("admin.haltes.documents.download", $document->id) }}';
             }
         });
-
-        // Log iframe load events
-        const iframe = document.getElementById('pdfViewer');
-        if (iframe) {
-            console.log('Iframe src:', iframe.src);
-
-            iframe.addEventListener('load', function() {
-                console.log('Iframe loaded successfully');
-            });
-
-            iframe.addEventListener('error', function(e) {
-                console.error('Iframe error:', e);
-            });
-        }
     </script>
 </body>
 </html>
