@@ -1,5 +1,5 @@
 <?php
-// routes/web.php - UPDATED WITH DOCUMENT MANAGEMENT ROUTES
+// routes/web.php - UPDATED WITH DOCUMENT CONTROLLER ROUTES
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
@@ -7,6 +7,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserDashboardController;
+use App\Http\Controllers\DocumentController;
 
 /*
 |--------------------------------------------------------------------------
@@ -32,19 +33,14 @@ Route::post('/register', [AuthController::class, 'register']);
 
 // User Routes (Protected by auth and user middleware)
 Route::prefix('user')->name('user.')->middleware(['auth', 'user'])->group(function () {
-    // User Dashboard
     Route::get('/dashboard', [UserDashboardController::class, 'dashboard'])->name('dashboard');
 
-    // Halte Management for Users
     Route::prefix('haltes')->name('haltes.')->group(function () {
         Route::get('/', [UserDashboardController::class, 'haltesList'])->name('index');
         Route::get('/{id}', [UserDashboardController::class, 'halteDetail'])->name('detail');
     });
 
-    // Map View
     Route::get('/map', [UserDashboardController::class, 'mapView'])->name('map');
-
-    // User Profile Management
     Route::get('/profile', [UserDashboardController::class, 'profile'])->name('profile');
     Route::put('/profile', [UserDashboardController::class, 'updateProfile'])->name('profile.update');
 });
@@ -68,11 +64,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         Route::delete('/photos/{id}', [AdminController::class, 'deletePhoto'])->name('photos.delete');
         Route::patch('/photos/{id}/primary', [AdminController::class, 'setPrimaryPhoto'])->name('photos.primary');
 
-        // Document Management - NEW ROUTES
+        // Halte Document Management - UPDATED ROUTES
         Route::prefix('documents')->name('documents.')->group(function () {
-            Route::get('/{id}/view', [AdminController::class, 'viewDocument'])->name('view');
-            Route::get('/{id}/download', [AdminController::class, 'downloadDocument'])->name('download');
-            Route::delete('/{id}', [AdminController::class, 'deleteDocument'])->name('delete');
+            Route::get('/{id}/view', [DocumentController::class, 'viewHalteDocument'])->name('view');
+            Route::get('/{id}/download', [DocumentController::class, 'downloadHalteDocument'])->name('download');
+            Route::delete('/{id}', [DocumentController::class, 'deleteHalteDocument'])->name('delete');
+            Route::post('/{halteId}/upload', [DocumentController::class, 'uploadHalteDocuments'])->name('upload');
         });
     });
 
@@ -80,11 +77,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::prefix('rentals')->name('rentals.')->group(function () {
         Route::get('/', [AdminController::class, 'rentalHistory'])->name('index');
 
-        // Rental Document Management - NEW ROUTES
+        // Rental Document Management - UPDATED ROUTES
         Route::prefix('documents')->name('documents.')->group(function () {
-            Route::get('/{id}/view', [AdminController::class, 'viewRentalDocument'])->name('view');
-            Route::get('/{id}/download', [AdminController::class, 'downloadRentalDocument'])->name('download');
-            Route::delete('/{id}', [AdminController::class, 'deleteRentalDocument'])->name('delete');
+            Route::get('/{id}/view', [DocumentController::class, 'viewRentalDocument'])->name('view');
+            Route::get('/{id}/download', [DocumentController::class, 'downloadRentalDocument'])->name('download');
+            Route::delete('/{id}', [DocumentController::class, 'deleteRentalDocument'])->name('delete');
+            Route::post('/{rentalHistoryId}/upload', [DocumentController::class, 'uploadRentalDocuments'])->name('upload');
         });
     });
 

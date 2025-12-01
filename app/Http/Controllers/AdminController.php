@@ -1,12 +1,14 @@
 <?php
-// app/Http/Controllers/AdminController.php - FIXED VERSION WITH AUTO SORTING
+// app/Http/Controllers/AdminController.php - CLEAN VERSION WITHOUT DOCUMENT HANDLING
 
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Halte;
 use App\Models\HaltePhoto;
+use App\Models\HalteDocument;
 use App\Models\RentalHistory;
+use App\Models\RentalDocument;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -47,18 +49,16 @@ class AdminController extends Controller
     }
 
     /**
-     * List all haltes - FIXED WITH AUTO SORTING AND PERSISTENT STATE
+     * List all haltes
      */
     public function halteList(Request $request)
     {
-        // FIXED: Store current filter/sort state in session (except for reset)
         if (!$request->has('reset')) {
             $currentParams = $request->only(['search', 'status', 'simbada', 'sort', 'direction']);
             if (!empty($currentParams)) {
                 $request->session()->put('halte_sort', $currentParams);
             }
         } else {
-            // Clear session when reset is triggered
             $request->session()->forget('halte_sort');
         }
 
@@ -66,12 +66,10 @@ class AdminController extends Controller
             $query->orderBy('is_primary', 'desc')->orderBy('id', 'asc');
         }, 'rentalHistories']);
 
-        // Apply search filter
         if ($request->filled('search')) {
             $query->where('name', 'LIKE', '%' . $request->search . '%');
         }
 
-        // Apply status filter
         if ($request->filled('status')) {
             if ($request->status === 'available') {
                 $query->where(function($q) {
@@ -84,16 +82,13 @@ class AdminController extends Controller
             }
         }
 
-        // Apply SIMBADA filter
         if ($request->filled('simbada')) {
             $query->where('simbada_registered', $request->simbada);
         }
 
-        // FIXED: Auto sorting with persistent state
-        $sortField = $request->get('sort', 'name'); // Default sort by name
-        $sortDirection = $request->get('direction', 'asc'); // Default ascending
+        $sortField = $request->get('sort', 'name');
+        $sortDirection = $request->get('direction', 'asc');
 
-        // Validate sort fields to prevent SQL injection
         $allowedSortFields = ['name', 'created_at', 'updated_at', 'status'];
         if (!in_array($sortField, $allowedSortFields)) {
             $sortField = 'name';
@@ -101,12 +96,9 @@ class AdminController extends Controller
 
         $sortDirection = in_array($sortDirection, ['asc', 'desc']) ? $sortDirection : 'asc';
 
-        // Apply sorting
         $query->orderBy($sortField, $sortDirection);
 
         $haltes = $query->paginate(10);
-
-        // Preserve ALL query parameters in pagination links
         $haltes->appends($request->query());
 
         return view('admin.haltes.index', compact('haltes', 'sortField', 'sortDirection'));
@@ -121,7 +113,7 @@ class AdminController extends Controller
     }
 
     /**
-     * Store new halte - FIXED RENTAL STATUS LOGIC
+     * Store new halte
      */
     public function halteStore(Request $request)
     {
@@ -133,14 +125,15 @@ class AdminController extends Controller
             'address' => 'nullable|string',
             'simbada_number' => 'nullable|string',
             'photos.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'simbada_documents.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
             'rent_start_date' => 'nullable|date',
             'rent_end_date' => 'nullable|date|after:rent_start_date',
             'rented_by' => 'nullable|string|max:255',
             'rental_cost' => 'nullable|numeric|min:0',
-            'rental_notes' => 'nullable|string'
+            'rental_notes' => 'nullable|string',
+            'rental_documents.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120'
         ]);
 
-        // FIXED: Proper rental status logic
         $isRented = $request->has('is_rented') && $request->is_rented;
         $hasValidRentalDates = $request->filled('rent_start_date') && $request->filled('rent_end_date');
 
@@ -154,7 +147,7 @@ class AdminController extends Controller
             'simbada_number' => $request->simbada_number,
         ];
 
-        // Handle rental information with proper validation
+        // Handle rental information
         if ($isRented && $hasValidRentalDates) {
             $startDate = Carbon::parse($request->rent_start_date);
             $endDate = Carbon::parse($request->rent_end_date);
@@ -165,13 +158,12 @@ class AdminController extends Controller
             $halteData['rent_end_date'] = $endDate;
             $halteData['rented_by'] = $request->rented_by;
 
-            // Set proper status based on dates
             if ($now->between($startDate, $endDate)) {
                 $halteData['status'] = 'rented';
             } elseif ($now->isBefore($startDate)) {
-                $halteData['status'] = 'available'; // Future rental
+                $halteData['status'] = 'available';
             } else {
-                $halteData['status'] = 'available'; // Expired rental
+                $halteData['status'] = 'available';
                 $halteData['is_rented'] = false;
             }
         } else {
@@ -185,8 +177,9 @@ class AdminController extends Controller
         $halte = Halte::create($halteData);
 
         // Create rental history if halte is rented
+        $rentalHistory = null;
         if ($isRented && $hasValidRentalDates) {
-            RentalHistory::create([
+            $rentalHistory = RentalHistory::create([
                 'halte_id' => $halte->id,
                 'rented_by' => $request->rented_by,
                 'rent_start_date' => $request->rent_start_date,
@@ -197,7 +190,7 @@ class AdminController extends Controller
             ]);
         }
 
-        // Handle photo uploads - FIXED
+        // Handle photo uploads
         if ($request->hasFile('photos')) {
             foreach ($request->file('photos') as $index => $photo) {
                 try {
@@ -215,7 +208,55 @@ class AdminController extends Controller
             }
         }
 
-        // FIXED: Redirect with preserved sort parameters
+        // Handle SIMBADA document uploads
+        if ($request->hasFile('simbada_documents')) {
+            foreach ($request->file('simbada_documents') as $index => $file) {
+                try {
+                    $originalName = $file->getClientOriginalName();
+                    $extension = $file->getClientOriginalExtension();
+                    $fileSize = $file->getSize();
+                    $path = $file->store('halte-documents', 'public');
+
+                    HalteDocument::create([
+                        'halte_id' => $halte->id,
+                        'document_type' => 'simbada',
+                        'document_name' => $originalName,
+                        'document_path' => $path,
+                        'file_type' => $extension,
+                        'file_size' => $fileSize,
+                        'description' => $request->simbada_document_descriptions[$index] ?? null,
+                        'uploaded_by' => Auth::id()
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('Error uploading SIMBADA document: ' . $e->getMessage());
+                }
+            }
+        }
+
+        // Handle rental document uploads
+        if ($rentalHistory && $request->hasFile('rental_documents')) {
+            foreach ($request->file('rental_documents') as $index => $file) {
+                try {
+                    $originalName = $file->getClientOriginalName();
+                    $extension = $file->getClientOriginalExtension();
+                    $fileSize = $file->getSize();
+                    $path = $file->store('rental-documents', 'public');
+
+                    RentalDocument::create([
+                        'rental_history_id' => $rentalHistory->id,
+                        'document_name' => $originalName,
+                        'document_path' => $path,
+                        'file_type' => $extension,
+                        'file_size' => $fileSize,
+                        'description' => $request->rental_document_descriptions[$index] ?? null,
+                        'uploaded_by' => Auth::id()
+                    ]);
+                } catch (\Exception $e) {
+                    Log::error('Error uploading rental document: ' . $e->getMessage());
+                }
+            }
+        }
+
         $redirectParams = [];
         if ($request->session()->has('halte_sort')) {
             $redirectParams = $request->session()->get('halte_sort');
@@ -232,8 +273,8 @@ class AdminController extends Controller
         $halte = Halte::with(['photos' => function($query) {
             $query->orderBy('is_primary', 'desc');
         }, 'rentalHistories' => function($query) {
-            $query->orderBy('created_at', 'desc');
-        }])->findOrFail($id);
+            $query->with('documents')->orderBy('created_at', 'desc');
+        }, 'simbadaDocuments', 'otherDocuments'])->findOrFail($id);
 
         return view('admin.haltes.show', compact('halte'));
     }
@@ -245,13 +286,15 @@ class AdminController extends Controller
     {
         $halte = Halte::with(['photos' => function($query) {
             $query->orderBy('is_primary', 'desc');
+        }, 'simbadaDocuments', 'rentalHistories' => function($query) {
+            $query->with('documents')->latest();
         }])->findOrFail($id);
 
         return view('admin.haltes.edit', compact('halte'));
     }
 
     /**
-     * Update halte - FIXED WITH PERSISTENT SORT STATE
+     * Update halte
      */
     public function halteUpdate(Request $request, $id)
     {
@@ -266,14 +309,15 @@ class AdminController extends Controller
                 'address' => 'nullable|string',
                 'simbada_number' => 'nullable|string',
                 'photos.*' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'simbada_documents.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
                 'rent_start_date' => 'nullable|date',
                 'rent_end_date' => 'nullable|date|after:rent_start_date',
                 'rented_by' => 'nullable|string|max:255',
                 'rental_cost' => 'nullable|numeric|min:0',
-                'rental_notes' => 'nullable|string'
+                'rental_notes' => 'nullable|string',
+                'rental_documents.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120'
             ]);
 
-            // FIXED: Proper rental status logic
             $isRented = $request->has('is_rented') && $request->is_rented;
             $hasValidRentalDates = $request->filled('rent_start_date') && $request->filled('rent_end_date');
 
@@ -287,7 +331,8 @@ class AdminController extends Controller
                 'simbada_number' => $request->simbada_number,
             ];
 
-            // Handle rental information with proper validation
+            // Handle rental information
+            $rentalHistory = null;
             if ($isRented && $hasValidRentalDates) {
                 $startDate = Carbon::parse($request->rent_start_date);
                 $endDate = Carbon::parse($request->rent_end_date);
@@ -298,17 +343,15 @@ class AdminController extends Controller
                 $updateData['rent_end_date'] = $endDate;
                 $updateData['rented_by'] = $request->rented_by;
 
-                // Set proper status based on dates
                 if ($now->between($startDate, $endDate)) {
                     $updateData['status'] = 'rented';
                 } elseif ($now->isBefore($startDate)) {
-                    $updateData['status'] = 'available'; // Future rental
+                    $updateData['status'] = 'available';
                 } else {
-                    $updateData['status'] = 'available'; // Expired rental
+                    $updateData['status'] = 'available';
                     $updateData['is_rented'] = false;
                 }
 
-                // Create rental history only if this is a new rental or rental info changed
                 $currentRental = $halte->rentalHistories()->latest()->first();
                 $shouldCreateNewHistory = !$currentRental ||
                                           $currentRental->rent_start_date->format('Y-m-d') != $startDate->format('Y-m-d') ||
@@ -316,7 +359,7 @@ class AdminController extends Controller
                                           $currentRental->rented_by != $request->rented_by;
 
                 if ($shouldCreateNewHistory) {
-                    RentalHistory::create([
+                    $rentalHistory = RentalHistory::create([
                         'halte_id' => $halte->id,
                         'rented_by' => $request->rented_by,
                         'rent_start_date' => $startDate,
@@ -325,6 +368,8 @@ class AdminController extends Controller
                         'notes' => $request->rental_notes,
                         'created_by' => Auth::id()
                     ]);
+                } else {
+                    $rentalHistory = $currentRental;
                 }
             } else {
                 $updateData['is_rented'] = false;
@@ -334,10 +379,9 @@ class AdminController extends Controller
                 $updateData['status'] = 'available';
             }
 
-            // FIXED: Update halte data
             $halte->update($updateData);
 
-            // Handle new photo uploads - FIXED
+            // Handle new photo uploads
             if ($request->hasFile('photos')) {
                 foreach ($request->file('photos') as $index => $photo) {
                     try {
@@ -347,7 +391,7 @@ class AdminController extends Controller
                             'halte_id' => $halte->id,
                             'photo_path' => $path,
                             'description' => $request->photo_descriptions[$index] ?? null,
-                            'is_primary' => false // New photos are not primary by default
+                            'is_primary' => false
                         ]);
                     } catch (\Exception $e) {
                         Log::error('Error uploading photo: ' . $e->getMessage());
@@ -355,7 +399,55 @@ class AdminController extends Controller
                 }
             }
 
-            // FIXED: Redirect with preserved sort parameters
+            // Handle SIMBADA document uploads
+            if ($request->hasFile('simbada_documents')) {
+                foreach ($request->file('simbada_documents') as $index => $file) {
+                    try {
+                        $originalName = $file->getClientOriginalName();
+                        $extension = $file->getClientOriginalExtension();
+                        $fileSize = $file->getSize();
+                        $path = $file->store('halte-documents', 'public');
+
+                        HalteDocument::create([
+                            'halte_id' => $halte->id,
+                            'document_type' => 'simbada',
+                            'document_name' => $originalName,
+                            'document_path' => $path,
+                            'file_type' => $extension,
+                            'file_size' => $fileSize,
+                            'description' => $request->simbada_document_descriptions[$index] ?? null,
+                            'uploaded_by' => Auth::id()
+                        ]);
+                    } catch (\Exception $e) {
+                        Log::error('Error uploading SIMBADA document: ' . $e->getMessage());
+                    }
+                }
+            }
+
+            // Handle rental document uploads
+            if ($rentalHistory && $request->hasFile('rental_documents')) {
+                foreach ($request->file('rental_documents') as $index => $file) {
+                    try {
+                        $originalName = $file->getClientOriginalName();
+                        $extension = $file->getClientOriginalExtension();
+                        $fileSize = $file->getSize();
+                        $path = $file->store('rental-documents', 'public');
+
+                        RentalDocument::create([
+                            'rental_history_id' => $rentalHistory->id,
+                            'document_name' => $originalName,
+                            'document_path' => $path,
+                            'file_type' => $extension,
+                            'file_size' => $fileSize,
+                            'description' => $request->rental_document_descriptions[$index] ?? null,
+                            'uploaded_by' => Auth::id()
+                        ]);
+                    } catch (\Exception $e) {
+                        Log::error('Error uploading rental document: ' . $e->getMessage());
+                    }
+                }
+            }
+
             $redirectParams = [];
             if ($request->session()->has('halte_sort')) {
                 $redirectParams = $request->session()->get('halte_sort');
@@ -370,14 +462,13 @@ class AdminController extends Controller
     }
 
     /**
-     * Delete halte - FIXED WITH PERSISTENT SORT STATE
+     * Delete halte
      */
     public function halteDestroy($id)
     {
         try {
             $halte = Halte::findOrFail($id);
 
-            // Delete photos from storage
             foreach ($halte->photos as $photo) {
                 if (Storage::disk('public')->exists($photo->photo_path)) {
                     Storage::disk('public')->delete($photo->photo_path);
@@ -386,7 +477,6 @@ class AdminController extends Controller
 
             $halte->delete();
 
-            // FIXED: Redirect with preserved sort parameters
             $redirectParams = [];
             if (request()->session()->has('halte_sort')) {
                 $redirectParams = request()->session()->get('halte_sort');
@@ -400,7 +490,7 @@ class AdminController extends Controller
     }
 
     /**
-     * Delete photo - COMPLETELY FIXED
+     * Delete photo
      */
     public function deletePhoto($id)
     {
@@ -409,15 +499,12 @@ class AdminController extends Controller
             $halteId = $photo->halte_id;
             $wasPrimary = $photo->is_primary;
 
-            // Delete file from storage
             if (Storage::disk('public')->exists($photo->photo_path)) {
                 Storage::disk('public')->delete($photo->photo_path);
             }
 
-            // Delete only the photo record, NOT the halte
             $photo->delete();
 
-            // If deleted photo was primary, make first available photo primary
             if ($wasPrimary) {
                 $firstPhoto = HaltePhoto::where('halte_id', $halteId)->first();
                 if ($firstPhoto) {
@@ -440,19 +527,17 @@ class AdminController extends Controller
     }
 
     /**
-     * Set primary photo - FIXED WITH BETTER ERROR HANDLING
+     * Set primary photo
      */
     public function setPrimaryPhoto($id)
     {
         try {
             $photo = HaltePhoto::findOrFail($id);
 
-            // Remove primary status from other photos of the same halte
             HaltePhoto::where('halte_id', $photo->halte_id)
                      ->where('id', '!=', $photo->id)
                      ->update(['is_primary' => false]);
 
-            // Set this photo as primary
             $photo->update(['is_primary' => true]);
 
             return response()->json([
@@ -470,14 +555,13 @@ class AdminController extends Controller
     }
 
     /**
-     * Rental history list - IMPROVED WITH FILTERS
+     * Rental history list
      */
     public function rentalHistory(Request $request)
     {
-        $query = RentalHistory::with(['halte', 'creator'])
+        $query = RentalHistory::with(['halte', 'creator', 'documents'])
                              ->orderBy('created_at', 'desc');
 
-        // Apply date filter
         if ($request->filled('start_date')) {
             $query->where('rent_start_date', '>=', $request->start_date);
         }
@@ -486,36 +570,30 @@ class AdminController extends Controller
             $query->where('rent_end_date', '<=', $request->end_date);
         }
 
-        // Apply halte filter
         if ($request->filled('halte_id')) {
             $query->where('halte_id', $request->halte_id);
         }
 
-        // Apply renter filter
         if ($request->filled('rented_by')) {
             $query->where('rented_by', 'LIKE', '%' . $request->rented_by . '%');
         }
 
         $histories = $query->paginate(15);
-
-        // Get haltes for filter dropdown
         $haltes = Halte::orderBy('name')->get();
 
-        // Preserve query parameters in pagination links
         $histories->appends($request->query());
 
         return view('admin.rentals.index', compact('histories', 'haltes'));
     }
 
     /**
-     * Reports dashboard - NEW
+     * Reports dashboard
      */
     public function reports(Request $request)
     {
         $year = $request->get('year', date('Y'));
         $month = $request->get('month', date('m'));
 
-        // Monthly rental statistics
         $monthlyStats = RentalHistory::selectRaw('
                 MONTH(rent_start_date) as month,
                 COUNT(*) as total_rentals,
@@ -527,7 +605,6 @@ class AdminController extends Controller
             ->orderBy('month')
             ->get();
 
-        // Top rented haltes
         $topHaltes = DB::table('rental_histories')
             ->join('haltes', 'rental_histories.halte_id', '=', 'haltes.id')
             ->select('haltes.name',
@@ -539,7 +616,6 @@ class AdminController extends Controller
             ->take(10)
             ->get();
 
-        // Revenue by month for chart
         $revenueChart = [];
         for ($i = 1; $i <= 12; $i++) {
             $monthData = $monthlyStats->firstWhere('month', $i);
@@ -550,7 +626,6 @@ class AdminController extends Controller
             ];
         }
 
-        // Current month detailed stats
         $currentMonthStats = [
             'total_rentals' => RentalHistory::whereYear('rent_start_date', $year)
                                           ->whereMonth('rent_start_date', $month)
@@ -578,7 +653,7 @@ class AdminController extends Controller
     }
 
     /**
-     * Generate PDF Report - NEW
+     * Generate PDF Report
      */
     public function generateReport(Request $request)
     {
@@ -593,7 +668,6 @@ class AdminController extends Controller
         $reportType = $request->report_type;
         $query = RentalHistory::with(['halte', 'creator']);
 
-        // Set date filters based on report type
         if ($reportType === 'monthly') {
             $year = $request->year ?? date('Y');
             $month = $request->month ?? date('m');
@@ -604,7 +678,7 @@ class AdminController extends Controller
             $year = $request->year ?? date('Y');
             $query->whereYear('rent_start_date', $year);
             $reportTitle = "Laporan Tahunan - " . $year;
-        } else { // custom
+        } else {
             $query->whereBetween('rent_start_date', [$request->start_date, $request->end_date]);
             $reportTitle = "Laporan Custom - " . $request->start_date . " sampai " . $request->end_date;
         }
@@ -618,7 +692,6 @@ class AdminController extends Controller
             'average_rental_cost' => $rentals->count() > 0 ? $rentals->avg('rental_cost') : 0
         ];
 
-        // Return view for now (can be converted to PDF later)
         return view('admin.reports.pdf', compact('rentals', 'summary', 'reportTitle'));
     }
 }
