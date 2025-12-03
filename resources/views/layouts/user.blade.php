@@ -395,11 +395,11 @@
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
     <!-- Sidebar -->
-    <div class="sidebar" id="sidebar">
-        <div class="sidebar-brand">
-            <h5>🚏 Halte Info</h5>
-            <small><i class="fas fa-circle"></i> {{ Auth::user()->name }}</small>
-        </div>
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+        <img src="{{ asset('pageatas.gif') }}" alt="Halte Info" style="width: 120px; display: block; margin: 0 auto;">
+        <small><i class="fas fa-circle"></i> {{ Auth::user()->name }}</small>
+    </div>
 
         <nav class="sidebar-nav">
             <div class="nav-section-title">Menu Utama</div>
