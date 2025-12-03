@@ -6,3 +6,6 @@ PEKERJAAN rumah :
 4. revisi tampilan dari user side
 
 
+1. ada error dibagian sort admin
+2. menampikkan file upload simbada dan yang sudah disewa dan mengganti maps nya menjadi google maps
+
