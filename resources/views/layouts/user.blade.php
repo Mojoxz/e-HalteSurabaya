@@ -296,10 +296,12 @@
             z-index: 999;
             opacity: 0;
             transition: opacity 0.3s ease;
+            pointer-events: none;
         }
 
         .sidebar-overlay.show {
             opacity: 1;
+            pointer-events: auto;
         }
 
         /* Mobile Responsive */
@@ -393,14 +395,14 @@
 </head>
 <body>
     <!-- Sidebar Overlay for Mobile -->
-    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
     <!-- Sidebar -->
-<div class="sidebar" id="sidebar">
-    <div class="sidebar-brand">
-        <img src="{{ asset('pageatas.gif') }}" alt="Halte Info" style="width: 120px; display: block; margin: 0 auto;">
-        <small><i class="fas fa-circle"></i> {{ Auth::user()->name }}</small>
-    </div>
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <img src="{{ asset('pageatas.gif') }}" alt="Halte Info" style="width: 120px; display: block; margin: 0 auto;">
+            <small><i class="fas fa-circle"></i> {{ Auth::user()->name }}</small>
+        </div>
 
         <nav class="sidebar-nav">
             <div class="nav-section-title">Menu Utama</div>
@@ -437,7 +439,7 @@
         <!-- Top Bar -->
         <div class="top-bar">
             <div style="display: flex; align-items: center; gap: 16px;">
-                <button class="mobile-menu-btn" onclick="toggleSidebar()">
+                <button class="mobile-menu-btn" id="mobileMenuBtn" type="button">
                     <i class="fas fa-bars"></i>
                 </button>
                 <h4>@yield('page-title', 'Dashboard')</h4>
@@ -451,7 +453,7 @@
                 <div class="user-avatar">
                     {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
                 </div>
-                <button class="btn-logout" onclick="document.getElementById('logout-form').submit();">
+                <button class="btn-logout" onclick="document.getElementById('logout-form').submit();" type="button">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Logout</span>
                 </button>
@@ -499,25 +501,67 @@
             }
         }
 
-        // Close sidebar when clicking a link on mobile
+        // Mobile menu button click handler
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        if (mobileMenuBtn) {
+            mobileMenuBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleSidebar();
+            });
+        }
+
+        // Overlay click handler
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        if (sidebarOverlay) {
+            sidebarOverlay.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleSidebar();
+            });
+        }
+
+        // Close sidebar when clicking a navigation link on mobile
         document.querySelectorAll('.sidebar .nav-link').forEach(link => {
-            link.addEventListener('click', function() {
+            link.addEventListener('click', function(e) {
+                // Only close sidebar on mobile when clicking navigation links
                 if (window.innerWidth <= 768) {
-                    setTimeout(toggleSidebar, 200);
+                    const sidebar = document.getElementById('sidebar');
+                    const overlay = document.getElementById('sidebarOverlay');
+
+                    // Don't prevent default for regular navigation
+                    // Just close the sidebar
+                    setTimeout(function() {
+                        sidebar.classList.remove('show');
+                        overlay.classList.remove('show');
+                        document.body.style.overflow = '';
+                    }, 100);
                 }
             });
         });
 
         // Close sidebar on resize if window becomes larger
+        let resizeTimer;
         window.addEventListener('resize', function() {
-            if (window.innerWidth > 768) {
-                const sidebar = document.getElementById('sidebar');
-                const overlay = document.getElementById('sidebarOverlay');
-                sidebar.classList.remove('show');
-                overlay.classList.remove('show');
-                document.body.style.overflow = '';
-            }
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(function() {
+                if (window.innerWidth > 768) {
+                    const sidebar = document.getElementById('sidebar');
+                    const overlay = document.getElementById('sidebarOverlay');
+                    sidebar.classList.remove('show');
+                    overlay.classList.remove('show');
+                    document.body.style.overflow = '';
+                }
+            }, 250);
         });
+
+        // Prevent sidebar from closing when clicking inside it
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar) {
+            sidebar.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        }
     </script>
 
     @stack('scripts')
