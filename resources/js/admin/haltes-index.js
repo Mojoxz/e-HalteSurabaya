@@ -1,4 +1,4 @@
-// Haltes Index Page JavaScript dengan Auto Search dan SweetAlert2
+// Haltes Index Page JavaScript dengan Auto Search dan SweetAlert2 - FIXED
 
 /**
  * Initialize sortable headers functionality
@@ -23,6 +23,24 @@ function initSortableHeaders() {
             const url = new URL(window.location.href);
             url.searchParams.set('sort', sortField);
             url.searchParams.set('direction', newDirection);
+
+            // Preserve filter parameters
+            const filterForm = document.getElementById('filterForm');
+            if (filterForm) {
+                const searchInput = filterForm.querySelector('#search');
+                const statusSelect = filterForm.querySelector('#status');
+                const simbadaSelect = filterForm.querySelector('#simbada');
+
+                if (searchInput && searchInput.value) {
+                    url.searchParams.set('search', searchInput.value);
+                }
+                if (statusSelect && statusSelect.value) {
+                    url.searchParams.set('status', statusSelect.value);
+                }
+                if (simbadaSelect && simbadaSelect.value) {
+                    url.searchParams.set('simbada', simbadaSelect.value);
+                }
+            }
 
             // Add loading state
             this.classList.add('loading');
@@ -198,8 +216,8 @@ function initImageErrorHandling() {
 }
 
 /**
- * AUTO SEARCH FUNCTIONALITY - REVISED
- * Pencarian otomatis tanpa perlu klik tombol Cari
+ * AUTO SEARCH FUNCTIONALITY - FIXED VERSION
+ * Pencarian otomatis dengan handling yang lebih baik untuk dropdown
  */
 function initAutoSearch() {
     const searchInput = document.getElementById('search');
@@ -211,45 +229,43 @@ function initAutoSearch() {
     if (!filterForm) return;
 
     let searchTimeout;
-    let isSearching = false;
+    let isSubmitting = false;
 
     /**
-     * Function to submit form with loading indicator
+     * Function to submit form with current filter values
      */
-    function submitFormWithLoading(trigger) {
-        if (isSearching) return;
+    function submitForm(showLoading = true) {
+        if (isSubmitting) return;
 
-        isSearching = true;
+        isSubmitting = true;
 
-        // Show loading indicator on the trigger element
-        if (trigger && trigger !== searchInput) {
-            const originalHTML = trigger.innerHTML;
-            trigger.disabled = true;
-            trigger.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-        }
-
-        // Optional: Show global loading indicator
-        if (searchBtn) {
-            searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Mencari...';
+        // Show loading indicator
+        if (showLoading && searchBtn) {
+            searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Memuat...';
             searchBtn.disabled = true;
         }
 
-        // Submit form
+        // Submit the form
         filterForm.submit();
     }
 
     /**
-     * AUTO SUBMIT on dropdown change (Status & SIMBADA)
+     * AUTO SUBMIT on Status dropdown change
      */
     if (statusSelect) {
         statusSelect.addEventListener('change', function() {
-            submitFormWithLoading(this);
+            console.log('Status changed to:', this.value);
+            submitForm(true);
         });
     }
 
+    /**
+     * AUTO SUBMIT on SIMBADA dropdown change
+     */
     if (simbadaSelect) {
         simbadaSelect.addEventListener('change', function() {
-            submitFormWithLoading(this);
+            console.log('SIMBADA changed to:', this.value);
+            submitForm(true);
         });
     }
 
@@ -268,8 +284,8 @@ function initAutoSearch() {
 
             // Debounce - wait 800ms after user stops typing
             searchTimeout = setTimeout(function() {
-                if (!isSearching) {
-                    submitFormWithLoading(searchInput);
+                if (!isSubmitting) {
+                    submitForm(true);
                 }
             }, 800);
         });
@@ -279,7 +295,7 @@ function initAutoSearch() {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 clearTimeout(searchTimeout);
-                submitFormWithLoading(searchInput);
+                submitForm(true);
             }
         });
 
@@ -291,21 +307,13 @@ function initAutoSearch() {
 
                 // Auto-submit after clearing
                 setTimeout(function() {
-                    if (!isSearching) {
-                        submitFormWithLoading(searchInput);
+                    if (!isSubmitting) {
+                        submitForm(true);
                     }
                 }, 100);
             }
         });
     }
-
-    /**
-     * Hide manual search button (optional)
-     * Uncomment if you want to completely remove the search button
-     */
-    // if (searchBtn) {
-    //     searchBtn.style.display = 'none';
-    // }
 
     /**
      * Keep search button functional for manual trigger
@@ -314,9 +322,16 @@ function initAutoSearch() {
         searchBtn.addEventListener('click', function(e) {
             e.preventDefault();
             clearTimeout(searchTimeout);
-            submitFormWithLoading(this);
+            submitForm(true);
         });
     }
+
+    // Debug: Log current form values
+    console.log('Filter form initialized with values:', {
+        search: searchInput ? searchInput.value : null,
+        status: statusSelect ? statusSelect.value : null,
+        simbada: simbadaSelect ? simbadaSelect.value : null
+    });
 }
 
 /**
@@ -341,15 +356,19 @@ function initPaginationLoading() {
  * Initialize all functionality when DOM is ready
  */
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('Initializing haltes-index.js...');
+
     initSortableHeaders();
     initAutoHideAlerts();
     initImageErrorHandling();
-    initAutoSearch(); // NEW: Replace initSearchForm with initAutoSearch
+    initAutoSearch();
     initPaginationLoading();
 
     // Tampilkan SweetAlert untuk success/error messages
     showSuccessAlert();
     showErrorAlert();
+
+    console.log('Haltes-index.js initialized successfully');
 });
 
 // Export functions if using module system

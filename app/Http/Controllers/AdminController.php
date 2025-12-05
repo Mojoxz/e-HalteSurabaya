@@ -49,59 +49,96 @@ class AdminController extends Controller
     }
 
 /**
- * List all haltes
+ * List all haltes - FIXED VERSION
  */
 public function halteList(Request $request)
 {
-    if (!$request->has('reset')) {
+    // Handle reset - clear session
+    if ($request->has('reset')) {
+        $request->session()->forget('halte_sort');
+    } else {
+        // Save current filter parameters to session
         $currentParams = $request->only(['search', 'status', 'simbada', 'sort', 'direction']);
         if (!empty($currentParams)) {
             $request->session()->put('halte_sort', $currentParams);
         }
-    } else {
-        $request->session()->forget('halte_sort');
     }
 
+    // Build query
     $query = Halte::with(['photos' => function($query) {
         $query->orderBy('is_primary', 'desc')->orderBy('id', 'asc');
     }, 'rentalHistories']);
 
+    // Apply search filter
     if ($request->filled('search')) {
-        $query->where('name', 'LIKE', '%' . $request->search . '%');
+        $searchTerm = $request->search;
+        $query->where(function($q) use ($searchTerm) {
+            $q->where('name', 'LIKE', '%' . $searchTerm . '%')
+              ->orWhere('address', 'LIKE', '%' . $searchTerm . '%')
+              ->orWhere('simbada_number', 'LIKE', '%' . $searchTerm . '%');
+        });
     }
 
+    // Apply status filter - FIXED
     if ($request->filled('status')) {
         if ($request->status === 'available') {
+            // Halte tersedia: tidak disewa ATAU sudah lewat masa sewa
             $query->where(function($q) {
                 $q->where('is_rented', false)
-                  ->orWhere('rent_end_date', '<', now());
+                  ->orWhere(function($q2) {
+                      $q2->where('is_rented', true)
+                         ->where('rent_end_date', '<', now());
+                  });
             });
         } elseif ($request->status === 'rented') {
+            // Halte sedang disewa: is_rented true DAN masa sewa masih berlaku
             $query->where('is_rented', true)
                   ->where('rent_end_date', '>=', now());
         }
     }
 
+    // Apply SIMBADA filter - FIXED
     if ($request->filled('simbada')) {
-        $query->where('simbada_registered', $request->simbada);
+        $simbadaValue = $request->simbada;
+        // Convert to boolean
+        if ($simbadaValue === '1' || $simbadaValue === 'true') {
+            $query->where('simbada_registered', true);
+        } elseif ($simbadaValue === '0' || $simbadaValue === 'false') {
+            $query->where('simbada_registered', false);
+        }
     }
 
-    // PERUBAHAN UTAMA: Default sort adalah 'id' bukan 'name'
+    // Apply sorting - Default sort adalah 'id'
     $sortField = $request->get('sort', 'id');
     $sortDirection = $request->get('direction', 'asc');
 
-    // Tambahkan 'id' ke allowed sort fields
+    // Validate sort field
     $allowedSortFields = ['id', 'name', 'created_at', 'updated_at', 'status'];
     if (!in_array($sortField, $allowedSortFields)) {
         $sortField = 'id';
     }
 
+    // Validate sort direction
     $sortDirection = in_array($sortDirection, ['asc', 'desc']) ? $sortDirection : 'asc';
 
+    // Apply sorting
     $query->orderBy($sortField, $sortDirection);
 
+    // Paginate results
     $haltes = $query->paginate(10);
+
+    // Preserve query parameters in pagination links
     $haltes->appends($request->query());
+
+    // Debug log (optional - remove in production)@
+    \Log::debug('Halte List Filters', [
+        'search' => $request->search,
+        'status' => $request->status,
+        'simbada' => $request->simbada,
+        'sort' => $sortField,
+        'direction' => $sortDirection,
+        'total_results' => $haltes->total()
+    ]);
 
     return view('admin.haltes.index', compact('haltes', 'sortField', 'sortDirection'));
 }

@@ -9,3 +9,8 @@ PEKERJAAN rumah :
 1. ada error dibagian sort admin
 2. menampikkan file upload simbada dan yang sudah disewa dan mengganti maps nya menjadi google maps
 
+
+
+bisa diakses untuk admin dan user.
+modal detail lengkap di map tidak bisa tampil
+untuk detail upload file dll bisa disertakan lagi
