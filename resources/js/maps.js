@@ -1,10 +1,7 @@
-// Import dependencies if needed
-// import L from 'leaflet';
-// import 'leaflet/dist/leaflet.css';
+// resources/js/maps.js - KODE LENGKAP FINAL
+// Copy SELURUH file ini, ganti maps.js Anda
 
-// Wait for DOM to be ready
 document.addEventListener('DOMContentLoaded', function() {
-    // Check if user is admin - this will be passed from Blade
     const isAdmin = window.isAdmin || false;
     const haltesData = window.haltesData || [];
 
@@ -120,21 +117,24 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    // Function to handle detail button click
+    // FIXED: Function to handle detail button click (PAKAI BOOTSTRAP MODAL)
     window.handleDetailClick = function(halteId, event) {
-        event.preventDefault();
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
 
         if (isAdmin) {
             // Admin can access detail page directly
             window.location.href = `/halte/${halteId}/detail`;
         } else {
-            // Show modal for non-admin users
+            // Show Bootstrap modal for non-admin users
             const modal = new bootstrap.Modal(document.getElementById('accessRestrictedModal'));
             modal.show();
         }
     };
 
-    // Function to open marker popup properly
+    // FIXED: Function to open marker popup properly (TANPA panIntoView)
     function openMarkerPopup(marker, halte) {
         // First center the map on the marker
         map.setView([halte.latitude, halte.longitude], Math.max(map.getZoom(), 15), {
@@ -144,7 +144,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Wait for map animation to complete, then open popup
         setTimeout(() => {
-            // Ensure popup is created and positioned correctly
             marker.openPopup();
 
             // Additional positioning fix
@@ -152,10 +151,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 const popup = marker.getPopup();
                 if (popup && popup._container) {
                     popup.update();
-                    map.panIntoView(popup._container, {
-                        paddingTopLeft: [20, 20],
-                        paddingBottomRight: [20, 20]
-                    });
+
+                    // FIXED: Use panBy instead of panIntoView
+                    const popupLatLng = popup.getLatLng();
+                    const pixelPoint = map.latLngToContainerPoint(popupLatLng);
+                    const popupHeight = popup._container.offsetHeight || 400;
+                    const mapHeight = map.getContainer().offsetHeight;
+
+                    // Check if popup is outside viewport and adjust
+                    if (pixelPoint.y < popupHeight + 50) {
+                        map.panBy([0, -(popupHeight + 50 - pixelPoint.y)], {
+                            animate: true,
+                            duration: 0.3
+                        });
+                    }
                 }
             }, 100);
         }, 500);
@@ -168,12 +177,12 @@ document.addEventListener('DOMContentLoaded', function() {
         // Create photo carousel
         const photoCarousel = createPhotoCarousel(halte.photos, halte.name);
 
-        // Create detail button with conditional behavior
+        // FIXED: Create detail button with proper type attribute
         const detailButton = isAdmin
             ? `<a href="/halte/${halte.id}/detail" class="btn-detail">
                 <i class="fas fa-info-circle me-1"></i> Lihat Detail Lengkap
                </a>`
-            : `<button onclick="handleDetailClick(${halte.id}, event)" class="btn-detail">
+            : `<button type="button" onclick="handleDetailClick(${halte.id}, event)" class="btn-detail">
                 <i class="fas fa-info-circle me-1"></i> Lihat Detail Lengkap
                </button>`;
 
@@ -367,99 +376,107 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Search input event listeners
-    searchInput.addEventListener('input', function() {
-        clearTimeout(searchTimeout);
-        const query = this.value.trim();
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            const query = this.value.trim();
 
-        if (query.length === 0) {
-            searchResults.style.display = 'none';
-            clearButton.style.display = 'none';
-            return;
-        }
+            if (query.length === 0) {
+                searchResults.style.display = 'none';
+                clearButton.style.display = 'none';
+                return;
+            }
 
-        clearButton.style.display = 'block';
+            clearButton.style.display = 'block';
 
-        // Debounce search
-        searchTimeout = setTimeout(() => {
-            performSearch(query);
-        }, 300);
-    });
+            // Debounce search
+            searchTimeout = setTimeout(() => {
+                performSearch(query);
+            }, 300);
+        });
+
+        // Show search results when input is focused and has value
+        searchInput.addEventListener('focus', function() {
+            if (this.value.trim().length >= 2) {
+                performSearch(this.value.trim());
+            }
+        });
+
+        // Keyboard navigation for search results
+        searchInput.addEventListener('keydown', function(e) {
+            const items = searchResults.querySelectorAll('.search-result-item[data-halte-id]');
+            const currentActive = searchResults.querySelector('.search-result-item.active');
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (currentActive) {
+                    currentActive.classList.remove('active');
+                    const next = currentActive.nextElementSibling;
+                    if (next && next.dataset.halteId) {
+                        next.classList.add('active');
+                    } else if (items.length > 0) {
+                        items[0].classList.add('active');
+                    }
+                } else if (items.length > 0) {
+                    items[0].classList.add('active');
+                }
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (currentActive) {
+                    currentActive.classList.remove('active');
+                    const prev = currentActive.previousElementSibling;
+                    if (prev && prev.dataset.halteId) {
+                        prev.classList.add('active');
+                    } else if (items.length > 0) {
+                        items[items.length - 1].classList.add('active');
+                    }
+                } else if (items.length > 0) {
+                    items[items.length - 1].classList.add('active');
+                }
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (currentActive && currentActive.dataset.halteId) {
+                    currentActive.click();
+                }
+            } else if (e.key === 'Escape') {
+                searchResults.style.display = 'none';
+                this.blur();
+            }
+        });
+    }
 
     // Clear search functionality
-    clearButton.addEventListener('click', function() {
-        searchInput.value = '';
-        searchResults.style.display = 'none';
-        clearButton.style.display = 'none';
-        searchInput.focus();
-    });
+    if (clearButton) {
+        clearButton.addEventListener('click', function() {
+            searchInput.value = '';
+            searchResults.style.display = 'none';
+            clearButton.style.display = 'none';
+            searchInput.focus();
+        });
+    }
 
     // Hide search results when clicking outside
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.map-search-container')) {
-            searchResults.style.display = 'none';
-        }
-    });
-
-    // Show search results when input is focused and has value
-    searchInput.addEventListener('focus', function() {
-        if (this.value.trim().length >= 2) {
-            performSearch(this.value.trim());
-        }
-    });
-
-    // Keyboard navigation for search results
-    searchInput.addEventListener('keydown', function(e) {
-        const items = searchResults.querySelectorAll('.search-result-item[data-halte-id]');
-        const currentActive = searchResults.querySelector('.search-result-item.active');
-
-        if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            if (currentActive) {
-                currentActive.classList.remove('active');
-                const next = currentActive.nextElementSibling;
-                if (next && next.dataset.halteId) {
-                    next.classList.add('active');
-                } else if (items.length > 0) {
-                    items[0].classList.add('active');
-                }
-            } else if (items.length > 0) {
-                items[0].classList.add('active');
+            if (searchResults) {
+                searchResults.style.display = 'none';
             }
-        } else if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            if (currentActive) {
-                currentActive.classList.remove('active');
-                const prev = currentActive.previousElementSibling;
-                if (prev && prev.dataset.halteId) {
-                    prev.classList.add('active');
-                } else if (items.length > 0) {
-                    items[items.length - 1].classList.add('active');
-                }
-            } else if (items.length > 0) {
-                items[items.length - 1].classList.add('active');
-            }
-        } else if (e.key === 'Enter') {
-            e.preventDefault();
-            if (currentActive && currentActive.dataset.halteId) {
-                currentActive.click();
-            }
-        } else if (e.key === 'Escape') {
-            searchResults.style.display = 'none';
-            this.blur();
         }
     });
 
     // Add hover effect for keyboard navigation
-    searchResults.addEventListener('mouseover', function(e) {
-        if (e.target.closest('.search-result-item[data-halte-id]')) {
-            // Remove active class from all items
-            this.querySelectorAll('.search-result-item.active').forEach(item => {
-                item.classList.remove('active');
-            });
-            // Add active class to hovered item
-            e.target.closest('.search-result-item[data-halte-id]').classList.add('active');
-        }
-    });
+    if (searchResults) {
+        searchResults.addEventListener('mouseover', function(e) {
+            if (e.target.closest('.search-result-item[data-halte-id]')) {
+                // Remove active class from all items
+                this.querySelectorAll('.search-result-item.active').forEach(item => {
+                    item.classList.remove('active');
+                });
+                // Add active class to hovered item
+                e.target.closest('.search-result-item[data-halte-id]').classList.add('active');
+            }
+        });
+    }
 
     // Auto-fit map to show all markers
     if (haltesData.length > 0) {
@@ -544,30 +561,32 @@ document.addEventListener('DOMContentLoaded', function() {
     const mapSection = document.getElementById('mapSection');
     let isFullscreen = false;
 
-    fullscreenToggle.addEventListener('click', function() {
-        if (!isFullscreen) {
-            // Enter fullscreen
-            mapSection.classList.add('fullscreen-map');
-            fullscreenToggle.innerHTML = '<i class="fas fa-compress"></i>';
-            fullscreenToggle.title = 'Keluar dari Mode Layar Penuh';
-            isFullscreen = true;
-        } else {
-            // Exit fullscreen
-            mapSection.classList.remove('fullscreen-map');
-            fullscreenToggle.innerHTML = '<i class="fas fa-expand"></i>';
-            fullscreenToggle.title = 'Mode Layar Penuh';
-            isFullscreen = false;
-        }
+    if (fullscreenToggle && mapSection) {
+        fullscreenToggle.addEventListener('click', function() {
+            if (!isFullscreen) {
+                // Enter fullscreen
+                mapSection.classList.add('fullscreen-map');
+                fullscreenToggle.innerHTML = '<i class="fas fa-compress"></i>';
+                fullscreenToggle.title = 'Keluar dari Mode Layar Penuh';
+                isFullscreen = true;
+            } else {
+                // Exit fullscreen
+                mapSection.classList.remove('fullscreen-map');
+                fullscreenToggle.innerHTML = '<i class="fas fa-expand"></i>';
+                fullscreenToggle.title = 'Mode Layar Penuh';
+                isFullscreen = false;
+            }
 
-        // Refresh map size after fullscreen toggle
-        setTimeout(() => {
-            map.invalidateSize();
-        }, 300);
-    });
+            // Refresh map size after fullscreen toggle
+            setTimeout(() => {
+                map.invalidateSize();
+            }, 300);
+        });
+    }
 
     // ESC key to exit fullscreen
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && isFullscreen) {
+        if (e.key === 'Escape' && isFullscreen && fullscreenToggle) {
             fullscreenToggle.click();
         }
     });
@@ -665,7 +684,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const popupLatLng = popup.getLatLng();
                 const pixelPoint = map.latLngToContainerPoint(popupLatLng);
                 const popupHeight = container.offsetHeight || 400;
-                const mapHeight = map.getContainer().offsetHeight;
 
                 // Check if popup is outside viewport
                 if (pixelPoint.y < popupHeight + 50) {

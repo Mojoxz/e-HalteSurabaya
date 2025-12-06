@@ -12,6 +12,8 @@ PEKERJAAN rumah :
 
 
 bisa diakses untuk admin dan user.
-modal detail lengkap di map tidak bisa tampil
-untuk detail upload file dll bisa disertakan lagi
+
+
+tinggal memisahakan untuk js dan css agar lebih clean code dan enteng
+
 

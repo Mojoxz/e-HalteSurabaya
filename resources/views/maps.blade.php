@@ -5,7 +5,7 @@
 @push('styles')
 <!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<!-- Bootstrap Modal CSS -->
+<!-- Bootstrap Modal CSS (PENTING!) -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <!-- Custom Maps CSS -->
 @vite(['resources/css/maps.css'])
@@ -106,7 +106,7 @@
     </button>
 </section>
 
-<!-- Access Restricted Modal -->
+<!-- Bootstrap Modal (SAMA seperti di home.blade.php) -->
 <div class="modal fade" id="accessRestrictedModal" tabindex="-1" aria-labelledby="accessRestrictedModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
@@ -117,25 +117,25 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <div class="modal-icon">
-                    <i class="fas fa-lock"></i>
-                </div>
-                <div class="modal-title-custom">
-                    Maaf, Akses Dibatasi!
-                </div>
-                <div class="modal-text">
-                    Detail lengkap halte hanya dapat diakses oleh <strong>Admin yang terdaftar</strong>.
-                    Silakan login untuk melihat informasi detail halte bus.
+                <div class="text-center py-4">
+                    <div class="mb-3">
+                        <i class="fas fa-lock" style="font-size: 4rem; color: #dc2626;"></i>
+                    </div>
+                    <h4 class="mb-3">Maaf, Akses Dibatasi!</h4>
+                    <p class="text-muted">
+                        Detail lengkap halte hanya dapat diakses oleh <strong>Admin yang terdaftar</strong>.
+                        Silakan login untuk melihat informasi detail halte bus.
+                    </p>
                 </div>
             </div>
             <div class="modal-footer justify-content-center">
                 @guest
-                <a href="{{ route('login') }}" class="btn btn-login-modal me-2">
+                <a href="{{ route('login') }}" class="btn btn-primary">
                     <i class="fas fa-sign-in-alt me-1"></i> Login sebagai Admin
                 </a>
                 @endguest
-                <button type="button" class="btn btn-understand" data-bs-dismiss="modal">
-                    <i class="fas fa-check me-1"></i> Saya Mengerti
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i> Tutup
                 </button>
             </div>
         </div>
@@ -146,7 +146,7 @@
 @push('scripts')
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<!-- Bootstrap JS -->
+<!-- Bootstrap JS (PENTING! Jangan dihapus) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <!-- Pass data to JavaScript -->
