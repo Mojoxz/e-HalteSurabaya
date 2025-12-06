@@ -1,5 +1,5 @@
 <?php
-// app/Http/Controllers/HalteDocumentController.php
+// app/Http/Controllers/HalteDocumentController.php - FIXED
 
 namespace App\Http\Controllers;
 
@@ -11,10 +11,11 @@ use Illuminate\Support\Facades\Auth;
 
 class HalteDocumentController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware(['auth', 'admin']);
-    }
+    // HAPUS middleware di constructor
+    // public function __construct()
+    // {
+    //     $this->middleware(['auth', 'admin']);
+    // }
 
     /**
      * View Halte Document in Browser
@@ -22,10 +23,16 @@ class HalteDocumentController extends Controller
     public function view($id)
     {
         try {
+            // Verifikasi user sudah login
+            if (!Auth::check()) {
+                abort(403, 'Anda harus login terlebih dahulu');
+            }
+
             $document = HalteDocument::findOrFail($id);
             $path = storage_path('app/public/' . $document->document_path);
 
             if (!file_exists($path)) {
+                Log::error('File not found: ' . $path);
                 abort(404, 'File tidak ditemukan');
             }
 
@@ -55,7 +62,8 @@ class HalteDocumentController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Error viewing halte document: ' . $e->getMessage());
-            abort(404, 'Dokumen tidak ditemukan');
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            abort(500, 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
 
@@ -65,10 +73,15 @@ class HalteDocumentController extends Controller
     public function download($id)
     {
         try {
+            if (!Auth::check()) {
+                abort(403, 'Anda harus login terlebih dahulu');
+            }
+
             $document = HalteDocument::findOrFail($id);
             $path = storage_path('app/public/' . $document->document_path);
 
             if (!file_exists($path)) {
+                Log::error('File not found for download: ' . $path);
                 abort(404, 'File tidak ditemukan');
             }
 
@@ -76,7 +89,7 @@ class HalteDocumentController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Error downloading halte document: ' . $e->getMessage());
-            abort(404, 'Dokumen tidak ditemukan');
+            abort(500, 'Gagal mengunduh dokumen: ' . $e->getMessage());
         }
     }
 
@@ -86,6 +99,13 @@ class HalteDocumentController extends Controller
     public function delete($id)
     {
         try {
+            if (!Auth::check() || !Auth::user()->isAdmin()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized'
+                ], 403);
+            }
+
             $document = HalteDocument::findOrFail($id);
 
             // Delete file from storage
@@ -115,6 +135,13 @@ class HalteDocumentController extends Controller
      */
     public function upload(Request $request, $halteId)
     {
+        if (!Auth::check() || !Auth::user()->isAdmin()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 403);
+        }
+
         $request->validate([
             'documents.*' => 'required|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:5120',
             'document_type' => 'required|in:simbada,other'
@@ -169,6 +196,13 @@ class HalteDocumentController extends Controller
     public function updateDescription(Request $request, $id)
     {
         try {
+            if (!Auth::check() || !Auth::user()->isAdmin()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized'
+                ], 403);
+            }
+
             $document = HalteDocument::findOrFail($id);
 
             $request->validate([
@@ -199,6 +233,13 @@ class HalteDocumentController extends Controller
     public function getDocuments($halteId)
     {
         try {
+            if (!Auth::check()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized'
+                ], 403);
+            }
+
             $documents = HalteDocument::where('halte_id', $halteId)
                                      ->orderBy('created_at', 'desc')
                                      ->get();

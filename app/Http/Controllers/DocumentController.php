@@ -1,5 +1,5 @@
 <?php
-// app/Http/Controllers/DocumentController.php - FINAL FIX
+// app/Http/Controllers/DocumentController.php - FIXED ACCESS CONTROL
 
 namespace App\Http\Controllers;
 
@@ -14,10 +14,11 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DocumentController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware(['auth', 'admin']);
-    }
+    // HAPUS atau COMMENT middleware di constructor
+    // public function __construct()
+    // {
+    //     $this->middleware(['auth', 'admin']);
+    // }
 
     /**
      * View Halte Document in Browser - DIRECT VIEW (NO WRAPPER)
@@ -25,11 +26,17 @@ class DocumentController extends Controller
     public function viewHalteDocument($id)
     {
         try {
+            // Verifikasi user sudah login
+            if (!Auth::check()) {
+                abort(403, 'Anda harus login terlebih dahulu');
+            }
+
             $document = HalteDocument::findOrFail($id);
             $filePath = storage_path('app/public/' . $document->document_path);
 
             if (!file_exists($filePath)) {
-                abort(404, 'File tidak ditemukan');
+                Log::error('File not found: ' . $filePath);
+                abort(404, 'File tidak ditemukan di: ' . $document->document_path);
             }
 
             $mimeType = mime_content_type($filePath);
@@ -55,7 +62,8 @@ class DocumentController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Error viewing halte document: ' . $e->getMessage());
-            abort(404, 'Dokumen tidak ditemukan');
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            abort(500, 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
 
@@ -65,10 +73,15 @@ class DocumentController extends Controller
     public function downloadHalteDocument($id)
     {
         try {
+            if (!Auth::check()) {
+                abort(403, 'Anda harus login terlebih dahulu');
+            }
+
             $document = HalteDocument::findOrFail($id);
             $path = storage_path('app/public/' . $document->document_path);
 
             if (!file_exists($path)) {
+                Log::error('File not found for download: ' . $path);
                 abort(404, 'File tidak ditemukan');
             }
 
@@ -78,7 +91,7 @@ class DocumentController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Error downloading halte document: ' . $e->getMessage());
-            abort(404, 'Dokumen tidak ditemukan');
+            abort(500, 'Gagal mengunduh dokumen: ' . $e->getMessage());
         }
     }
 
@@ -88,6 +101,13 @@ class DocumentController extends Controller
     public function deleteHalteDocument($id)
     {
         try {
+            if (!Auth::check() || !Auth::user()->isAdmin()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized'
+                ], 403);
+            }
+
             $document = HalteDocument::findOrFail($id);
 
             // Delete file from storage
@@ -118,12 +138,16 @@ class DocumentController extends Controller
     public function viewRentalDocument($id)
     {
         try {
+            if (!Auth::check()) {
+                abort(403, 'Anda harus login terlebih dahulu');
+            }
+
             $document = RentalDocument::findOrFail($id);
             $filePath = storage_path('app/public/' . $document->document_path);
 
             if (!file_exists($filePath)) {
                 Log::error('File not found: ' . $filePath);
-                abort(404, 'File tidak ditemukan');
+                abort(404, 'File tidak ditemukan di: ' . $document->document_path);
             }
 
             $mimeType = mime_content_type($filePath);
@@ -153,17 +177,8 @@ class DocumentController extends Controller
             if (isset($filePath)) {
                 Log::error('File path: ' . $filePath);
             }
-            abort(404, 'Dokumen tidak ditemukan');
+            abort(500, 'Terjadi kesalahan: ' . $e->getMessage());
         }
-    }
-
-    /**
-     * Serve Rental Document (for embedding in viewer)
-     */
-    public function serveRentalDocument($id)
-    {
-        // Same as viewRentalDocument - kept for backward compatibility
-        return $this->viewRentalDocument($id);
     }
 
     /**
@@ -172,10 +187,15 @@ class DocumentController extends Controller
     public function downloadRentalDocument($id)
     {
         try {
+            if (!Auth::check()) {
+                abort(403, 'Anda harus login terlebih dahulu');
+            }
+
             $document = RentalDocument::findOrFail($id);
             $path = storage_path('app/public/' . $document->document_path);
 
             if (!file_exists($path)) {
+                Log::error('File not found for download: ' . $path);
                 abort(404, 'File tidak ditemukan');
             }
 
@@ -185,7 +205,7 @@ class DocumentController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Error downloading rental document: ' . $e->getMessage());
-            abort(404, 'Dokumen tidak ditemukan');
+            abort(500, 'Gagal mengunduh dokumen: ' . $e->getMessage());
         }
     }
 
@@ -195,6 +215,13 @@ class DocumentController extends Controller
     public function deleteRentalDocument($id)
     {
         try {
+            if (!Auth::check() || !Auth::user()->isAdmin()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized'
+                ], 403);
+            }
+
             $document = RentalDocument::findOrFail($id);
 
             // Delete file from storage
@@ -224,6 +251,13 @@ class DocumentController extends Controller
      */
     public function uploadHalteDocuments(Request $request, $halteId)
     {
+        if (!Auth::check() || !Auth::user()->isAdmin()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 403);
+        }
+
         $request->validate([
             'documents.*' => 'required|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:5120',
             'document_type' => 'required|in:simbada,other'
@@ -277,6 +311,13 @@ class DocumentController extends Controller
      */
     public function uploadRentalDocuments(Request $request, $rentalHistoryId)
     {
+        if (!Auth::check() || !Auth::user()->isAdmin()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 403);
+        }
+
         $request->validate([
             'documents.*' => 'required|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:5120'
         ]);

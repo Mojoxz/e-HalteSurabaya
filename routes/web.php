@@ -1,5 +1,5 @@
 <?php
-// routes/web.php - COMPLETE WITH DOCUMENT SERVE ROUTES
+// routes/web.php - FIXED DOCUMENT ACCESS
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
@@ -45,6 +45,23 @@ Route::prefix('user')->name('user.')->middleware(['auth', 'user'])->group(functi
     Route::put('/profile', [UserDashboardController::class, 'updateProfile'])->name('profile.update');
 });
 
+// ========================================================================
+// DOCUMENT ROUTES - ACCESSIBLE BY ANY AUTHENTICATED USER (NOT ADMIN ONLY)
+// ========================================================================
+Route::middleware(['auth'])->group(function () {
+    // Halte Documents - View & Download (Any authenticated user can access)
+    Route::get('/admin/haltes/documents/{id}/view', [DocumentController::class, 'viewHalteDocument'])
+        ->name('admin.haltes.documents.view');
+    Route::get('/admin/haltes/documents/{id}/download', [DocumentController::class, 'downloadHalteDocument'])
+        ->name('admin.haltes.documents.download');
+
+    // Rental Documents - View & Download (Any authenticated user can access)
+    Route::get('/admin/rentals/documents/{id}/view', [DocumentController::class, 'viewRentalDocument'])
+        ->name('admin.rentals.documents.view');
+    Route::get('/admin/rentals/documents/{id}/download', [DocumentController::class, 'downloadRentalDocument'])
+        ->name('admin.rentals.documents.download');
+});
+
 // Admin Routes (Protected by auth and admin middleware)
 Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(function () {
     // Dashboard
@@ -64,10 +81,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
         Route::delete('/photos/{id}', [AdminController::class, 'deletePhoto'])->name('photos.delete');
         Route::patch('/photos/{id}/primary', [AdminController::class, 'setPrimaryPhoto'])->name('photos.primary');
 
-        // Halte Document Management - SIMPLIFIED (Direct View)
+        // Halte Document Management - ADMIN ONLY (Upload & Delete)
         Route::prefix('documents')->name('documents.')->group(function () {
-            Route::get('/{id}/view', [DocumentController::class, 'viewHalteDocument'])->name('view');
-            Route::get('/{id}/download', [DocumentController::class, 'downloadHalteDocument'])->name('download');
             Route::delete('/{id}', [DocumentController::class, 'deleteHalteDocument'])->name('delete');
             Route::post('/{halteId}/upload', [DocumentController::class, 'uploadHalteDocuments'])->name('upload');
         });
@@ -77,10 +92,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'admin'])->group(fun
     Route::prefix('rentals')->name('rentals.')->group(function () {
         Route::get('/', [AdminController::class, 'rentalHistory'])->name('index');
 
-        // Rental Document Management - SIMPLIFIED (Direct View)
+        // Rental Document Management - ADMIN ONLY (Upload & Delete)
         Route::prefix('documents')->name('documents.')->group(function () {
-            Route::get('/{id}/view', [DocumentController::class, 'viewRentalDocument'])->name('view');
-            Route::get('/{id}/download', [DocumentController::class, 'downloadRentalDocument'])->name('download');
             Route::delete('/{id}', [DocumentController::class, 'deleteRentalDocument'])->name('delete');
             Route::post('/{rentalHistoryId}/upload', [DocumentController::class, 'uploadRentalDocuments'])->name('upload');
         });

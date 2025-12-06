@@ -1,5 +1,5 @@
 <?php
-// app/Http/Controllers/RentalDocumentController.php
+// app/Http/Controllers/RentalDocumentController.php - FIXED
 
 namespace App\Http\Controllers;
 
@@ -12,10 +12,11 @@ use Illuminate\Support\Facades\Auth;
 
 class RentalDocumentController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware(['auth', 'admin']);
-    }
+    // HAPUS middleware di constructor
+    // public function __construct()
+    // {
+    //     $this->middleware(['auth', 'admin']);
+    // }
 
     /**
      * View Rental Document in Browser
@@ -23,10 +24,16 @@ class RentalDocumentController extends Controller
     public function view($id)
     {
         try {
+            // Verifikasi user sudah login
+            if (!Auth::check()) {
+                abort(403, 'Anda harus login terlebih dahulu');
+            }
+
             $document = RentalDocument::findOrFail($id);
             $path = storage_path('app/public/' . $document->document_path);
 
             if (!file_exists($path)) {
+                Log::error('File not found: ' . $path);
                 abort(404, 'File tidak ditemukan');
             }
 
@@ -56,7 +63,8 @@ class RentalDocumentController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Error viewing rental document: ' . $e->getMessage());
-            abort(404, 'Dokumen tidak ditemukan');
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            abort(500, 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
 
@@ -66,10 +74,15 @@ class RentalDocumentController extends Controller
     public function download($id)
     {
         try {
+            if (!Auth::check()) {
+                abort(403, 'Anda harus login terlebih dahulu');
+            }
+
             $document = RentalDocument::findOrFail($id);
             $path = storage_path('app/public/' . $document->document_path);
 
             if (!file_exists($path)) {
+                Log::error('File not found for download: ' . $path);
                 abort(404, 'File tidak ditemukan');
             }
 
@@ -77,7 +90,7 @@ class RentalDocumentController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Error downloading rental document: ' . $e->getMessage());
-            abort(404, 'Dokumen tidak ditemukan');
+            abort(500, 'Gagal mengunduh dokumen: ' . $e->getMessage());
         }
     }
 
@@ -87,6 +100,13 @@ class RentalDocumentController extends Controller
     public function delete($id)
     {
         try {
+            if (!Auth::check() || !Auth::user()->isAdmin()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized'
+                ], 403);
+            }
+
             $document = RentalDocument::findOrFail($id);
 
             // Delete file from storage
@@ -116,6 +136,13 @@ class RentalDocumentController extends Controller
      */
     public function upload(Request $request, $rentalHistoryId)
     {
+        if (!Auth::check() || !Auth::user()->isAdmin()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Unauthorized'
+            ], 403);
+        }
+
         $request->validate([
             'documents.*' => 'required|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:5120'
         ]);
@@ -171,6 +198,13 @@ class RentalDocumentController extends Controller
     public function updateDescription(Request $request, $id)
     {
         try {
+            if (!Auth::check() || !Auth::user()->isAdmin()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized'
+                ], 403);
+            }
+
             $document = RentalDocument::findOrFail($id);
 
             $request->validate([
@@ -201,6 +235,13 @@ class RentalDocumentController extends Controller
     public function getDocuments($rentalHistoryId)
     {
         try {
+            if (!Auth::check()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized'
+                ], 403);
+            }
+
             $documents = RentalDocument::where('rental_history_id', $rentalHistoryId)
                                       ->orderBy('created_at', 'desc')
                                       ->get();
@@ -225,6 +266,13 @@ class RentalDocumentController extends Controller
     public function bulkDelete(Request $request, $rentalHistoryId)
     {
         try {
+            if (!Auth::check() || !Auth::user()->isAdmin()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized'
+                ], 403);
+            }
+
             $request->validate([
                 'document_ids' => 'required|array',
                 'document_ids.*' => 'exists:rental_documents,id'
