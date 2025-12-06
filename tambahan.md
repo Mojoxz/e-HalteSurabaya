@@ -15,5 +15,3 @@ bisa diakses untuk admin dan user.
 modal detail lengkap di map tidak bisa tampil
 untuk detail upload file dll bisa disertakan lagi
 
-
-untuk file di user page masih belum bisa untuk edit role yang belum bisa
