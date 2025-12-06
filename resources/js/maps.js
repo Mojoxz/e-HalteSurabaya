@@ -1,11 +1,11 @@
-// resources/js/maps.js - KODE LENGKAP FINAL
-// Copy SELURUH file ini, ganti maps.js Anda
+// resources/js/maps.js - FIXED POPUP ISSUES
+// Ganti SELURUH file maps.js dengan kode ini
 
 document.addEventListener('DOMContentLoaded', function() {
     const isAdmin = window.isAdmin || false;
     const haltesData = window.haltesData || [];
 
-    // Initialize map centered on Surabaya, East Java with better options
+    // Initialize map
     const map = L.map('map', {
         zoomControl: true,
         attributionControl: true,
@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
         markerZoomAnimation: true
     }).setView([-7.2575, 112.7521], 12);
 
-    // Add OpenStreetMap tiles with better styling
+    // Add tiles
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors | E-HalteDishub',
         maxZoom: 19,
@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', function() {
         zoomOffset: 0
     }).addTo(map);
 
-    // Create custom marker icons with better styling
+    // Custom marker icons
     const availableIcon = L.divIcon({
         className: 'custom-div-icon',
         html: '<div style="background-color: #059669; width: 24px; height: 24px; border-radius: 50%; border: 4px solid white; box-shadow: 0 0 15px rgba(5, 150, 105, 0.5); position: relative;"><div style="position: absolute; top: -2px; left: -2px; width: 28px; height: 28px; border: 2px solid #059669; border-radius: 50%; opacity: 0.3; animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div></div>',
@@ -40,11 +40,10 @@ document.addEventListener('DOMContentLoaded', function() {
         popupAnchor: [0, -12]
     });
 
-    // Store markers and halte data for search functionality
     const markers = {};
     const searchData = [];
 
-    // Function to create photo carousel HTML
+    // Photo carousel function
     function createPhotoCarousel(photos, halteName) {
         if (!photos || photos.length === 0) {
             return `
@@ -58,8 +57,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         let carouselHtml = '<div class="popup-photo-container">';
-
-        // Add photos
         photos.forEach((photo, index) => {
             carouselHtml += `
                 <img src="${photo}"
@@ -71,7 +68,6 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
         });
 
-        // Add navigation buttons if more than one photo
         if (photos.length > 1) {
             carouselHtml += `
                 <button class="popup-photo-nav prev" onclick="changePhoto(this, -1)" title="Foto sebelumnya">
@@ -90,7 +86,7 @@ document.addEventListener('DOMContentLoaded', function() {
         return carouselHtml;
     }
 
-    // Global function to change photos (accessible from onclick)
+    // Change photo function
     window.changePhoto = function(button, direction) {
         const container = button.closest('.popup-photo-container');
         const photos = container.querySelectorAll('.popup-photo');
@@ -117,7 +113,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    // FIXED: Function to handle detail button click (PAKAI BOOTSTRAP MODAL)
+    // ✅ FIXED: Handle detail click
     window.handleDetailClick = function(halteId, event) {
         if (event) {
             event.preventDefault();
@@ -125,40 +121,68 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         if (isAdmin) {
-            // Admin can access detail page directly
             window.location.href = `/halte/${halteId}/detail`;
         } else {
-            // Show Bootstrap modal for non-admin users
-            const modal = new bootstrap.Modal(document.getElementById('accessRestrictedModal'));
-            modal.show();
+            // Close Leaflet popup first
+            map.closePopup();
+
+            setTimeout(() => {
+                const modalElement = document.getElementById('accessRestrictedModal');
+                if (modalElement) {
+                    modalElement.removeAttribute('aria-hidden');
+
+                    const bsModal = new bootstrap.Modal(modalElement, {
+                        backdrop: 'static',
+                        keyboard: true,
+                        focus: true
+                    });
+
+                    bsModal.show();
+
+                    modalElement.addEventListener('shown.bs.modal', function() {
+                        this.removeAttribute('aria-hidden');
+                        const focusableElement = this.querySelector('.btn-close, button, a, input');
+                        if (focusableElement) {
+                            focusableElement.focus();
+                        }
+                    }, { once: true });
+                }
+            }, 100);
         }
     };
 
-    // FIXED: Function to open marker popup properly (TANPA panIntoView)
+    // ✅ FIXED: Improved popup opening function
     function openMarkerPopup(marker, halte) {
-        // First center the map on the marker
-        map.setView([halte.latitude, halte.longitude], Math.max(map.getZoom(), 15), {
+        // Close any existing popups
+        map.closePopup();
+
+        // Calculate zoom level
+        const currentZoom = map.getZoom();
+        const targetZoom = Math.max(currentZoom, 15);
+
+        // Center map on marker
+        map.setView([halte.latitude, halte.longitude], targetZoom, {
             animate: true,
-            duration: 0.5
+            duration: 0.5,
+            easeLinearity: 0.25
         });
 
-        // Wait for map animation to complete, then open popup
+        // Wait for map to settle before opening popup
         setTimeout(() => {
+            // Force marker to open popup
             marker.openPopup();
 
-            // Additional positioning fix
+            // Additional adjustment after popup opens
             setTimeout(() => {
                 const popup = marker.getPopup();
-                if (popup && popup._container) {
+                if (popup && popup._container && popup.isOpen()) {
                     popup.update();
 
-                    // FIXED: Use panBy instead of panIntoView
+                    // Pan if needed
                     const popupLatLng = popup.getLatLng();
                     const pixelPoint = map.latLngToContainerPoint(popupLatLng);
                     const popupHeight = popup._container.offsetHeight || 400;
-                    const mapHeight = map.getContainer().offsetHeight;
 
-                    // Check if popup is outside viewport and adjust
                     if (pixelPoint.y < popupHeight + 50) {
                         map.panBy([0, -(popupHeight + 50 - pixelPoint.y)], {
                             animate: true,
@@ -166,18 +190,15 @@ document.addEventListener('DOMContentLoaded', function() {
                         });
                     }
                 }
-            }, 100);
-        }, 500);
+            }, 150);
+        }, 600);
     }
 
-    // Add markers for each halte
+    // Add markers
     haltesData.forEach(function(halte) {
         const icon = halte.rental_status === 'rented' ? rentedIcon : availableIcon;
-
-        // Create photo carousel
         const photoCarousel = createPhotoCarousel(halte.photos, halte.name);
 
-        // FIXED: Create detail button with proper type attribute
         const detailButton = isAdmin
             ? `<a href="/halte/${halte.id}/detail" class="btn-detail">
                 <i class="fas fa-info-circle me-1"></i> Lihat Detail Lengkap
@@ -186,7 +207,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 <i class="fas fa-info-circle me-1"></i> Lihat Detail Lengkap
                </button>`;
 
-        // Create popup content with carousel and conditional detail button
         let popupContent = `
             <div class="popup-content">
                 ${photoCarousel}
@@ -215,13 +235,15 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
 
-        // Create marker with improved popup options
+        // ✅ FIXED: Create marker with better event handling
         const marker = L.marker([halte.latitude, halte.longitude], { icon: icon })
             .bindPopup(popupContent, {
                 maxWidth: 400,
                 minWidth: 300,
                 className: 'custom-popup',
                 closeButton: true,
+                autoClose: true,
+                closeOnClick: false,
                 autoPan: true,
                 autoPanPaddingTopLeft: [50, 50],
                 autoPanPaddingBottomRight: [50, 50],
@@ -230,19 +252,14 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .addTo(map);
 
-        // Custom marker click handler for better popup positioning
+        // ✅ FIXED: Better click handler
         marker.on('click', function(e) {
-            // Close any existing popups first
-            map.closePopup();
-
-            // Open this marker's popup with proper positioning
+            L.DomEvent.stopPropagation(e);
             openMarkerPopup(marker, halte);
         });
 
-        // Store marker for search functionality
         markers[halte.id] = marker;
 
-        // Prepare search data
         searchData.push({
             id: halte.id,
             name: halte.name,
@@ -263,7 +280,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const clearButton = document.getElementById('clearSearch');
     let searchTimeout;
 
-    // Function to normalize text for search
     function normalizeText(text) {
         return text.toLowerCase()
             .replace(/[àáâãäå]/g, 'a')
@@ -274,7 +290,6 @@ document.addEventListener('DOMContentLoaded', function() {
             .trim();
     }
 
-    // Function to highlight marker
     function highlightMarker(markerId) {
         const marker = markers[markerId];
         if (marker) {
@@ -288,7 +303,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Function to perform search
     function performSearch(query) {
         const normalizedQuery = normalizeText(query);
 
@@ -309,7 +323,6 @@ document.addEventListener('DOMContentLoaded', function() {
         displaySearchResults(results);
     }
 
-    // Function to display search results
     function displaySearchResults(results) {
         if (results.length === 0) {
             searchResults.innerHTML = '<div class="no-results"><i class="fas fa-search me-2"></i>Tidak ada halte yang ditemukan</div>';
@@ -351,23 +364,15 @@ document.addEventListener('DOMContentLoaded', function() {
         searchResults.innerHTML = resultsHtml;
         searchResults.style.display = 'block';
 
-        // Add click handlers to search results
         searchResults.querySelectorAll('.search-result-item[data-halte-id]').forEach(item => {
             item.addEventListener('click', function() {
                 const halteId = this.dataset.halteId;
                 const halte = searchData.find(h => h.id == halteId);
 
                 if (halte) {
-                    // Use the same popup opening function for consistency
                     openMarkerPopup(halte.marker, halte);
-
-                    // Highlight marker
                     highlightMarker(halteId);
-
-                    // Hide search results
                     searchResults.style.display = 'none';
-
-                    // Update search input with selected halte name
                     searchInput.value = halte.name;
                     clearButton.style.display = 'block';
                 }
@@ -375,7 +380,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Search input event listeners
     if (searchInput) {
         searchInput.addEventListener('input', function() {
             clearTimeout(searchTimeout);
@@ -388,21 +392,17 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             clearButton.style.display = 'block';
-
-            // Debounce search
             searchTimeout = setTimeout(() => {
                 performSearch(query);
             }, 300);
         });
 
-        // Show search results when input is focused and has value
         searchInput.addEventListener('focus', function() {
             if (this.value.trim().length >= 2) {
                 performSearch(this.value.trim());
             }
         });
 
-        // Keyboard navigation for search results
         searchInput.addEventListener('keydown', function(e) {
             const items = searchResults.querySelectorAll('.search-result-item[data-halte-id]');
             const currentActive = searchResults.querySelector('.search-result-item.active');
@@ -445,7 +445,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Clear search functionality
     if (clearButton) {
         clearButton.addEventListener('click', function() {
             searchInput.value = '';
@@ -455,7 +454,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Hide search results when clicking outside
     document.addEventListener('click', function(e) {
         if (!e.target.closest('.map-search-container')) {
             if (searchResults) {
@@ -464,21 +462,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Add hover effect for keyboard navigation
     if (searchResults) {
         searchResults.addEventListener('mouseover', function(e) {
             if (e.target.closest('.search-result-item[data-halte-id]')) {
-                // Remove active class from all items
                 this.querySelectorAll('.search-result-item.active').forEach(item => {
                     item.classList.remove('active');
                 });
-                // Add active class to hovered item
                 e.target.closest('.search-result-item[data-halte-id]').classList.add('active');
             }
         });
     }
 
-    // Auto-fit map to show all markers
+    // Auto-fit map
     if (haltesData.length > 0) {
         const group = new L.featureGroup(Object.values(markers));
         if (Object.keys(group._layers).length > 0) {
@@ -486,41 +481,26 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Add geolocation control
+    // Geolocation control
     if (navigator.geolocation) {
         const locationControl = L.Control.extend({
-            options: {
-                position: 'topleft'
-            },
-
+            options: { position: 'topleft' },
             onAdd: function(map) {
                 const container = L.DomUtil.create('div', 'leaflet-bar leaflet-control leaflet-control-custom');
                 container.innerHTML = '<a href="#" title="Lokasi Saya" style="text-decoration: none;"><i class="fas fa-crosshairs"></i></a>';
-                container.style.backgroundColor = 'white';
-                container.style.width = '40px';
-                container.style.height = '40px';
-                container.style.lineHeight = '40px';
-                container.style.textAlign = 'center';
-                container.style.color = '#333';
-                container.style.fontSize = '16px';
-                container.style.borderRadius = '4px';
-                container.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+                container.style.cssText = 'background: white; width: 40px; height: 40px; line-height: 40px; text-align: center; color: #333; font-size: 16px; border-radius: 4px; box-shadow: 0 2px 10px rgba(0,0,0,0.2);';
 
                 container.onclick = function(e) {
                     e.preventDefault();
                     e.stopPropagation();
-
                     container.innerHTML = '<a href="#" style="text-decoration: none;"><i class="fas fa-spinner fa-spin"></i></a>';
 
                     navigator.geolocation.getCurrentPosition(function(position) {
                         const lat = position.coords.latitude;
                         const lng = position.coords.longitude;
 
-                        map.flyTo([lat, lng], 16, {
-                            duration: 1.5
-                        });
+                        map.flyTo([lat, lng], 16, { duration: 1.5 });
 
-                        // Add user location marker
                         const userIcon = L.divIcon({
                             className: 'user-location-icon',
                             html: '<div style="background-color: #2563eb; width: 20px; height: 20px; border-radius: 50%; border: 4px solid white; box-shadow: 0 0 20px rgba(37, 99, 235, 0.6); position: relative;"><div style="position: absolute; top: -4px; left: -4px; width: 28px; height: 28px; border: 3px solid #2563eb; border-radius: 50%; opacity: 0.4; animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div></div>',
@@ -528,7 +508,6 @@ document.addEventListener('DOMContentLoaded', function() {
                             iconAnchor: [10, 10]
                         });
 
-                        // Remove existing user marker if any
                         if (window.userMarker) {
                             map.removeLayer(window.userMarker);
                         }
@@ -540,7 +519,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                         container.innerHTML = '<a href="#" title="Lokasi Saya" style="text-decoration: none;"><i class="fas fa-crosshairs"></i></a>';
                     }, function(error) {
-                        alert('Tidak dapat mengakses lokasi Anda. Pastikan GPS aktif dan berikan izin lokasi.');
+                        alert('Tidak dapat mengakses lokasi Anda.');
                         container.innerHTML = '<a href="#" title="Lokasi Saya" style="text-decoration: none;"><i class="fas fa-crosshairs"></i></a>';
                     }, {
                         enableHighAccuracy: true,
@@ -556,7 +535,7 @@ document.addEventListener('DOMContentLoaded', function() {
         map.addControl(new locationControl());
     }
 
-    // Fullscreen functionality
+    // Fullscreen
     const fullscreenToggle = document.getElementById('fullscreenToggle');
     const mapSection = document.getElementById('mapSection');
     let isFullscreen = false;
@@ -564,81 +543,57 @@ document.addEventListener('DOMContentLoaded', function() {
     if (fullscreenToggle && mapSection) {
         fullscreenToggle.addEventListener('click', function() {
             if (!isFullscreen) {
-                // Enter fullscreen
                 mapSection.classList.add('fullscreen-map');
                 fullscreenToggle.innerHTML = '<i class="fas fa-compress"></i>';
                 fullscreenToggle.title = 'Keluar dari Mode Layar Penuh';
                 isFullscreen = true;
             } else {
-                // Exit fullscreen
                 mapSection.classList.remove('fullscreen-map');
                 fullscreenToggle.innerHTML = '<i class="fas fa-expand"></i>';
                 fullscreenToggle.title = 'Mode Layar Penuh';
                 isFullscreen = false;
             }
 
-            // Refresh map size after fullscreen toggle
             setTimeout(() => {
                 map.invalidateSize();
             }, 300);
         });
     }
 
-    // ESC key to exit fullscreen
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape' && isFullscreen && fullscreenToggle) {
             fullscreenToggle.click();
         }
     });
 
-    // Map controls and interactions with better popup handling
-    map.on('zoomend', function() {
-        const zoom = map.getZoom();
-        // Adjust marker size based on zoom level
-        Object.values(markers).forEach(marker => {
-            const icon = marker.options.icon;
-            let size = 24;
-            if (zoom > 15) {
-                size = 28;
-            } else if (zoom < 10) {
-                size = 20;
-            }
+    // ✅ FIXED: Better popup event handling
+    map.on('popupopen', function(e) {
+        const popup = e.popup;
+        const container = popup._container;
+        if (container) {
+            container.style.opacity = '0';
+            container.style.transform = 'scale(0.9)';
 
-            // Update marker icon size
-            const isRented = icon.options.html.includes('#dc2626');
-            const color = isRented ? '#dc2626' : '#059669';
-
-            const newIcon = L.divIcon({
-                className: 'custom-div-icon',
-                html: `<div style="background-color: ${color}; width: ${size}px; height: ${size}px; border-radius: 50%; border: 4px solid white; box-shadow: 0 0 15px rgba(${isRented ? '220, 38, 38' : '5, 150, 105'}, 0.5); position: relative;"><div style="position: absolute; top: -2px; left: -2px; width: ${size + 4}px; height: ${size + 4}px; border: 2px solid ${color}; border-radius: 50%; opacity: 0.3; animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;"></div></div>`,
-                iconSize: [size, size],
-                iconAnchor: [size/2, size/2],
-                popupAnchor: [0, -size/2]
-            });
-
-            marker.setIcon(newIcon);
-        });
-
-        // Update any open popup position after zoom
-        setTimeout(() => {
-            const popup = map._popup;
-            if (popup && popup._container) {
-                popup.update();
-            }
-        }, 100);
-    });
-
-    // Fix popup positioning after map movement
-    map.on('moveend', function() {
-        const popup = map._popup;
-        if (popup && popup._container) {
             setTimeout(() => {
+                container.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                container.style.opacity = '1';
+                container.style.transform = 'scale(1)';
                 popup.update();
             }, 50);
         }
     });
 
-    // Remove loading overlay after map loads
+    map.on('popupclose', function(e) {
+        const popup = e.popup;
+        const container = popup._container;
+        if (container) {
+            container.style.transition = 'opacity 0.2s ease, transform 0.2s ease';
+            container.style.opacity = '0';
+            container.style.transform = 'scale(0.95)';
+        }
+    });
+
+    // Remove loading
     map.whenReady(() => {
         setTimeout(() => {
             const loadingOverlay = document.getElementById('mapLoading');
@@ -650,60 +605,15 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }, 1000);
 
-        // Invalidate size to ensure proper rendering
         setTimeout(() => {
             map.invalidateSize();
         }, 1500);
     });
 
-    // Add scale control
+    // Scale control
     L.control.scale({
         position: 'bottomleft',
         metric: true,
         imperial: false
     }).addTo(map);
-
-    // Enhanced popup handling
-    map.on('popupopen', function(e) {
-        const popup = e.popup;
-        const container = popup._container;
-        if (container) {
-            // Initial animation
-            container.style.opacity = '0';
-            container.style.transform = 'scale(0.8)';
-
-            setTimeout(() => {
-                container.style.transition = 'all 0.3s ease';
-                container.style.opacity = '1';
-                container.style.transform = 'scale(1)';
-
-                // Ensure proper positioning
-                popup.update();
-
-                // Pan into view if needed
-                const popupLatLng = popup.getLatLng();
-                const pixelPoint = map.latLngToContainerPoint(popupLatLng);
-                const popupHeight = container.offsetHeight || 400;
-
-                // Check if popup is outside viewport
-                if (pixelPoint.y < popupHeight + 50) {
-                    map.panBy([0, -(popupHeight + 50 - pixelPoint.y)], {
-                        animate: true,
-                        duration: 0.5
-                    });
-                }
-            }, 50);
-        }
-    });
-
-    // Handle popup close
-    map.on('popupclose', function(e) {
-        const popup = e.popup;
-        const container = popup._container;
-        if (container) {
-            container.style.transition = 'all 0.2s ease';
-            container.style.opacity = '0';
-            container.style.transform = 'scale(0.9)';
-        }
-    });
 });

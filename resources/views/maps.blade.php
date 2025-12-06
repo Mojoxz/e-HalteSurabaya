@@ -106,36 +106,40 @@
     </button>
 </section>
 
-<!-- Bootstrap Modal (SAMA seperti di home.blade.php) -->
-<div class="modal fade" id="accessRestrictedModal" tabindex="-1" aria-labelledby="accessRestrictedModalLabel" aria-hidden="true">
+<!-- ✅ FIXED: Bootstrap Modal dengan struktur yang benar -->
+<div class="modal fade" id="accessRestrictedModal" tabindex="-1" aria-labelledby="accessRestrictedModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
+        <div class="modal-content" style="border-radius: 20px; overflow: hidden;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); color: white; border: none;">
                 <h5 class="modal-title" id="accessRestrictedModalLabel">
                     <i class="fas fa-shield-alt me-2"></i>Akses Terbatas
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-                <div class="text-center py-4">
-                    <div class="mb-3">
-                        <i class="fas fa-lock" style="font-size: 4rem; color: #dc2626;"></i>
+            <div class="modal-body" style="padding: 40px 30px;">
+                <div class="text-center">
+                    <div class="mb-4">
+                        <div style="width: 80px; height: 80px; margin: 0 auto; background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 30px rgba(220, 38, 38, 0.3);">
+                            <i class="fas fa-lock" style="font-size: 36px; color: white;"></i>
+                        </div>
                     </div>
-                    <h4 class="mb-3">Maaf, Akses Dibatasi!</h4>
-                    <p class="text-muted">
-                        Detail lengkap halte hanya dapat diakses oleh <strong>Admin yang terdaftar</strong>.
+                    <h4 class="mb-3" style="font-weight: 700; color: #1f2937;">Detail Halte Terbatas</h4>
+                    <p class="text-muted mb-2" style="font-size: 16px; line-height: 1.6;">
+                        Detail lengkap halte hanya dapat diakses oleh <strong style="color: #dc2626;">Admin yang terdaftar</strong>.
+                    </p>
+                    <p class="text-muted" style="font-size: 14px;">
                         Silakan login untuk melihat informasi detail halte bus.
                     </p>
                 </div>
             </div>
-            <div class="modal-footer justify-content-center">
+            <div class="modal-footer" style="border: none; padding: 20px 30px; justify-content: center; gap: 12px;">
                 @guest
-                <a href="{{ route('login') }}" class="btn btn-primary">
-                    <i class="fas fa-sign-in-alt me-1"></i> Login sebagai Admin
+                <a href="{{ route('login') }}" class="btn btn-primary" style="padding: 14px 28px; border-radius: 12px; font-weight: 600; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); border: none; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);">
+                    <i class="fas fa-sign-in-alt me-2"></i>Login sebagai Admin
                 </a>
                 @endguest
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-1"></i> Tutup
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="padding: 14px 28px; border-radius: 12px; font-weight: 600; background: #f3f4f6; color: #4b5563; border: 2px solid #e5e7eb;">
+                    <i class="fas fa-times me-2"></i>Tutup
                 </button>
             </div>
         </div>
@@ -146,7 +150,7 @@
 @push('scripts')
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<!-- Bootstrap JS (PENTING! Jangan dihapus) -->
+<!-- ✅ Bootstrap JS (PENTING! Jangan dihapus) - Load SEBELUM maps.js -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <!-- Pass data to JavaScript -->
