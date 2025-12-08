@@ -7,6 +7,8 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <!-- Swiper CSS untuk carousel -->
 <link href="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.css" rel="stylesheet">
+<!-- SweetAlert2 CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 @vite(['resources/css/gallery.css'])
 @endpush
 
@@ -240,42 +242,6 @@
     <i class="fas fa-arrow-up"></i>
 </button>
 
-<!-- Access Restricted Modal -->
-<div class="modal fade" id="accessRestrictedModal" tabindex="-1" aria-labelledby="accessRestrictedModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header" style="background: var(--primary-gradient); color: white; border-radius: 15px 15px 0 0;">
-                <h5 class="modal-title" id="accessRestrictedModalLabel">
-                    <i class="fas fa-shield-alt me-2"></i>Akses Terbatas
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="filter: invert(1);"></button>
-            </div>
-            <div class="modal-body" style="padding: 2rem; text-align: center;">
-                <div style="font-size: 4rem; color: #ffc107; margin-bottom: 1rem;">
-                    <i class="fas fa-lock"></i>
-                </div>
-                <div style="font-size: 1.5rem; font-weight: bold; color: #495057; margin-bottom: 1rem;">
-                    Maaf, Akses Dibatasi!
-                </div>
-                <div style="color: #6c757d; font-size: 1.1rem; line-height: 1.6; margin-bottom: 2rem;">
-                    Detail lengkap halte hanya dapat diakses oleh <strong>Admin</strong>.
-                    Silakan login untuk melihat informasi detail halte.
-                </div>
-            </div>
-            <div class="modal-footer justify-content-center" style="border-top: 1px solid #dee2e6; padding: 1rem 2rem; background-color: #f8f9fa; border-radius: 0 0 15px 15px;">
-                @guest
-                <a href="{{ route('login') }}" class="btn" style="background: var(--secondary-gradient); border: none; padding: 12px 30px; border-radius: 30px; color: white; font-weight: 600; text-decoration: none; transition: all 0.3s ease; box-shadow: 0 6px 20px rgba(29, 78, 216, 0.3); margin-right: 10px;">
-                    <i class="fas fa-sign-in-alt me-1"></i> Login sebagai User
-                </a>
-                @endguest
-                <button type="button" class="btn" data-bs-dismiss="modal" style="background: var(--accent-gradient); border: none; padding: 12px 30px; border-radius: 30px; color: white; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);">
-                    <i class="fas fa-check me-1"></i> Saya Mengerti
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
 @endsection
 
 @push('scripts')
@@ -283,6 +249,10 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <!-- Swiper JS -->
 <script src="https://cdn.jsdelivr.net/npm/swiper@8/swiper-bundle.min.js"></script>
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
 // Pass data from backend to JavaScript

@@ -16,14 +16,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Auto-hide alerts after 5 seconds
-    const alerts = document.querySelectorAll('.alert:not(.alert-permanent)');
-    alerts.forEach(alert => {
-        setTimeout(() => {
-            const bsAlert = new bootstrap.Alert(alert);
-            bsAlert.close();
-        }, 5000);
-    });
+    // HAPUS bagian auto-hide alerts - karena sekarang pakai SweetAlert2
+    // Alert akan ditampilkan langsung oleh SweetAlert2 dari layout admin
 
     // Add loading state to buttons when forms are submitted
     const forms = document.querySelectorAll('form');
@@ -38,66 +32,57 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-// Logout Modal Functions
+// Logout Modal Functions - DIGANTI dengan SweetAlert2
 window.showLogoutConfirmation = function() {
-    const modal = document.getElementById('logoutModal');
-    modal.classList.add('show');
-    // Focus pada tombol cancel setelah modal muncul
-    setTimeout(() => {
-        const cancelBtn = modal.querySelector('.btn-cancel-confirm');
-        if (cancelBtn) cancelBtn.focus();
-    }, 100);
-}
+    Swal.fire({
+        title: 'Yakin ingin keluar?',
+        text: "Apakah Anda yakin ingin keluar dari panel admin?",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#f44336',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, Logout',
+        cancelButtonText: 'Batal',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Show loading state
+            Swal.fire({
+                title: 'Memproses...',
+                text: 'Mohon tunggu sebentar',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
 
-window.cancelLogout = function() {
-    const modal = document.getElementById('logoutModal');
-    modal.classList.remove('show');
-}
+            // Create and submit logout form
+            const logoutForm = document.createElement('form');
+            logoutForm.method = 'POST';
+            logoutForm.action = window.logoutRoute || '/logout';
 
-window.confirmLogout = function() {
-    const confirmBtn = document.getElementById('confirmBtn');
+            const csrfToken = document.createElement('input');
+            csrfToken.type = 'hidden';
+            csrfToken.name = '_token';
+            csrfToken.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            logoutForm.appendChild(csrfToken);
 
-    // Tambahkan loading state
-    confirmBtn.classList.add('btn-loading');
-    confirmBtn.innerHTML = '<span>Memproses...</span>';
-    confirmBtn.disabled = true;
-
-    // Create and submit logout form
-    const logoutForm = document.createElement('form');
-    logoutForm.method = 'POST';
-    logoutForm.action = window.logoutRoute || '/logout';
-
-    const csrfToken = document.createElement('input');
-    csrfToken.type = 'hidden';
-    csrfToken.name = '_token';
-    csrfToken.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-    logoutForm.appendChild(csrfToken);
-
-    document.body.appendChild(logoutForm);
-    logoutForm.submit();
-}
-
-// Close modal with ESC key or overlay click
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        const logoutModal = document.getElementById('logoutModal');
-        if (logoutModal && logoutModal.classList.contains('show')) {
-            window.cancelLogout();
+            document.body.appendChild(logoutForm);
+            logoutForm.submit();
         }
-    }
-});
+    });
+}
 
-// Close modal when clicking overlay
-document.addEventListener('DOMContentLoaded', function() {
-    const logoutModal = document.getElementById('logoutModal');
-    if (logoutModal) {
-        logoutModal.addEventListener('click', function(e) {
-            if (e.target === this) {
-                window.cancelLogout();
-            }
-        });
-    }
-});
+// HAPUS fungsi cancelLogout dan confirmLogout - tidak dipakai lagi
+// Semua sudah dihandle oleh SweetAlert2
+
+// Close modal with ESC key - TIDAK PERLU lagi karena SweetAlert2 sudah handle
+// SweetAlert2 otomatis support ESC key
+
+// HAPUS event listener untuk modal overlay click
+// SweetAlert2 sudah handle ini secara otomatis
 
 // Update main content when sidebar state changes
 window.addEventListener('storage', function(e) {
@@ -112,3 +97,84 @@ window.addEventListener('storage', function(e) {
         }
     }
 });
+
+// Helper function untuk menampilkan SweetAlert dari JavaScript
+window.showAlert = function(type, title, message, timer = null) {
+    const icons = {
+        'success': 'success',
+        'error': 'error',
+        'warning': 'warning',
+        'info': 'info'
+    };
+
+    const colors = {
+        'success': '#4CAF50',
+        'error': '#f44336',
+        'warning': '#ff9800',
+        'info': '#2196F3'
+    };
+
+    const config = {
+        icon: icons[type] || 'info',
+        title: title,
+        text: message,
+        confirmButtonColor: colors[type] || '#2196F3',
+        confirmButtonText: 'OK'
+    };
+
+    if (timer) {
+        config.timer = timer;
+        config.timerProgressBar = true;
+    }
+
+    Swal.fire(config);
+};
+
+// Function untuk konfirmasi delete dengan SweetAlert2
+window.confirmDelete = function(itemName, deleteUrl) {
+    Swal.fire({
+        title: 'Hapus ' + itemName + '?',
+        text: "Data yang dihapus tidak dapat dikembalikan!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#f44336',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Ya, Hapus!',
+        cancelButtonText: 'Batal',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Show loading
+            Swal.fire({
+                title: 'Menghapus...',
+                text: 'Mohon tunggu sebentar',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            // Create and submit delete form
+            const deleteForm = document.createElement('form');
+            deleteForm.method = 'POST';
+            deleteForm.action = deleteUrl;
+
+            const csrfToken = document.createElement('input');
+            csrfToken.type = 'hidden';
+            csrfToken.name = '_token';
+            csrfToken.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+            deleteForm.appendChild(csrfToken);
+
+            const methodInput = document.createElement('input');
+            methodInput.type = 'hidden';
+            methodInput.name = '_method';
+            methodInput.value = 'DELETE';
+            deleteForm.appendChild(methodInput);
+
+            document.body.appendChild(deleteForm);
+            deleteForm.submit();
+        }
+    });
+};

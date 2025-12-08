@@ -10,8 +10,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <!-- SweetAlert2 CSS -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <!-- Favicon -->
     <link rel="icon" type="image/svg" href="{{ asset('logo1.svg') }}">
 
@@ -76,35 +74,6 @@
                     </nav>
                 @endif
 
-                <!-- Flash Messages -->
-                @if(session('success'))
-                    <div class="alert alert-success alert-dismissible fade show mb-4" role="alert">
-                        <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
-
-                @if(session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
-                        <i class="fas fa-exclamation-circle me-2"></i> {{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
-
-                @if(session('warning'))
-                    <div class="alert alert-warning alert-dismissible fade show mb-4" role="alert">
-                        <i class="fas fa-exclamation-triangle me-2"></i> {{ session('warning') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
-
-                @if(session('info'))
-                    <div class="alert alert-info alert-dismissible fade show mb-4" role="alert">
-                        <i class="fas fa-info-circle me-2"></i> {{ session('info') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                @endif
-
                 <!-- Page Content -->
                 @yield('content')
             </main>
@@ -141,111 +110,129 @@
         // Set logout route globally
         window.logoutRoute = "{{ route('logout') }}";
 
-        // SweetAlert2 custom styling
-        const swalCustomClass = {
-            popup: 'rounded-4 shadow-lg',
-            title: 'fw-bold',
-            confirmButton: 'btn px-4 py-2',
-            cancelButton: 'btn px-4 py-2',
-            actions: 'gap-2'
-        };
-
-        // Auto show SweetAlert for flash messages
+        // SweetAlert2 Flash Messages Handler
         document.addEventListener('DOMContentLoaded', function() {
+            // Success Alert
             @if(session('success'))
-                setTimeout(() => {
-                    const successAlert = document.querySelector('.alert-success');
-                    if (successAlert) {
-                        const message = successAlert.textContent.trim().replace(/×/g, '').trim();
-                        successAlert.remove();
-
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Berhasil!',
-                            text: message,
-                            confirmButtonColor: '#198754',
-                            confirmButtonText: '<i class="fas fa-check me-2"></i>OK',
-                            timer: 3000,
-                            timerProgressBar: true,
-                            customClass: {
-                                ...swalCustomClass,
-                                confirmButton: 'btn btn-success px-4 py-2'
-                            },
-                            buttonsStyling: false
-                        });
-                    }
-                }, 100);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: '{{ session('success') }}',
+                    confirmButtonColor: '#4CAF50',
+                    confirmButtonText: 'OK',
+                    timer: 3000,
+                    timerProgressBar: true
+                });
             @endif
 
+            // Error Alert
             @if(session('error'))
-                setTimeout(() => {
-                    const errorAlert = document.querySelector('.alert-danger');
-                    if (errorAlert) {
-                        const message = errorAlert.textContent.trim().replace(/×/g, '').trim();
-                        errorAlert.remove();
-
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Gagal!',
-                            text: message,
-                            confirmButtonColor: '#dc3545',
-                            confirmButtonText: '<i class="fas fa-times me-2"></i>OK',
-                            customClass: {
-                                ...swalCustomClass,
-                                confirmButton: 'btn btn-danger px-4 py-2'
-                            },
-                            buttonsStyling: false
-                        });
-                    }
-                }, 100);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal!',
+                    text: '{{ session('error') }}',
+                    confirmButtonColor: '#f44336',
+                    confirmButtonText: 'OK'
+                });
             @endif
 
+            // Warning Alert
             @if(session('warning'))
-                setTimeout(() => {
-                    const warningAlert = document.querySelector('.alert-warning');
-                    if (warningAlert) {
-                        const message = warningAlert.textContent.trim().replace(/×/g, '').trim();
-                        warningAlert.remove();
-
-                        Swal.fire({
-                            icon: 'warning',
-                            title: 'Perhatian!',
-                            text: message,
-                            confirmButtonColor: '#ffc107',
-                            confirmButtonText: '<i class="fas fa-exclamation-triangle me-2"></i>OK',
-                            customClass: {
-                                ...swalCustomClass,
-                                confirmButton: 'btn btn-warning px-4 py-2'
-                            },
-                            buttonsStyling: false
-                        });
-                    }
-                }, 100);
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Perhatian!',
+                    text: '{{ session('warning') }}',
+                    confirmButtonColor: '#ff9800',
+                    confirmButtonText: 'OK'
+                });
             @endif
 
+            // Info Alert
             @if(session('info'))
-                setTimeout(() => {
-                    const infoAlert = document.querySelector('.alert-info');
-                    if (infoAlert) {
-                        const message = infoAlert.textContent.trim().replace(/×/g, '').trim();
-                        infoAlert.remove();
-
-                        Swal.fire({
-                            icon: 'info',
-                            title: 'Informasi',
-                            text: message,
-                            confirmButtonColor: '#0dcaf0',
-                            confirmButtonText: '<i class="fas fa-info-circle me-2"></i>OK',
-                            customClass: {
-                                ...swalCustomClass,
-                                confirmButton: 'btn btn-info px-4 py-2'
-                            },
-                            buttonsStyling: false
-                        });
-                    }
-                }, 100);
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Informasi',
+                    text: '{{ session('info') }}',
+                    confirmButtonColor: '#2196F3',
+                    confirmButtonText: 'OK'
+                });
             @endif
         });
+
+        // Logout Confirmation menggunakan SweetAlert2
+        function showLogoutConfirmation() {
+            Swal.fire({
+                title: 'Yakin ingin keluar?',
+                text: "Apakah Anda yakin ingin keluar dari panel admin?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#f44336',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Ya, Logout',
+                cancelButtonText: 'Batal',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Show loading state
+                    Swal.fire({
+                        title: 'Memproses...',
+                        text: 'Mohon tunggu sebentar',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        showConfirmButton: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    // Create and submit logout form
+                    const logoutForm = document.createElement('form');
+                    logoutForm.method = 'POST';
+                    logoutForm.action = window.logoutRoute || '/logout';
+
+                    const csrfToken = document.createElement('input');
+                    csrfToken.type = 'hidden';
+                    csrfToken.name = '_token';
+                    csrfToken.value = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+                    logoutForm.appendChild(csrfToken);
+
+                    document.body.appendChild(logoutForm);
+                    logoutForm.submit();
+                }
+            });
+        }
+
+        // Helper function untuk menampilkan SweetAlert dari JavaScript
+        window.showAlert = function(type, title, message, timer = null) {
+            const icons = {
+                'success': 'success',
+                'error': 'error',
+                'warning': 'warning',
+                'info': 'info'
+            };
+
+            const colors = {
+                'success': '#4CAF50',
+                'error': '#f44336',
+                'warning': '#ff9800',
+                'info': '#2196F3'
+            };
+
+            const config = {
+                icon: icons[type] || 'info',
+                title: title,
+                text: message,
+                confirmButtonColor: colors[type] || '#2196F3',
+                confirmButtonText: 'OK'
+            };
+
+            if (timer) {
+                config.timer = timer;
+                config.timerProgressBar = true;
+            }
+
+            Swal.fire(config);
+        };
     </script>
 
     @stack('scripts')

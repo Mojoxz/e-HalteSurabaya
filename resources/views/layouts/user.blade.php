@@ -10,6 +10,9 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="icon" type="image/svg" href="{{ asset('logo1.svg') }}">
 
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
     <style>
         :root {
             --primary-dark: #1a1d23;
@@ -304,6 +307,31 @@
             pointer-events: auto;
         }
 
+        /* SweetAlert2 Dark Theme Customization */
+        .swal2-popup {
+            background: var(--secondary-dark) !important;
+            color: var(--text-primary) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+
+        .swal2-title {
+            color: var(--text-primary) !important;
+        }
+
+        .swal2-html-container {
+            color: var(--text-secondary) !important;
+        }
+
+        .swal2-confirm {
+            background: #ef4444 !important;
+            border: none !important;
+        }
+
+        .swal2-cancel {
+            background: var(--accent-dark) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+
         /* Mobile Responsive */
         @media (max-width: 768px) {
             .sidebar {
@@ -425,7 +453,7 @@
             <a class="nav-link" href="{{ route('home') }}">
                 <i class="fas fa-globe"></i> Halaman Utama
             </a>
-            <a class="nav-link" href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+            <a class="nav-link" href="#" onclick="event.preventDefault(); confirmLogout();">
                 <i class="fas fa-sign-out-alt"></i> Keluar
             </a>
             <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
@@ -453,7 +481,7 @@
                 <div class="user-avatar">
                     {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
                 </div>
-                <button class="btn-logout" onclick="document.getElementById('logout-form').submit();" type="button">
+                <button class="btn-logout" onclick="confirmLogout();" type="button">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Logout</span>
                 </button>
@@ -484,7 +512,46 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <script>
+        // Konfirmasi Logout dengan SweetAlert2
+        function confirmLogout() {
+            Swal.fire({
+                title: 'Konfirmasi Logout',
+                text: 'Apakah Anda yakin ingin keluar dari sistem?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#3d424d',
+                confirmButtonText: 'Ya, Keluar',
+                cancelButtonText: 'Batal',
+                reverseButtons: true,
+                background: '#2d3139',
+                color: '#ffffff'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Tampilkan loading
+                    Swal.fire({
+                        title: 'Logging out...',
+                        text: 'Mohon tunggu sebentar',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        showConfirmButton: false,
+                        background: '#2d3139',
+                        color: '#ffffff',
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
+                    // Submit form logout
+                    document.getElementById('logout-form').submit();
+                }
+            });
+        }
+
         // Toggle sidebar for mobile
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');

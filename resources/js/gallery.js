@@ -44,7 +44,44 @@ window.initGallery = function(haltes) {
     // Preload images
     setTimeout(preloadImages, 1000);
 
+    // Add SweetAlert2 custom styles
+    addSweetAlertStyles();
+
     console.log('Gallery carousel initialized with', halteData.length, 'halte(s)');
+}
+
+// Add custom styles for SweetAlert2
+function addSweetAlertStyles() {
+    const style = document.createElement('style');
+    style.textContent = `
+        .swal2-custom-popup {
+            border-radius: 20px !important;
+            font-family: Arial, sans-serif;
+        }
+
+        .swal2-custom-confirm {
+            border-radius: 30px !important;
+            padding: 12px 30px !important;
+            font-weight: 600 !important;
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3) !important;
+        }
+
+        .swal2-custom-cancel {
+            border-radius: 30px !important;
+            padding: 12px 30px !important;
+            font-weight: 600 !important;
+        }
+
+        .swal2-icon.swal2-warning {
+            border-color: #ffc107 !important;
+            color: #ffc107 !important;
+        }
+
+        .swal2-html-container {
+            margin: 1rem 0 !important;
+        }
+    `;
+    document.head.appendChild(style);
 }
 
 // View toggle functionality
@@ -497,15 +534,48 @@ window.toggleZoom = function(image) {
     }
 };
 
-// Access modal function (exposed to global scope)
+// Access modal function with SweetAlert2 (exposed to global scope)
 window.showAccessModal = function() {
-    if (typeof bootstrap !== 'undefined') {
-        const modalElement = document.getElementById('accessRestrictedModal');
-        if (modalElement) {
-            const modal = new bootstrap.Modal(modalElement);
-            modal.show();
-        }
+    if (typeof Swal === 'undefined') {
+        alert('Detail halte hanya dapat diakses oleh user yang memiliki akun, silahkan hubungi admin untuk meminta akun.');
+        return;
     }
+
+    Swal.fire({
+        icon: 'warning',
+        title: 'Akses Terbatas!',
+        html: `
+            <div style="text-align: center;">
+                <div style="font-size: 3rem; color: #ffc107; margin: 1rem 0;">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <div style="color: #6c757d; font-size: 1rem; line-height: 1.6; margin-bottom: 1rem;">
+                    Detail lengkap halte hanya dapat diakses oleh User yang memiliki akun.
+                    <br>Silakan hubungi admin untuk meminta akun.
+                </div>
+            </div>
+        `,
+        showCancelButton: true,
+        confirmButtonColor: '#3b82f6',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="fas fa-sign-in-alt"></i> Login',
+        cancelButtonText: '<i class="fas fa-times"></i> Tutup',
+        customClass: {
+            popup: 'swal2-custom-popup',
+            confirmButton: 'swal2-custom-confirm',
+            cancelButton: 'swal2-custom-cancel'
+        },
+        showCloseButton: true,
+        focusConfirm: false,
+        width: '500px',
+        padding: '2rem',
+        backdrop: 'rgba(0,0,0,0.7)'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Redirect to login page
+            window.location.href = '/login';
+        }
+    });
 };
 
 // Modal listeners

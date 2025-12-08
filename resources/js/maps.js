@@ -1,8 +1,10 @@
-// resources/js/maps.js - FIXED FULLSCREEN MODAL ISSUE
+// resources/js/maps.js - UPDATED WITH SWEETALERT2
 
 document.addEventListener('DOMContentLoaded', function() {
     const isAdmin = window.isAdmin || false;
     const haltesData = window.haltesData || [];
+    const isGuest = window.isGuest || false;
+    const loginUrl = window.loginUrl || '/login';
 
     // Initialize map
     const map = L.map('map', {
@@ -112,7 +114,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    // ✅ FIXED: Handle detail click dengan z-index fix
+    // ✅ UPDATED: Handle detail click dengan SweetAlert2 + FIXED z-index for fullscreen
     window.handleDetailClick = function(halteId, event) {
         if (event) {
             event.preventDefault();
@@ -126,45 +128,80 @@ document.addEventListener('DOMContentLoaded', function() {
             map.closePopup();
 
             setTimeout(() => {
-                const modalElement = document.getElementById('accessRestrictedModal');
-                const mapSection = document.getElementById('mapSection');
+                // ✅ FIX: Set z-index tinggi untuk SweetAlert2 container
+                const swalContainer = document.createElement('div');
+                swalContainer.id = 'swal-container-custom';
+                swalContainer.style.cssText = 'position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 999999 !important;';
+                document.body.appendChild(swalContainer);
 
-                if (modalElement) {
-                    // ✅ FIX: Pindahkan modal ke body jika dalam fullscreen
-                    if (mapSection && mapSection.classList.contains('fullscreen-map')) {
-                        // Pindahkan modal ke body untuk menghindari masalah z-index
-                        if (modalElement.parentElement !== document.body) {
-                            document.body.appendChild(modalElement);
+                // Show SweetAlert2 with custom target
+                Swal.fire({
+                    target: swalContainer,
+                    icon: 'warning',
+                    title: '<strong style="color: #1f2937;">Akses Terbatas</strong>',
+                    html: `
+                        <div style="text-align: center; padding: 20px 10px;">
+                            <div style="width: 80px; height: 80px; margin: 0 auto 20px; background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 30px rgba(220, 38, 38, 0.3);">
+                                <i class="fas fa-lock" style="font-size: 36px; color: white;"></i>
+                            </div>
+                            <p style="font-size: 16px; line-height: 1.6; color: #6b7280; margin-bottom: 12px;">
+                                Detail lengkap halte hanya dapat diakses oleh <strong style="color: #dc2626;">Yang memiliki Akun</strong>.
+                            </p>
+                            <p style="font-size: 14px; color: #9ca3af;">
+                                Silakan meminta akun kepada administrator sistem untuk mendapatkan akses.
+                            </p>
+                        </div>
+                    `,
+                    showCancelButton: isGuest,
+                    confirmButtonText: isGuest ? '<i class="fas fa-sign-in-alt"></i> Login' : '<i class="fas fa-check"></i> OK',
+                    cancelButtonText: '<i class="fas fa-times"></i> Tutup',
+                    confirmButtonColor: '#2563eb',
+                    cancelButtonColor: '#6b7280',
+                    width: '500px',
+                    padding: '30px',
+                    customClass: {
+                        container: 'swal-custom-container',
+                        popup: 'swal-custom-popup',
+                        confirmButton: 'swal-custom-confirm',
+                        cancelButton: 'swal-custom-cancel'
+                    },
+                    backdrop: true,
+                    allowOutsideClick: true,
+                    allowEscapeKey: true,
+                    showClass: {
+                        popup: 'animate__animated animate__fadeInDown animate__faster'
+                    },
+                    hideClass: {
+                        popup: 'animate__animated animate__fadeOutUp animate__faster'
+                    },
+                    didOpen: () => {
+                        // ✅ FIX: Force z-index untuk semua elemen SweetAlert2
+                        const swalPopup = document.querySelector('.swal2-container');
+                        const swalBackdrop = document.querySelector('.swal2-container');
+
+                        if (swalPopup) {
+                            swalPopup.style.zIndex = '1000000';
                         }
+                        if (swalBackdrop) {
+                            swalBackdrop.style.zIndex = '999999';
+                        }
+
+                        // Set z-index untuk container
+                        swalContainer.style.zIndex = '999999';
+                    },
+                    willClose: () => {
+                        // ✅ Cleanup: Hapus container custom setelah modal ditutup
+                        setTimeout(() => {
+                            if (swalContainer && swalContainer.parentNode) {
+                                swalContainer.parentNode.removeChild(swalContainer);
+                            }
+                        }, 300);
                     }
-
-                    modalElement.removeAttribute('aria-hidden');
-
-                    const bsModal = new bootstrap.Modal(modalElement, {
-                        backdrop: 'static',
-                        keyboard: true,
-                        focus: true
-                    });
-
-                    bsModal.show();
-
-                    // ✅ FIX: Pastikan modal backdrop memiliki z-index yang tepat
-                    modalElement.addEventListener('shown.bs.modal', function() {
-                        this.removeAttribute('aria-hidden');
-
-                        // Force z-index untuk modal dan backdrop
-                        const backdrop = document.querySelector('.modal-backdrop');
-                        if (backdrop) {
-                            backdrop.style.zIndex = '999999';
-                        }
-                        this.style.zIndex = '1000000';
-
-                        const focusableElement = this.querySelector('.btn-close, button, a, input');
-                        if (focusableElement) {
-                            focusableElement.focus();
-                        }
-                    }, { once: true });
-                }
+                }).then((result) => {
+                    if (result.isConfirmed && isGuest) {
+                        window.location.href = loginUrl;
+                    }
+                });
             }, 100);
         }
     };
@@ -556,6 +593,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 fullscreenToggle.innerHTML = '<i class="fas fa-compress"></i>';
                 fullscreenToggle.title = 'Keluar dari Mode Layar Penuh';
                 isFullscreen = true;
+
+                // ✅ FIX: Force z-index untuk SweetAlert2 yang sedang terbuka
+                const openSwal = document.querySelector('.swal2-container');
+                if (openSwal) {
+                    openSwal.style.zIndex = '999999';
+                }
             } else {
                 mapSection.classList.remove('fullscreen-map');
                 fullscreenToggle.innerHTML = '<i class="fas fa-expand"></i>';
