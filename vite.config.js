@@ -16,6 +16,7 @@ export default defineConfig({
                     'resources/css/admin/haltes-create.css', 'resources/js/admin/haltes-create.js',
                     'resources/css/admin/halte-show.css', 'resources/js/admin/halte-show.js',
                     'resources/css/admin/rental/index.css', 'resources/js/admin/rental/index.js',
+                    'resources/css/admin/reports/index.css', 'resources/js/admin/reports/index.js',
                     'resources/css/user/maps.css', 'resources/js/user/maps.js',
                     'resources/css/user/detail-halte.css', 'resources/js/user/detail-halte.js',
             ],
