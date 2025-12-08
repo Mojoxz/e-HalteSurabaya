@@ -13,7 +13,11 @@ export default defineConfig({
                     'resources/css/admin.css', 'resources/js/admin.js',
                     'resources/css/admin/haltes-index.css', 'resources/js/admin/haltes-index.js',
                     'resources/css/admin/haltes-edit.css', 'resources/js/admin/haltes-edit.js',
-                    'resources/css/admin/haltes-create.css', 'resources/js/admin/haltes-create.js'
+                    'resources/css/admin/haltes-create.css', 'resources/js/admin/haltes-create.js',
+                    'resources/css/admin/halte-show.css', 'resources/js/admin/halte-show.js',
+                    'resources/css/admin/rental/index.css', 'resources/js/admin/rental/index.js',
+                    'resources/css/user/maps.css', 'resources/js/user/maps.js',
+                    'resources/css/user/detail-halte.css', 'resources/js/user/detail-halte.js',
             ],
             refresh: true,
         }),

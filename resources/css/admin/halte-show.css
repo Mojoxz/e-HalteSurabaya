@@ -1,0 +1,57 @@
+/* resources/css/admin/halte-show.css */
+
+.detail-item {
+    margin-bottom: 1rem;
+}
+
+.detail-item i {
+    font-size: 1.1rem;
+}
+
+.detail-item p {
+    color: #495057;
+}
+
+.cursor-pointer {
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.cursor-pointer:hover {
+    transform: scale(1.05);
+}
+
+.card {
+    border: none;
+    border-radius: 10px;
+}
+
+.card-header {
+    border-radius: 10px 10px 0 0 !important;
+    padding: 1rem 1.25rem;
+}
+
+.badge {
+    padding: 0.5rem 1rem;
+}
+
+.list-group-item {
+    border-left: none;
+    border-right: none;
+}
+
+.list-group-item:first-child {
+    border-top: none;
+}
+
+.list-group-item:last-child {
+    border-bottom: none;
+}
+
+.border-left-info {
+    border-left: 4px solid #36b9cc;
+}
+
+.border-left-success {
+    border-left: 4px solid #1cc88a;
+}

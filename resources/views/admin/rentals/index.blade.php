@@ -1,7 +1,12 @@
-{{-- resources/views/admin/rentals/index.blade.php - AUTO SEARCH VERSION WITH DOCUMENTS --}}
+{{-- resources/views/admin/rentals/index.blade.php - CLEAN VERSION --}}
 @extends('layouts.admin')
 
 @section('title', 'Riwayat Sewa Halte')
+
+{{-- Include CSS --}}
+@push('styles')
+    @vite(['resources/css/admin/rental/index.css'])
+@endpush
 
 @section('content')
 <div class="container-fluid">
@@ -319,7 +324,7 @@
                                             Rp {{ number_format($history->rental_cost, 0, ',', '.') }}
                                         </strong>
                                     </td>
-                                    {{-- DOCUMENTS COLUMN - NEW --}}
+                                    {{-- DOCUMENTS COLUMN --}}
                                     <td class="text-center">
                                         @if($history->hasDocuments())
                                             <button type="button"
@@ -440,7 +445,7 @@
     </div>
 </div>
 
-{{-- DOCUMENTS MODALS - NEW --}}
+{{-- DOCUMENTS MODALS --}}
 @foreach($histories as $history)
     @if($history->hasDocuments())
         <div class="modal fade" id="documentsModal{{ $history->id }}" tabindex="-1">
@@ -522,7 +527,7 @@
     @endif
 @endforeach
 
-{{-- Document Modal for Images - NEW --}}
+{{-- Document Modal for Images --}}
 <div class="modal fade" id="documentImageModal" tabindex="-1">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
@@ -536,244 +541,9 @@
         </div>
     </div>
 </div>
-
-{{-- Custom Styles --}}
-<style>
-.border-left-primary {
-    border-left: 0.25rem solid #4e73df !important;
-}
-
-.border-left-success {
-    border-left: 0.25rem solid #1cc88a !important;
-}
-
-.border-left-info {
-    border-left: 0.25rem solid #36b9cc !important;
-}
-
-.border-left-warning {
-    border-left: 0.25rem solid #f6c23e !important;
-}
-
-.table th {
-    background-color: #f8f9fc;
-    font-weight: 600;
-    font-size: 0.85rem;
-    color: #5a5c69;
-    border-color: #e3e6f0;
-}
-
-.table td {
-    font-size: 0.875rem;
-    color: #5a5c69;
-    border-color: #e3e6f0;
-    vertical-align: middle;
-}
-
-.table-hover tbody tr:hover {
-    background-color: #f5f5f5;
-}
-
-.badge {
-    font-size: 0.75rem;
-    padding: 0.375rem 0.75rem;
-}
-
-.dropdown-item:hover {
-    background-color: #f8f9fa;
-}
-
-.card {
-    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15) !important;
-    border: 1px solid #e3e6f0;
-}
-
-.card-header {
-    background-color: #f8f9fc;
-    border-bottom: 1px solid #e3e6f0;
-}
-
-/* Breadcrumb Styling */
-.breadcrumb {
-    background-color: #f8f9fc;
-    border: 1px solid #e3e6f0;
-    margin-bottom: 0;
-}
-
-.breadcrumb-item + .breadcrumb-item::before {
-    content: "›";
-    color: #6c757d;
-}
-
-.breadcrumb-item a {
-    color: #5a5c69;
-    transition: color 0.2s ease;
-}
-
-.breadcrumb-item a:hover {
-    color: #3a3b45;
-}
-
-.breadcrumb-item.active {
-    color: #858796;
-}
-
-/* Gap utilities for older Bootstrap versions */
-.gap-2 {
-    gap: 0.5rem;
-}
-
-.d-flex.gap-2 > * + * {
-    margin-left: 0.5rem;
-}
-
-/* Button enhancements */
-.btn {
-    font-weight: 500;
-    transition: all 0.2s ease;
-}
-
-.btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-/* Filter indicator animation */
-#filterIndicator {
-    animation: fadeIn 0.3s ease-in;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-/* Auto-search input highlight */
-.auto-search:focus {
-    border-color: #4e73df;
-    box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
-}
-</style>
-
-{{-- Custom Scripts - AUTO SEARCH WITH DOCUMENTS --}}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Auto-search functionality
-    const form = document.getElementById('autoFilterForm');
-    const autoSearchInputs = document.querySelectorAll('.auto-search');
-    const filterIndicator = document.getElementById('filterIndicator');
-    let searchTimeout;
-
-    // Function to submit form
-    function submitForm() {
-        // Show loading indicator
-        if (filterIndicator) {
-            filterIndicator.style.display = 'inline-block';
-        }
-
-        // Submit form
-        form.submit();
-    }
-
-    // Add event listeners to all auto-search inputs
-    autoSearchInputs.forEach(input => {
-        // For text input - use debounce (delay 500ms after user stops typing)
-        if (input.type === 'text') {
-            input.addEventListener('input', function() {
-                clearTimeout(searchTimeout);
-
-                searchTimeout = setTimeout(() => {
-                    submitForm();
-                }, 500); // Wait 500ms after user stops typing
-            });
-        }
-        // For date and select - submit immediately
-        else if (input.type === 'date' || input.tagName === 'SELECT') {
-            input.addEventListener('change', function() {
-                submitForm();
-            });
-        }
-    });
-
-    // Auto-collapse filter on mobile
-    if (window.innerWidth < 768) {
-        const filterCollapse = document.getElementById('filterCollapse');
-        if (filterCollapse && !filterCollapse.classList.contains('show')) {
-            // Keep it open on first load if there are active filters
-            const hasActiveFilters = {{ request()->hasAny(['start_date', 'end_date', 'halte_id', 'rented_by']) ? 'true' : 'false' }};
-            if (!hasActiveFilters) {
-                filterCollapse.classList.remove('show');
-            }
-        }
-    }
-
-    // Initialize tooltips
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
-
-    // Preserve filter state in pagination links
-    const paginationLinks = document.querySelectorAll('.pagination a');
-    paginationLinks.forEach(link => {
-        if (link.href) {
-            const url = new URL(link.href);
-
-            // Add current filter values to pagination links
-            autoSearchInputs.forEach(input => {
-                if (input.value) {
-                    url.searchParams.set(input.name, input.value);
-                }
-            });
-
-            link.href = url.toString();
-        }
-    });
-
-    // Clear individual filter on ESC key
-    autoSearchInputs.forEach(input => {
-        if (input.type === 'text') {
-            input.addEventListener('keydown', function(e) {
-                if (e.key === 'Escape') {
-                    this.value = '';
-                    submitForm();
-                }
-            });
-        }
-    });
-
-    // Add visual feedback for active filters
-    autoSearchInputs.forEach(input => {
-        if (input.value) {
-            input.style.borderColor = '#4e73df';
-            input.style.backgroundColor = '#f0f5ff';
-        }
-    });
-
-    // Auto-dismiss alerts
-    setTimeout(() => {
-        const alerts = document.querySelectorAll('.alert');
-        alerts.forEach(alert => {
-            if (typeof bootstrap !== 'undefined' && bootstrap.Alert) {
-                const bsAlert = new bootstrap.Alert(alert);
-                bsAlert.close();
-            } else if (typeof $ !== 'undefined') {
-                $(alert).fadeOut();
-            }
-        });
-    }, 5000);
-});
-
-// Show document in modal for images
-function showDocumentModal(documentSrc, documentName) {
-    document.getElementById('modalDocumentImage').src = documentSrc;
-    document.getElementById('documentImageModalLabel').textContent = documentName;
-
-    if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-        new bootstrap.Modal(document.getElementById('documentImageModal')).show();
-    } else if (typeof $ !== 'undefined') {
-        $('#documentImageModal').modal('show');
-    }
-}
-</script>
 @endsection
+
+{{-- Include JavaScript --}}
+@push('scripts')
+    @vite(['resources/js/admin/rental/index.js'])
+@endpush
