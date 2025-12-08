@@ -125,17 +125,17 @@
                     </div>
                     <h4 class="mb-3" style="font-weight: 700; color: #1f2937;">Detail Halte Terbatas</h4>
                     <p class="text-muted mb-2" style="font-size: 16px; line-height: 1.6;">
-                        Detail lengkap halte hanya dapat diakses oleh <strong style="color: #dc2626;">Admin yang terdaftar</strong>.
+                        Detail lengkap halte hanya dapat diakses oleh <strong style="color: #dc2626;">Yang memiliki Akun</strong>.
                     </p>
                     <p class="text-muted" style="font-size: 14px;">
-                        Silakan login untuk melihat informasi detail halte bus.
+                        Silakan meminta akun kepada administrator sistem untuk mendapatkan akses.
                     </p>
                 </div>
             </div>
             <div class="modal-footer" style="border: none; padding: 20px 30px; justify-content: center; gap: 12px;">
                 @guest
                 <a href="{{ route('login') }}" class="btn btn-primary" style="padding: 14px 28px; border-radius: 12px; font-weight: 600; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); border: none; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);">
-                    <i class="fas fa-sign-in-alt me-2"></i>Login sebagai Admin
+                    <i class="fas fa-sign-in-alt me-2"></i>Login
                 </a>
                 @endguest
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" style="padding: 14px 28px; border-radius: 12px; font-weight: 600; background: #f3f4f6; color: #4b5563; border: 2px solid #e5e7eb;">

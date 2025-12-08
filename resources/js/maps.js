@@ -1,5 +1,4 @@
-// resources/js/maps.js - FIXED POPUP ISSUES
-// Ganti SELURUH file maps.js dengan kode ini
+// resources/js/maps.js - FIXED FULLSCREEN MODAL ISSUE
 
 document.addEventListener('DOMContentLoaded', function() {
     const isAdmin = window.isAdmin || false;
@@ -113,7 +112,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    // ✅ FIXED: Handle detail click
+    // ✅ FIXED: Handle detail click dengan z-index fix
     window.handleDetailClick = function(halteId, event) {
         if (event) {
             event.preventDefault();
@@ -128,7 +127,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
             setTimeout(() => {
                 const modalElement = document.getElementById('accessRestrictedModal');
+                const mapSection = document.getElementById('mapSection');
+
                 if (modalElement) {
+                    // ✅ FIX: Pindahkan modal ke body jika dalam fullscreen
+                    if (mapSection && mapSection.classList.contains('fullscreen-map')) {
+                        // Pindahkan modal ke body untuk menghindari masalah z-index
+                        if (modalElement.parentElement !== document.body) {
+                            document.body.appendChild(modalElement);
+                        }
+                    }
+
                     modalElement.removeAttribute('aria-hidden');
 
                     const bsModal = new bootstrap.Modal(modalElement, {
@@ -139,8 +148,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     bsModal.show();
 
+                    // ✅ FIX: Pastikan modal backdrop memiliki z-index yang tepat
                     modalElement.addEventListener('shown.bs.modal', function() {
                         this.removeAttribute('aria-hidden');
+
+                        // Force z-index untuk modal dan backdrop
+                        const backdrop = document.querySelector('.modal-backdrop');
+                        if (backdrop) {
+                            backdrop.style.zIndex = '999999';
+                        }
+                        this.style.zIndex = '1000000';
+
                         const focusableElement = this.querySelector('.btn-close, button, a, input');
                         if (focusableElement) {
                             focusableElement.focus();
@@ -151,34 +169,27 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    // ✅ FIXED: Improved popup opening function
+    // Improved popup opening function
     function openMarkerPopup(marker, halte) {
-        // Close any existing popups
         map.closePopup();
 
-        // Calculate zoom level
         const currentZoom = map.getZoom();
         const targetZoom = Math.max(currentZoom, 15);
 
-        // Center map on marker
         map.setView([halte.latitude, halte.longitude], targetZoom, {
             animate: true,
             duration: 0.5,
             easeLinearity: 0.25
         });
 
-        // Wait for map to settle before opening popup
         setTimeout(() => {
-            // Force marker to open popup
             marker.openPopup();
 
-            // Additional adjustment after popup opens
             setTimeout(() => {
                 const popup = marker.getPopup();
                 if (popup && popup._container && popup.isOpen()) {
                     popup.update();
 
-                    // Pan if needed
                     const popupLatLng = popup.getLatLng();
                     const pixelPoint = map.latLngToContainerPoint(popupLatLng);
                     const popupHeight = popup._container.offsetHeight || 400;
@@ -235,7 +246,6 @@ document.addEventListener('DOMContentLoaded', function() {
             </div>
         `;
 
-        // ✅ FIXED: Create marker with better event handling
         const marker = L.marker([halte.latitude, halte.longitude], { icon: icon })
             .bindPopup(popupContent, {
                 maxWidth: 400,
@@ -252,7 +262,6 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .addTo(map);
 
-        // ✅ FIXED: Better click handler
         marker.on('click', function(e) {
             L.DomEvent.stopPropagation(e);
             openMarkerPopup(marker, halte);
@@ -566,7 +575,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // ✅ FIXED: Better popup event handling
+    // Better popup event handling
     map.on('popupopen', function(e) {
         const popup = e.popup;
         const container = popup._container;
