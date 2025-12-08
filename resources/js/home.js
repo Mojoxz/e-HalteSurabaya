@@ -16,6 +16,10 @@ window.addEventListener('load', function() {
         console.error('Bootstrap is not loaded');
         return;
     }
+    if (typeof Swal === 'undefined') {
+        console.error('SweetAlert2 is not loaded');
+        return;
+    }
 
     console.log('All libraries loaded, initializing home.js...');
 
@@ -169,7 +173,7 @@ window.addEventListener('load', function() {
         }
     };
 
-    // Function to handle detail button click
+    // Function to handle detail button click with SweetAlert2
     window.handleDetailClick = function(halteId, event) {
         event.preventDefault();
 
@@ -177,9 +181,37 @@ window.addEventListener('load', function() {
             // Admin can access detail page directly
             window.location.href = `/halte/${halteId}/detail`;
         } else {
-            // Show modal for non-admin users
-            const modal = new bootstrap.Modal(document.getElementById('accessRestrictedModal'));
-            modal.show();
+            // Show SweetAlert2 for non-admin users
+            Swal.fire({
+                icon: 'warning',
+                title: 'Akses Terbatas',
+                html: `
+                    <div style="text-align: center; padding: 20px 0;">
+                        <i class="fas fa-lock" style="font-size: 3em; color: #f0ad4e; margin-bottom: 20px;"></i>
+                        <p style="font-size: 1.1em; margin-bottom: 15px;">
+                            Detail lengkap halte hanya dapat diakses oleh User yang memiliki Akun.
+                        </p>
+                        <p style="color: #666;">
+                            Silakan hubungi admin untuk meminta akun.
+                        </p>
+                    </div>
+                `,
+                showCancelButton: true,
+                confirmButtonColor: '#3b82f6',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="fas fa-sign-in-alt"></i> Login ',
+                cancelButtonText: '<i class="fas fa-check"></i> Saya Mengerti',
+                reverseButtons: true,
+                customClass: {
+                    popup: 'swal-wide',
+                    title: 'swal-title-custom'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Redirect to login page
+                    window.location.href = '/login';
+                }
+            });
         }
     };
 
@@ -635,7 +667,12 @@ window.addEventListener('load', function() {
 
                         container.innerHTML = '<i class="fas fa-crosshairs"></i>';
                     }, function(error) {
-                        alert('Tidak dapat mengakses lokasi Anda');
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Lokasi Tidak Tersedia',
+                            text: 'Tidak dapat mengakses lokasi Anda. Pastikan izin lokasi telah diaktifkan.',
+                            confirmButtonColor: '#4CAF50'
+                        });
                         container.innerHTML = '<i class="fas fa-crosshairs"></i>';
                     });
                 };

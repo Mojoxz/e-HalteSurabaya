@@ -9,6 +9,8 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
 <!-- AOS Animation CSS -->
 <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+<!-- SweetAlert2 CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <!-- Custom Home CSS via Vite -->
 @vite('resources/css/home.css')
 @endpush
@@ -275,42 +277,6 @@
     </div>
 </section>
 
-<!-- Modal for Access Restriction -->
-<div class="modal fade" id="accessRestrictedModal" tabindex="-1" aria-labelledby="accessRestrictedModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="accessRestrictedModalLabel">
-                    <i class="fas fa-shield-alt me-2"></i>Akses Terbatas
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="modal-icon">
-                    <i class="fas fa-lock"></i>
-                </div>
-                <div class="modal-title-custom">
-                    Maaf, Akses Dibatasi!
-                </div>
-                <div class="modal-text">
-                    Detail lengkap halte hanya dapat diakses oleh <strong>Admin</strong>.
-                    Silakan login untuk melihat informasi detail halte.
-                </div>
-            </div>
-            <div class="modal-footer justify-content-center">
-                @guest
-                <a href="{{ route('login') }}" class="btn btn-login-modal me-2">
-                    <i class="fas fa-sign-in-alt me-1"></i> Login sebagai User
-                </a>
-                @endguest
-                <button type="button" class="btn btn-understand" data-bs-dismiss="modal">
-                    <i class="fas fa-check me-1"></i> Saya Mengerti
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
 @endsection
 
 @push('scripts')
@@ -322,6 +288,8 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 <!-- AOS Animation Library -->
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<!-- SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <!-- Pass data from Laravel to JavaScript -->
 <script>
