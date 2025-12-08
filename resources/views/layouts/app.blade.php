@@ -37,13 +37,16 @@
                             <i class="fas fa-home me-1"></i> Beranda
                         </a>
                     </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="{{ route('gallery') }}">
                             <i class="fas fa-images me-1"></i> Gallery
                         </a>
-
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="{{ route('maps') }}">
                             <i class="fas fa-map me-1"></i> Maps
                         </a>
+                    </li>
                 </ul>
 
                 <ul class="navbar-nav">
@@ -52,6 +55,12 @@
                             <li class="nav-item">
                                 <a class="nav-link" href="{{ route('admin.dashboard') }}">
                                     <i class="fas fa-tachometer-alt me-1"></i> Dashboard Admin
+                                </a>
+                            </li>
+                        @else
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('user.dashboard') }}">
+                                    <i class="fas fa-tachometer-alt me-1"></i> Dashboard User
                                 </a>
                             </li>
                         @endif
@@ -180,4 +189,4 @@
 
     @stack('scripts')
 </body>
-</html> 
+</html>
