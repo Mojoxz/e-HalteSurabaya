@@ -18,18 +18,16 @@
 @endsection
 
 @push('styles')
-<!-- Leaflet CSS -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<!-- Lightbox2 CSS for photo gallery -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/css/lightbox.min.css" />
 <style>
     .detail-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #1a4b8c 0%, #2a75d6 100%);
         color: white;
         padding: 2rem 0;
         margin-bottom: 2rem;
-        border-radius: 0.375rem;
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(26, 75, 140, 0.2);
     }
+
     .status-badge {
         display: inline-block;
         padding: 0.5rem 1rem;
@@ -37,128 +35,326 @@
         font-weight: bold;
         font-size: 0.875rem;
         margin-bottom: 1rem;
+        animation: fadeInScale 0.5s ease-out;
     }
+
     .status-available {
         background-color: #d4edda;
         color: #155724;
         border: 2px solid #c3e6cb;
     }
+
     .status-rented {
         background-color: #f8d7da;
         color: #721c24;
         border: 2px solid #f5c6cb;
     }
+
     .info-card {
         background: white;
-        border-radius: 0.375rem;
-        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         border: 1px solid #dee2e6;
         margin-bottom: 1.5rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        animation: fadeInScale 0.5s ease-out;
     }
+
+    .info-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    }
+
     .info-card .card-header {
         background-color: #f8f9fa;
         border-bottom: 1px solid #dee2e6;
         font-weight: 600;
         color: #495057;
+        padding: 1rem 1.25rem;
+        border-radius: 12px 12px 0 0;
+        transition: background-color 0.3s ease;
     }
+
+    .info-card:hover .card-header {
+        background-color: #e6f0fa;
+    }
+
     .info-row {
         display: flex;
         padding: 0.75rem 0;
         border-bottom: 1px solid #f1f3f4;
+        transition: background-color 0.2s ease;
     }
+
+    .info-row:hover {
+        background-color: rgba(230, 240, 250, 0.3);
+    }
+
     .info-row:last-child {
         border-bottom: none;
     }
+
     .info-label {
         font-weight: 600;
         color: #495057;
         min-width: 150px;
         flex-shrink: 0;
     }
+
     .info-value {
         color: #6c757d;
         flex: 1;
     }
+
     .photo-gallery {
         margin-bottom: 2rem;
     }
+
     .photo-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
         gap: 1rem;
         margin-top: 1rem;
     }
+
     .photo-item {
         position: relative;
-        border-radius: 0.375rem;
+        border-radius: 12px;
         overflow: hidden;
-        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-        transition: transform 0.2s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
+
     .photo-item:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+        transform: translateY(-5px) scale(1.02);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
     }
+
     .photo-item img {
         width: 100%;
         height: 200px;
         object-fit: cover;
         cursor: pointer;
     }
+
     .primary-badge {
         position: absolute;
         top: 10px;
         right: 10px;
-        background: #28a745;
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
         color: white;
         padding: 0.25rem 0.5rem;
-        border-radius: 0.25rem;
+        border-radius: 6px;
         font-size: 0.75rem;
         font-weight: bold;
+        box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
     }
+
     .no-photos {
         text-align: center;
         padding: 3rem 0;
         color: #6c757d;
     }
+
     .map-container {
         height: 400px;
-        border-radius: 0.375rem;
+        border-radius: 12px;
         overflow: hidden;
-        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
+
     .breadcrumb {
         background-color: transparent;
         padding: 0.5rem 0;
         margin-bottom: 1rem;
     }
+
     .breadcrumb-item a {
         color: #007bff;
         text-decoration: none;
+        transition: color 0.2s ease;
     }
+
     .breadcrumb-item a:hover {
         text-decoration: underline;
+        color: #0056b3;
     }
+
     .rental-history-table {
         font-size: 0.875rem;
     }
+
     .rental-history-table th {
         background-color: #f8f9fa;
         font-weight: 600;
         border-top: none;
     }
-    .back-button {
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        border: none;
-        color: white;
-        padding: 0.5rem 1.5rem;
-        border-radius: 25px;
-        font-weight: 500;
-        transition: transform 0.2s ease;
+
+    .rental-history-table tr {
+        transition: background-color 0.2s ease, transform 0.2s ease;
     }
-    .back-button:hover {
-        transform: translateY(-1px);
+
+    .rental-history-table tr:hover {
+        background-color: rgba(230, 240, 250, 0.5);
+        transform: scale(1.01);
+    }
+
+    /* Document Styles */
+    .document-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .document-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+        transition: all 0.3s ease;
+    }
+
+    .document-item:hover {
+        background: #e6f0fa;
+        border-color: #1a4b8c;
+        transform: translateX(5px);
+        box-shadow: 0 4px 12px rgba(26, 75, 140, 0.1);
+    }
+
+    .document-info {
+        display: flex;
+        align-items: center;
+        flex: 1;
+    }
+
+    .document-icon {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #1a4b8c 0%, #2a75d6 100%);
         color: white;
+        border-radius: 8px;
+        margin-right: 1rem;
+        font-size: 1.2rem;
+        flex-shrink: 0;
+    }
+
+    .document-details {
+        flex: 1;
+    }
+
+    .document-name {
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 0.25rem;
+        word-break: break-word;
+    }
+
+    .document-meta {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+
+    .document-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-shrink: 0;
+    }
+
+    .btn-doc {
+        padding: 0.4rem 0.8rem;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .btn-doc:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-doc-view {
+        background: #1a4b8c;
+        color: white;
+    }
+
+    .btn-doc-view:hover {
+        background: #153a73;
+        color: white;
+    }
+
+    .btn-doc-download {
+        background: #155724;
+        color: white;
+    }
+
+    .btn-doc-download:hover {
+        background: #0d3d1a;
+        color: white;
+    }
+
+    .no-documents {
+        text-align: center;
+        padding: 2rem;
+        color: #6c757d;
+    }
+
+    .no-documents i {
+        font-size: 2.5rem;
+        color: #dee2e6;
+        margin-bottom: 1rem;
+    }
+
+    @keyframes fadeInScale {
+        from {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .document-item {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .document-actions {
+            width: 100%;
+            margin-top: 0.75rem;
+            justify-content: flex-start;
+        }
+
+        .btn-doc {
+            flex: 1;
+        }
     }
 </style>
 @endpush
@@ -219,13 +415,84 @@
                 </div>
             </div>
 
+            <!-- Halte Documents -->
+            <div class="info-card">
+                <div class="card-header">
+                    <i class="fas fa-file-alt"></i> Dokumen Halte
+                    <span class="badge bg-secondary ms-2">{{ $halte->documents->count() }} dokumen</span>
+                </div>
+                <div class="card-body">
+                    @if($halte->documents->count() > 0)
+                        <ul class="document-list">
+                            @foreach($halte->documents as $document)
+                                <li class="document-item">
+                                    <div class="document-info">
+                                        <div class="document-icon">
+                                            <i class="fas fa-file-pdf"></i>
+                                        </div>
+                                        <div class="document-details">
+                                            <div class="document-name">{{ $document->file_name }}</div>
+                                            <div class="document-meta">
+                                                <i class="fas fa-clock"></i> {{ $document->created_at->format('d M Y, H:i') }}
+                                                @if($document->file_size)
+                                                    | <i class="fas fa-hdd"></i> {{ number_format($document->file_size / 1024, 2) }} KB
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="document-actions">
+                                        <a href="{{ route('admin.haltes.documents.view', $document->id) }}"
+                                           class="btn-doc btn-doc-view"
+                                           target="_blank">
+                                            <i class="fas fa-eye"></i> Lihat
+                                        </a>
+                                        <a href="{{ route('admin.haltes.documents.download', $document->id) }}"
+                                           class="btn-doc btn-doc-download">
+                                            <i class="fas fa-download"></i> Unduh
+                                        </a>
+                                    </div>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @else
+                        <div class="no-documents">
+                            <i class="fas fa-folder-open"></i>
+                            <p class="mb-0">Belum ada dokumen yang tersedia</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
             <!-- Map -->
             <div class="info-card">
                 <div class="card-header">
                     <i class="fas fa-map-marked-alt"></i> Lokasi
                 </div>
                 <div class="card-body p-0">
-                    <div id="map" class="map-container"></div>
+                    <div id="map" class="map-container">
+                        <iframe
+                            width="100%"
+                            height="400"
+                            frameborder="0"
+                            style="border:0; display: block;"
+                            referrerpolicy="no-referrer-when-downgrade"
+                            src="https://www.google.com/maps?q={{ $halte->latitude }},{{ $halte->longitude }}&hl=id&z=16&output=embed"
+                            allowfullscreen>
+                        </iframe>
+                    </div>
+                    <div class="p-3 bg-light border-top">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <i class="fas fa-map-marker-alt me-1"></i>
+                                {{ $halte->latitude }}, {{ $halte->longitude }}
+                            </small>
+                            <a href="https://www.google.com/maps/search/?api=1&query={{ $halte->latitude }},{{ $halte->longitude }}"
+                               target="_blank"
+                               class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-external-link-alt me-1"></i> Buka di Google Maps
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -244,7 +511,7 @@
                                     <th>Tanggal Mulai</th>
                                     <th>Tanggal Berakhir</th>
                                     <th>Biaya</th>
-                                    <th>Keterangan</th>
+                                    <th>Dokumen</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -260,7 +527,15 @@
                                             -
                                         @endif
                                     </td>
-                                    <td>{{ $history->notes ?? '-' }}</td>
+                                    <td>
+                                        @if($history->documents->count() > 0)
+                                            <span class="badge bg-info">
+                                                <i class="fas fa-file"></i> {{ $history->documents->count() }}
+                                            </span>
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
                                 </tr>
                                 @endforeach
                             </tbody>
@@ -271,6 +546,49 @@
                             <small>Menampilkan 10 riwayat terbaru dari {{ $halte->rentalHistories->count() }} total riwayat</small>
                         </p>
                     @endif
+                </div>
+            </div>
+            @endif
+
+            <!-- Rental Documents (from recent rental history) -->
+            @if($halte->isCurrentlyRented() && $halte->rentalHistories->first() && $halte->rentalHistories->first()->documents->count() > 0)
+            <div class="info-card">
+                <div class="card-header">
+                    <i class="fas fa-file-contract"></i> Dokumen Penyewaan Aktif
+                    <span class="badge bg-secondary ms-2">{{ $halte->rentalHistories->first()->documents->count() }} dokumen</span>
+                </div>
+                <div class="card-body">
+                    <ul class="document-list">
+                        @foreach($halte->rentalHistories->first()->documents as $document)
+                            <li class="document-item">
+                                <div class="document-info">
+                                    <div class="document-icon">
+                                        <i class="fas fa-file-contract"></i>
+                                    </div>
+                                    <div class="document-details">
+                                        <div class="document-name">{{ $document->file_name }}</div>
+                                        <div class="document-meta">
+                                            <i class="fas fa-clock"></i> {{ $document->created_at->format('d M Y, H:i') }}
+                                            @if($document->file_size)
+                                                | <i class="fas fa-hdd"></i> {{ number_format($document->file_size / 1024, 2) }} KB
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="document-actions">
+                                    <a href="{{ route('admin.rentals.documents.view', $document->id) }}"
+                                       class="btn-doc btn-doc-view"
+                                       target="_blank">
+                                        <i class="fas fa-eye"></i> Lihat
+                                    </a>
+                                    <a href="{{ route('admin.rentals.documents.download', $document->id) }}"
+                                       class="btn-doc btn-doc-download">
+                                        <i class="fas fa-download"></i> Unduh
+                                    </a>
+                                </div>
+                            </li>
+                        @endforeach
+                    </ul>
                 </div>
             </div>
             @endif
@@ -419,49 +737,4 @@
 </div>
 @endsection
 
-@push('scripts')
-<!-- Leaflet JS -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<!-- Lightbox2 JS for photo gallery -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/lightbox2/2.11.4/js/lightbox.min.js"></script>
-<script>
-$(document).ready(function() {
-    // Initialize map
-    const map = L.map('map').setView([{{ $halte->latitude }}, {{ $halte->longitude }}], 16);
 
-    // Add OpenStreetMap tiles
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
-
-    // Create marker icon based on rental status
-    const markerIcon = L.divIcon({
-        className: 'custom-div-icon',
-        html: `<div style="background-color: {{ $halte->isCurrentlyRented() ? '#dc3545' : '#28a745' }}; width: 30px; height: 30px; border-radius: 50%; border: 4px solid white; box-shadow: 0 0 15px rgba(0,0,0,0.4);"></div>`,
-        iconSize: [30, 30],
-        iconAnchor: [15, 15]
-    });
-
-    // Add marker
-    L.marker([{{ $halte->latitude }}, {{ $halte->longitude }}], { icon: markerIcon })
-        .bindPopup(`
-            <div style="text-align: center; min-width: 200px;">
-                <h5 style="margin-bottom: 10px;">{{ $halte->name }}</h5>
-                <p style="margin-bottom: 5px;">{{ $halte->address ?? 'Lokasi halte bus' }}</p>
-                <span class="badge bg-{{ $halte->isCurrentlyRented() ? 'danger' : 'success' }}">
-                    {{ $halte->isCurrentlyRented() ? 'Sedang Disewa' : 'Tersedia' }}
-                </span>
-            </div>
-        `)
-        .addTo(map)
-        .openPopup();
-
-    // Configure lightbox
-    lightbox.option({
-        'resizeDuration': 200,
-        'wrapAround': true,
-        'albumLabel': 'Foto %1 dari %2'
-    });
-});
-</script>
-@endpush
